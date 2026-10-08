@@ -347,37 +347,89 @@ void main() {
     await _closeWidgetHarness(tester, h);
   });
 
+  for (final mime in ['text/event-stream', 'application/json']) {
+    testWidgets(
+        'chat composer sends through protected plan auth without an API key, MIME=$mime',
+        (tester) async {
+      h.fixture.responseHandler = (_) {
+        final response = fixtureEvents([
+          {'type': 'response.output_text.delta', 'delta': 'A saved reply ✓'},
+          fixtureCompleted
+        ]);
+        response.headers[Headers.contentTypeHeader] = [mime];
+        return response;
+      };
+      await tester.pumpWidget(h.app(ChatScreen(chatId: h.chatId)));
+      await tester.pump();
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 30)));
+      await tester.pump();
+      expect(find.text('API Not Configured'), findsNothing);
+      expect(find.text('ChatGPT setup required'), findsNothing);
+      final input = find.byType(TextField).first;
+      await tester.enterText(input, 'Hello from the composer');
+      await tester.tap(find.byIcon(Icons.send));
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 80)));
+      await tester.pump();
+      await _pumpUntil(
+          tester,
+          () =>
+              !h.container.read(activeChatProvider).isGenerating &&
+              h.container.read(activeChatProvider).messages.last.content ==
+                  'A saved reply ✓');
+      final saved =
+          await tester.runAsync(() => h.repository.getMessages(h.chatId));
+      expect(saved!.map((m) => m.content),
+          ['Hello from the composer', 'A saved reply ✓']);
+      expect(h.fixture.requests.single.path, endsWith('/responses'));
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(milliseconds: 1));
+      await _closeWidgetHarness(tester, h);
+      await tester.pump();
+    });
+  }
+
   testWidgets(
-      'chat composer sends through protected plan auth without an API key',
+      'HTTP 200 JSON denial reaches the real composer with safe diagnostics',
       (tester) async {
+    h.container.read(llmConfigProvider.notifier).updateModel('gpt-6-astra');
+    h.fixture.responseHandler = (_) => fixtureJson({
+          'error': {
+            'code': 'subscription_sharing_user_not_eligible',
+            'message': 'PRIVATE_CHAT_AND_TOKEN'
+          }
+        });
     await tester.pumpWidget(h.app(ChatScreen(chatId: h.chatId)));
     await tester.pump();
     await tester
         .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
     await tester.pump();
-    expect(find.text('API Not Configured'), findsNothing);
-    expect(find.text('ChatGPT setup required'), findsNothing);
-    final input = find.byType(TextField).first;
-    await tester.enterText(input, 'Hello from the composer');
+    await tester.enterText(
+        find.byType(TextField).first, 'Synthetic denial test.');
     await tester.tap(find.byIcon(Icons.send));
-    await tester
-        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 80)));
-    await tester.pump();
-    await _pumpUntil(
-        tester,
-        () =>
-            !h.container.read(activeChatProvider).isGenerating &&
-            h.container.read(activeChatProvider).messages.last.content ==
-                'A saved reply ✓');
+    await _pumpUntil(tester, () {
+      final state = h.container.read(activeChatProvider);
+      return !state.isGenerating && state.error != null;
+    });
+    final error = h.container.read(activeChatProvider).error!;
+    expect(error, contains('subscription_sharing_user_not_eligible'));
+    expect(error, contains('HTTP 200'));
+    expect(error, contains('Content type: application/json'));
+    expect(error, contains('req_fixture'));
+    expect(error, isNot(contains('PRIVATE_CHAT_AND_TOKEN')));
+    expect(find.textContaining('subscription_sharing_user_not_eligible'),
+        findsOneWidget);
+    expect(find.text('OpenAI returned an unexpected response type.'),
+        findsNothing);
+    expect(h.fixture.requests, hasLength(1));
+    expect((h.fixture.requests.single.data as Map)['model'], 'gpt-6-astra');
     final saved =
         await tester.runAsync(() => h.repository.getMessages(h.chatId));
-    expect(saved!.map((m) => m.content),
-        ['Hello from the composer', 'A saved reply ✓']);
-    expect(h.fixture.requests.single.path, endsWith('/responses'));
+    expect(saved!.map((m) => m.content), ['Synthetic denial test.']);
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(milliseconds: 1));
     await _closeWidgetHarness(tester, h);
-    await tester.pump();
   });
 }
 

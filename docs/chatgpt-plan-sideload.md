@@ -2,7 +2,7 @@
 
 Prepared 2026-10-08. Upstream base: `miaoxworld/NativeTavern` commit
 `6dbd1ee042e994966db85693594ab61e4f4ec441`, version `0.1.17+41`.
-This personal source modification uses version `0.1.17+43`.
+This personal source modification uses version `0.1.17+44`.
 It is not an upstream, OpenAI, App Store, or TestFlight release.
 
 ## What this adds
@@ -33,27 +33,20 @@ Sources:
 - [Preview limits](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 - [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
-## Download build 43
+## Download build 44
 
-**Build 43 has been compiled and its downloaded unsigned IPA verified.**
-Sign in as the fork owner at [NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
-and open **NativeTavern ChatGPT preview (build 43, unsigned)**. Download
-`NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa` and its `.sha256` companion.
-Keep the previous build 42 separate; it does not contain the chat integration fix.
+Build 44 fixes the response-decoding check that produced
+**OpenAI returned an unexpected response type.** It is a new build; the
+previous build 43 does not contain this transport update.
 
-The IPA is 45,088,282 bytes (43.0 MiB), above this chat's
-9 MiB attachment limit. Its SHA-256 is:
-
-~~~
-d25cb1a66fd66881eb32274580b0b25e2168fd25917c984e8779cbceea0828ed
-~~~
-
-[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37817606854) passed
-**585 Flutter tests, with 2 skipped**, and completed analysis with zero
-errors. The exact compiled source is
-[`1ae5695467f76c2ffd11fb81ef8e8b584e97995d`](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/1ae5695467f76c2ffd11fb81ef8e8b584e97995d).
-The validation report separates compilation and simulated integration tests
-from unverified live account/device behavior.
+The unsigned IPA and its checksum will be saved only after the build succeeds
+in the personal fork's draft release:
+[NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
+Sign in as the fork owner and open
+**NativeTavern ChatGPT preview (build 44, unsigned)**.
+The validation report will record the actual run, compiled source, downloaded
+artifact checks, and checksum. A prepared source patch is not evidence that
+the new IPA has been built.
 
 Re-sign the complete app and its frameworks with your existing sideload tool.
 The app targets **iOS 15 or later**. Export existing data before installation;
@@ -103,6 +96,15 @@ request remains a chat error; partial text is not saved as a completed reply.
 Errors include safe codes, HTTP status, and request IDs when supplied. An
 eligibility or regional denial must be resolved with OpenAI, not repeated
 sign-in or a token pasted into another provider.
+
+The client detects documented SSE framing from the response bytes instead
+of rejecting a valid stream solely because of a mixed-case, missing, or
+incorrect MIME label. It preserves fragmented UTF-8 and still requires
+`response.completed`. JSON objects are inspected as bounded diagnostics;
+an ordinary JSON response is not substituted for a completed event stream.
+Errors retain the actual HTTP status, safe code/parameter/request ID, body
+shape, and normalized content-type label. Raw server text and MIME parameters
+are excluded. A server/account denial is still a failed request.
 
 This provider always uses streaming HTTP, even when an existing preset has
 non-streaming display selected. Temperature, top-p, output token limits,
@@ -163,8 +165,8 @@ the entire iOS project with `flutter create` over this checkout.
 Expected output **only if the build actually succeeds**:
 
 ~~~
-release/NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa
-release/NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa.sha256
+release/NativeTavern_ChatGPT_v0.1.17+44_unsigned.ipa
+release/NativeTavern_ChatGPT_v0.1.17+44_unsigned.ipa.sha256
 ~~~
 
 An unsigned IPA contains a real device application, but must be locally

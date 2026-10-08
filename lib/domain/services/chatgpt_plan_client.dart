@@ -16,13 +16,19 @@ typedef ChatGptAuthorize = Future<Uri> Function(Uri url, String state);
 
 class ChatGptPlanException implements Exception {
   const ChatGptPlanException(this.message,
-      {this.code, this.status, this.requestId, this.param, this.bodyShape});
+      {this.code,
+      this.status,
+      this.requestId,
+      this.param,
+      this.bodyShape,
+      this.contentType});
   final String message;
   final String? code;
   final int? status;
   final String? requestId;
   final String? param;
   final String? bodyShape;
+  final String? contentType;
   @override
   String toString() => [
         message,
@@ -30,7 +36,8 @@ class ChatGptPlanException implements Exception {
         if (status != null) 'HTTP $status',
         if (requestId != null) 'Request: $requestId',
         if (param != null) 'Parameter: $param',
-        if (bodyShape != null) 'Response shape: $bodyShape'
+        if (bodyShape != null) 'Response shape: $bodyShape',
+        if (contentType != null) 'Content type: $contentType'
       ].join('\n');
 }
 
@@ -481,7 +488,8 @@ class ChatGptPlanClient {
   static ChatGptPlanException safeHttpFailure(DioException e) => safeFailure(
       data: e.response?.data,
       status: e.response?.statusCode,
-      requestId: e.response?.headers.value('x-request-id'),
+      requestId: e.response?.headers['x-request-id']?.firstOrNull,
+      contentType: e.response?.headers[Headers.contentTypeHeader]?.firstOrNull,
       fallback:
           e.type == DioExceptionType.cancel ? 'Request cancelled.' : null);
 
@@ -492,6 +500,8 @@ class ChatGptPlanClient {
     int? status,
     String? requestId,
     String? fallback,
+    String? contentType,
+    String? bodyShapeOverride,
   }) {
     String? code;
     String? param;
@@ -527,6 +537,8 @@ class ChatGptPlanClient {
       'chatpass_v2_scope_not_authorized' ||
       'subscription_sharing_chatpass_v2_scope_not_authorized' =>
         'The selected connection does not have plan-usage permission. Choose Enable plan usage in AI Configuration.',
+      'chatpass_v2_invalid_authorization_context' =>
+        'OpenAI rejected the signed plan-usage context. Check the selected account and plan-usage permission in AI Configuration.',
       'invalid_authorization_context' ||
       'subscription_sharing_invalid_authorization_context' =>
         'OpenAI rejected this connection’s authorization context. Reconnect the selected account in AI Configuration.',
@@ -548,11 +560,23 @@ class ChatGptPlanClient {
         code: code,
         status: status,
         param: param,
-        bodyShape: shape,
+        bodyShape: bodyShapeOverride ?? shape,
+        contentType: contentType == null ? null : safeContentType(contentType),
         requestId: requestId != null &&
                 RegExp(r'^[A-Za-z0-9_-]{1,150}$').hasMatch(requestId)
             ? requestId
             : null);
+  }
+
+  /// The MIME label is useful diagnostic metadata; parameters and arbitrary
+  /// header text are excluded because they can contain private server data.
+  static String safeContentType(String? value) {
+    if (value == null || value.trim().isEmpty) return 'missing';
+    final mime = value.split(';').first.trim().toLowerCase();
+    return RegExp(r'^(application|text)/[a-z0-9][a-z0-9.+_-]{0,90}$')
+            .hasMatch(mime)
+        ? mime
+        : 'other';
   }
 
   static String _random() => base64UrlEncode(
