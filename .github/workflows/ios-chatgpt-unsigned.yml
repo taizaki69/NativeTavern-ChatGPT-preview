@@ -1,0 +1,72 @@
+name: iOS ChatGPT preview (unsigned)
+
+on:
+  workflow_dispatch:
+
+# Read-only checkout. The build job can write only to save draft release assets.
+# No Apple signing or OpenAI credentials are needed.
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-chatgpt-preview
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # Standard runner. This workflow refuses private repositories.
+    if: github.event.repository.private == false && github.repository != 'miaoxworld/NativeTavern'
+    permissions:
+      contents: write
+    runs-on: macos-15
+    timeout-minutes: 55
+    env:
+      COCOAPODS_DISABLE_STATS: "true"
+      FLUTTER_SUPPRESS_ANALYTICS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Install the repository's Flutter version
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch 3.44.9 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+          xcodebuild -version
+          pod --version
+
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+
+      - name: Analyze the app
+        run: flutter analyze --no-pub --no-fatal-infos --no-fatal-warnings
+
+      - name: Run mobile checks
+        run: bash tool/run_mobile_release_checks.sh
+
+      - name: Build and verify the unsigned iPhone IPA
+        env:
+          UNSIGNED_SIDELOAD: "true"
+        run: bash build_ios.sh
+
+      # Release assets avoid the pooled Actions artifact-storage allowance.
+      # Keep this a draft: no upstream release or public announcement.
+      - name: Save verified unsigned IPA as a draft release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          preview_tag="chatgpt-preview-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          gh release create "$preview_tag" \
+            release/NativeTavern_ChatGPT_*_unsigned.ipa \
+            release/NativeTavern_ChatGPT_*_unsigned.ipa.sha256 \
+            --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+            --title "NativeTavern ChatGPT preview (unsigned)" \
+            --notes-file docs/chatgpt-preview-release.md
+          echo "Unsigned IPA and checksum saved in draft release $preview_tag." >> "$GITHUB_STEP_SUMMARY"
+          echo "Re-sign locally before sideloading. No Apple or OpenAI login was used by this job." >> "$GITHUB_STEP_SUMMARY"

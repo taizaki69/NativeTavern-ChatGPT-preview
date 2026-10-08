@@ -1,3 +1,4 @@
+import 'chatgpt_plan_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -124,6 +125,7 @@ class AIConfigScreen extends ConsumerWidget {
               context, AppLocalizations.of(context)!.llmConnection),
           const _ConnectionProfilesTile(),
           const _LLMProviderTile(),
+          const ChatGptPlanTile(),
           const _ApiKeyTile(),
           const _ApiUrlTile(),
           const _ModelTile(),
@@ -299,6 +301,8 @@ class _LLMProviderTile extends ConsumerWidget {
 
   String _providerName(LLMProvider provider) {
     switch (provider) {
+      case LLMProvider.chatgptPlan:
+        return 'ChatGPT plan (preview)';
       case LLMProvider.openai:
         return 'OAI Compatible';
       case LLMProvider.claude:
@@ -350,7 +354,9 @@ class _LLMProviderTile extends ConsumerWidget {
     final hideOpenAI = _shouldHideOpenAI(context, isChinaRegion);
     return LLMProvider.values.where((provider) {
       // Hide OpenAI in China region or when language is Chinese
-      if (hideOpenAI && provider == LLMProvider.openai) {
+      if (hideOpenAI &&
+          (provider == LLMProvider.openai ||
+              provider == LLMProvider.chatgptPlan)) {
         return false;
       }
       return true;
@@ -417,6 +423,8 @@ class _LLMProviderTile extends ConsumerWidget {
 
   String _providerDescription(LLMProvider provider) {
     switch (provider) {
+      case LLMProvider.chatgptPlan:
+        return 'Sign in with ChatGPT; uses your authorized plan';
       case LLMProvider.openai:
         return '5.2';
       case LLMProvider.claude:
@@ -463,7 +471,8 @@ class _ApiKeyTileState extends ConsumerState<_ApiKeyTile> {
     final isLocal = config.provider == LLMProvider.ollama ||
         config.provider == LLMProvider.koboldCpp;
 
-    if (isLocal) return const SizedBox.shrink();
+    if (isLocal || config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
 
     return ListTile(
       leading: const Icon(Icons.key),
@@ -540,6 +549,9 @@ class _ApiUrlTile extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
 
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
+
     return ListTile(
       leading: const Icon(Icons.link),
       title: Text(AppLocalizations.of(context)!.apiUrl),
@@ -608,6 +620,8 @@ class _ModelTileState extends ConsumerState<_ModelTile> {
   @override
   Widget build(BuildContext context) {
     final config = ref.watch(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
     final modelFetchState = ref.watch(modelFetchProvider);
 
     ref.listen<ModelFetchState>(modelFetchProvider, (previous, next) {
@@ -1048,6 +1062,8 @@ class _MaxTokensTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
     final tokenValue = '${config.maxTokens}';
 
     return ListTile(
@@ -1128,6 +1144,8 @@ class _TemperatureTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
 
     return ListTile(
       leading: const Icon(Icons.thermostat),
@@ -1152,6 +1170,8 @@ class _TopPTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
 
     return ListTile(
       leading: const Icon(Icons.pie_chart),
@@ -1185,6 +1205,8 @@ class _ReasoningEffortTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
     final labels = _labels(l10n);
     final effort = ReasoningEffort.values.contains(config.reasoningEffort)
@@ -1403,6 +1425,8 @@ class _StreamingTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan)
+      return const SizedBox.shrink();
 
     return SwitchListTile(
       secondary: const Icon(Icons.stream),

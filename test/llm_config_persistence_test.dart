@@ -95,4 +95,59 @@ void main() {
       isTrue,
     );
   });
+
+  test(
+      'plan profile survives provider switching without sharing API keys or OAuth secrets',
+      () async {
+    const initial = LLMConfig(
+        provider: LLMProvider.openai,
+        model: 'fixture',
+        apiKey: 'fixture-api-key',
+        apiUrl: 'https://api.openai.com/v1');
+    SharedPreferences.setMockInitialValues(
+        {'llm_config': jsonEncode(initial.toJson())});
+    final prefs = await SharedPreferences.getInstance();
+    final database = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(database.close);
+    final notifier = LLMConfigNotifier(prefs, database);
+    addTearDown(notifier.dispose);
+    await Future<void>.delayed(const Duration(milliseconds: 20));
+    await notifier.updateProvider(LLMProvider.chatgptPlan);
+    notifier.updateChatGptProfile('oaiapp_fixture');
+    notifier.updateApiKey('must-not-save');
+    notifier.updateModel('fixture-model');
+    await notifier.flushPersistence();
+    expect(notifier.state.apiKey, '');
+    final configs = await notifier.getAllProviderConfigs();
+    expect(configs['chatgptPlan']!['chatgptProfileId'], 'oaiapp_fixture');
+    expect(configs['chatgptPlan']!['apiKey'], '');
+    await notifier.updateProvider(LLMProvider.openai);
+    expect(notifier.state.apiKey, 'fixture-api-key');
+    await notifier.updateProvider(LLMProvider.chatgptPlan);
+    expect(notifier.state.chatgptProfileId, 'oaiapp_fixture');
+    expect(notifier.state.model, 'fixture-model');
+    expect(notifier.state.apiKey, '');
+    await notifier.restoreProviderConfigs({
+      'chatgptPlan': {
+        'apiKey': 'must-not-save',
+        'access_token': 'must-not-export',
+        'refresh_token': 'must-not-export',
+        'model': 'fixture-model'
+      }
+    });
+    await notifier.forceSetProvider(LLMProvider.chatgptPlan);
+    final row = await (database.select(database.globalStates)
+          ..where((r) => r.key.equals('llm_provider_config_chatgptPlan')))
+        .getSingle();
+    expect(row.value, isNot(contains('must-not')));
+    expect(notifier.state.chatgptProfileId, 'oaiapp_fixture');
+    await notifier.applyConfig(const LLMConfig(
+        provider: LLMProvider.chatgptPlan,
+        apiKey: 'must-not-save',
+        apiUrl: 'https://attacker.invalid',
+        model: 'fixture',
+        chatgptProfileId: 'oaiapp_fixture'));
+    expect(notifier.state.apiKey, '');
+    expect(notifier.state.apiUrl, 'https://api.openai.com/v1');
+  });
 }

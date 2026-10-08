@@ -1,4 +1,7 @@
 import 'dart:async';
+import 'chatgpt_plan_client.dart';
+import 'chatgpt_plan_platform.dart';
+import 'chatgpt_plan_responses.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
@@ -24,6 +27,7 @@ enum LLMProvider {
   moonshot,
   zai,
   miniMax,
+  chatgptPlan,
 }
 
 /// LLM Response with content and optional reasoning/thinking
@@ -294,6 +298,9 @@ class LLMConfig {
   final String model;
   final String apiKey;
   final String apiUrl;
+
+  /// Issued public client ID only; OAuth tokens are kept in protected storage.
+  final String chatgptProfileId;
   final int maxTokens;
   final int contextLength;
   final double temperature;
@@ -345,6 +352,7 @@ class LLMConfig {
     required this.model,
     required this.apiKey,
     required this.apiUrl,
+    this.chatgptProfileId = '',
     this.maxTokens = 8192,
     this.contextLength = 1000000,
     this.temperature = 1,
@@ -383,6 +391,7 @@ class LLMConfig {
     String? model,
     String? apiKey,
     String? apiUrl,
+    String? chatgptProfileId,
     int? maxTokens,
     int? contextLength,
     double? temperature,
@@ -415,6 +424,7 @@ class LLMConfig {
       model: model ?? this.model,
       apiKey: apiKey ?? this.apiKey,
       apiUrl: apiUrl ?? this.apiUrl,
+      chatgptProfileId: chatgptProfileId ?? this.chatgptProfileId,
       maxTokens: maxTokens ?? this.maxTokens,
       contextLength: contextLength ?? this.contextLength,
       temperature: temperature ?? this.temperature,
@@ -450,7 +460,8 @@ class LLMConfig {
   Map<String, dynamic> toJson() => {
         'provider': provider.name,
         'model': model,
-        'apiKey': apiKey,
+        'apiKey': provider == LLMProvider.chatgptPlan ? '' : apiKey,
+        'chatgptProfileId': chatgptProfileId,
         'apiUrl': apiUrl,
         'maxTokens': maxTokens,
         'contextLength': contextLength,
@@ -486,7 +497,10 @@ class LLMConfig {
           orElse: () => LLMProvider.openai,
         ),
         model: json['model'] as String? ?? 'claude-sonnet-4.5',
-        apiKey: json['apiKey'] as String? ?? '',
+        apiKey: json['provider'] == 'chatgptPlan'
+            ? ''
+            : json['apiKey'] as String? ?? '',
+        chatgptProfileId: json['chatgptProfileId'] as String? ?? '',
         apiUrl: json['apiUrl'] as String? ?? 'https://api.openai.com/v1',
         maxTokens: json['maxTokens'] as int? ?? 8192,
         contextLength: json['contextLength'] as int? ?? 1000000,
@@ -528,15 +542,18 @@ class LLMConfig {
 /// LLM Service for generating responses
 class LLMService {
   final Dio _dio;
+  final ChatGptPlanClient _chatGptClient;
   final ContextWindowService _contextWindowService = ContextWindowService();
 
   LLMService({
     Dio? dio,
+    ChatGptPlanClient? chatGptClient,
     ExternalCallAuditRepository auditRepository =
         const NoopExternalCallAuditRepository(),
     AiDataSharingConsentRepository consentRepository =
         const AllowAllAiDataSharingConsentRepository(),
-  }) : _dio = dio ?? Dio() {
+  })  : _dio = dio ?? Dio(),
+        _chatGptClient = chatGptClient ?? ChatGptPlanPlatform.instance.client {
     _dio.interceptors.add(ExternalCallAuditInterceptor(
       repository: auditRepository,
       capabilityId: 'llm',
@@ -647,6 +664,7 @@ class LLMService {
           adapter,
           cancellationToken,
         ),
+      LLMProvider.chatgptPlan ||
       LLMProvider.ollama ||
       LLMProvider.koboldCpp =>
         throw const ToolProtocolException(
@@ -1317,6 +1335,33 @@ class LLMService {
     _log('═══════════════════════════════════════════════════════════════');
   }
 
+  Stream<LLMStreamChunk> _streamChatGptPlan(
+      List<Map<String, dynamic>> messages, LLMConfig config) async* {
+    await for (final delta in ChatGptPlanResponses(_chatGptClient, _dio).stream(
+        clientId: config.chatgptProfileId,
+        model: config.model,
+        messages: messages,
+        cancelToken: _newCancelToken())) {
+      yield LLMStreamChunk(
+          content: delta.text,
+          reasoning: delta.reasoning,
+          isReasoningChunk: delta.reasoning != null);
+    }
+  }
+
+  Future<LLMResponse> _generateChatGptPlan(
+      List<Map<String, dynamic>> messages, LLMConfig config) async {
+    final content = StringBuffer();
+    final reasoning = StringBuffer();
+    await for (final chunk in _streamChatGptPlan(messages, config)) {
+      if (chunk.content != null) content.write(chunk.content);
+      if (chunk.reasoning != null) reasoning.write(chunk.reasoning);
+    }
+    return LLMResponse(
+        content: content.toString(),
+        reasoning: reasoning.isEmpty ? null : reasoning.toString());
+  }
+
   /// Generate a response (non-streaming) - content only for backward compatibility
   Future<String> generate(
     List<Map<String, dynamic>> messages,
@@ -1374,6 +1419,8 @@ class LLMService {
     List<Map<String, dynamic>> messages,
     LLMConfig config,
   ) async {
+    if (config.provider == LLMProvider.chatgptPlan)
+      return _generateChatGptPlan(messages, config);
     final responseTokens = _contextWindowService.effectiveResponseTokenLimit(
       contextLength: config.contextLength,
       requestedTokens: config.maxTokens,
@@ -1388,6 +1435,8 @@ class LLMService {
         .messages;
     messages = _mergeConsecutiveRoles(messages, config);
     switch (config.provider) {
+      case LLMProvider.chatgptPlan:
+        return _generateChatGptPlan(messages, config);
       case LLMProvider.deepSeek:
       case LLMProvider.qwen:
       case LLMProvider.siliconFlow:
@@ -1467,6 +1516,8 @@ class LLMService {
     List<Map<String, dynamic>> messages,
     LLMConfig config,
   ) {
+    if (config.provider == LLMProvider.chatgptPlan)
+      return _streamChatGptPlan(messages, config);
     final responseTokens = _contextWindowService.effectiveResponseTokenLimit(
       contextLength: config.contextLength,
       requestedTokens: config.maxTokens,
@@ -1481,6 +1532,8 @@ class LLMService {
         .messages;
     messages = _mergeConsecutiveRoles(messages, config);
     switch (config.provider) {
+      case LLMProvider.chatgptPlan:
+        return _streamChatGptPlan(messages, config);
       case LLMProvider.deepSeek:
       case LLMProvider.qwen:
       case LLMProvider.siliconFlow:
@@ -1507,11 +1560,20 @@ class LLMService {
   /// Returns a success message or throws an exception with error details
   Future<String> testConnection(LLMConfig config) async {
     _log('Testing connection to ${config.provider.name} at ${config.apiUrl}');
-    _log(
-        'API Key: ${config.apiKey.isEmpty ? "(empty)" : "${config.apiKey.substring(0, 8)}..."}');
+    if (config.provider != LLMProvider.chatgptPlan)
+      _log(
+          'API Key: ${config.apiKey.isEmpty ? "(empty)" : "${config.apiKey.substring(0, 8)}..."}');
 
     try {
       switch (config.provider) {
+        case LLMProvider.chatgptPlan:
+          final result = await _generateChatGptPlan([
+            {'role': 'user', 'content': 'Reply with exactly: Connected.'}
+          ], config);
+          if (result.content.isEmpty)
+            throw const ChatGptPlanException(
+                'The completed ChatGPT test response was empty.');
+          return 'ChatGPT plan request completed.';
         case LLMProvider.openRouter:
         case LLMProvider.deepSeek:
         case LLMProvider.qwen:
@@ -1795,6 +1857,10 @@ class LLMService {
 
     try {
       switch (config.provider) {
+        case LLMProvider.chatgptPlan:
+          return (await _chatGptClient.models(config.chatgptProfileId))
+              .map((m) => m.slug)
+              .toList();
         case LLMProvider.openRouter:
         case LLMProvider.deepSeek:
         case LLMProvider.qwen:
@@ -1908,10 +1974,14 @@ class LLMService {
           return [];
       }
     } catch (e, stackTrace) {
+      if (config.provider == LLMProvider.chatgptPlan) rethrow;
       _log('Error fetching models: $e', stackTrace: stackTrace);
       return [];
     }
   }
+
+  Future<List<ChatGptModel>> getChatGptModels(LLMConfig config) =>
+      _chatGptClient.models(config.chatgptProfileId);
 
   /// Get upstream providers available for the selected OpenRouter model.
   Future<List<String>> getOpenRouterProviders(LLMConfig config) async {

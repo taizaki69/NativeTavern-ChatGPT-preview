@@ -257,7 +257,10 @@ final class ToolGenerationLoop {
       LLMProvider.zai ||
       LLMProvider.miniMax =>
         const OpenAiToolCallingAdapter(),
-      LLMProvider.ollama || LLMProvider.koboldCpp => null,
+      LLMProvider.chatgptPlan ||
+      LLMProvider.ollama ||
+      LLMProvider.koboldCpp =>
+        null,
     };
   }
 

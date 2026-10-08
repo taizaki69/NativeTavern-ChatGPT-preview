@@ -74,6 +74,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
   /// Get default URL for a provider
   static String _getDefaultUrl(LLMProvider provider) {
     switch (provider) {
+      case LLMProvider.chatgptPlan:
       case LLMProvider.openai:
         return 'https://api.openai.com/v1';
       case LLMProvider.claude:
@@ -106,6 +107,8 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
   /// Get default model for a provider
   static String _getDefaultModel(LLMProvider provider) {
     switch (provider) {
+      case LLMProvider.chatgptPlan:
+        return ''; // Discover eligible models from the selected account.
       case LLMProvider.openai:
         return 'gpt-5.2';
       case LLMProvider.claude:
@@ -136,6 +139,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
   }
 
   static String _normalizeApiUrl(LLMProvider provider, String apiUrl) {
+    if (provider == LLMProvider.chatgptPlan) return 'https://api.openai.com/v1';
     var normalized = apiUrl.trim();
     while (normalized.endsWith('/')) {
       normalized = normalized.substring(0, normalized.length - 1);
@@ -167,7 +171,8 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
     final config = snapshot ?? state;
     final key = _getProviderConfigKey(config.provider);
     final providerConfig = {
-      'apiKey': config.apiKey,
+      'apiKey': config.provider == LLMProvider.chatgptPlan ? '' : config.apiKey,
+      'chatgptProfileId': config.chatgptProfileId,
       'apiUrl': config.apiUrl,
       'model': config.model,
     };
@@ -212,7 +217,10 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
         _log(
             'Loaded saved config for provider ${provider.name}: apiUrl=${map['apiUrl']}, model=${map['model']}');
         return {
-          'apiKey': map['apiKey'] as String? ?? '',
+          'apiKey': provider == LLMProvider.chatgptPlan
+              ? ''
+              : map['apiKey'] as String? ?? '',
+          'chatgptProfileId': map['chatgptProfileId'] as String? ?? '',
           'apiUrl': _normalizeApiUrl(
             provider,
             map['apiUrl'] as String? ?? _getDefaultUrl(provider),
@@ -228,6 +236,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
     _log('Using default config for provider ${provider.name}');
     return {
       'apiKey': '',
+      'chatgptProfileId': '',
       'apiUrl': _getDefaultUrl(provider),
       'model': _getDefaultModel(provider),
     };
@@ -349,6 +358,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
         apiKey: newProviderConfig['apiKey'],
         apiUrl: newProviderConfig['apiUrl'],
         model: newProviderConfig['model'],
+        chatgptProfileId: newProviderConfig['chatgptProfileId'],
       );
       await _saveConfig(state);
       await _saveCurrentProviderConfig(state);
@@ -379,6 +389,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
         apiKey: keepCurrentKey ? state.apiKey : newProviderConfig['apiKey'],
         apiUrl: newProviderConfig['apiUrl'],
         model: newProviderConfig['model'],
+        chatgptProfileId: newProviderConfig['chatgptProfileId'],
       );
       await _saveConfig(state);
       await _saveCurrentProviderConfig(state);
@@ -388,7 +399,13 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
     });
   }
 
+  void updateChatGptProfile(String clientId) {
+    state = state.copyWith(chatgptProfileId: clientId, apiKey: '', model: '');
+    _enqueuePersistence(providerConfig: true);
+  }
+
   void updateApiKey(String apiKey) {
+    if (state.provider == LLMProvider.chatgptPlan) return;
     state = state.copyWith(apiKey: apiKey);
     _enqueuePersistence(providerConfig: true);
   }
@@ -504,6 +521,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
   }
 
   Future<String> _resolveAppliedApiKey(LLMConfig config) async {
+    if (config.provider == LLMProvider.chatgptPlan) return "";
     if (config.apiKey.trim().isNotEmpty) return config.apiKey;
 
     final saved = await _loadProviderConfig(config.provider);
@@ -601,6 +619,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
         // Ensure we store concrete values, not nulls
         result[provider.name] = {
           'apiKey': config['apiKey'],
+          'chatgptProfileId': config['chatgptProfileId'],
           'apiUrl': config['apiUrl'],
           'model': config['model'],
         };
@@ -632,7 +651,17 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
 
           final key = _getProviderConfigKey(provider);
           final current = await _loadProviderConfig(provider);
-          final restored = <String, dynamic>{...config};
+          final restored = provider == LLMProvider.chatgptPlan
+              ? <String, dynamic>{
+                  'apiKey': '',
+                  'apiUrl': _getDefaultUrl(provider),
+                  'model': config['model'] as String? ?? '',
+                  'chatgptProfileId': config['chatgptProfileId'] as String? ??
+                      current['chatgptProfileId'] ??
+                      '',
+                }
+              : <String, dynamic>{...config};
+          if (provider == LLMProvider.chatgptPlan) restored["apiKey"] = "";
           // Presets/backups intentionally omit secrets. Never turn an omitted
           // key into an empty key when applying one of those snapshots.
           if (!restored.containsKey('apiKey') || restored['apiKey'] == null) {
@@ -1239,22 +1268,26 @@ enum ModelFetchStatus { idle, loading, success, error }
 class ModelFetchState {
   final ModelFetchStatus status;
   final List<String> models;
+  final Map<String, String> modelNames;
   final String? errorMessage;
 
   const ModelFetchState({
     this.status = ModelFetchStatus.idle,
     this.models = const [],
+    this.modelNames = const {},
     this.errorMessage,
   });
 
   ModelFetchState copyWith({
     ModelFetchStatus? status,
     List<String>? models,
+    Map<String, String>? modelNames,
     String? errorMessage,
   }) {
     return ModelFetchState(
       status: status ?? this.status,
       models: models ?? this.models,
+      modelNames: modelNames ?? this.modelNames,
       errorMessage: errorMessage,
     );
   }
@@ -1263,10 +1296,12 @@ class ModelFetchState {
 /// Model fetch notifier
 class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
   final LLMService _llmService;
+  int _requestGeneration = 0;
 
   ModelFetchNotifier(this._llmService) : super(const ModelFetchState());
 
   Future<void> fetchModels(LLMConfig config) async {
+    final generation = ++_requestGeneration;
     _log('Starting model fetch for ${config.provider.name}');
     _log('API URL: ${config.apiUrl}');
 
@@ -1274,7 +1309,12 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
 
     try {
       _log('Calling LLMService.getAvailableModels...');
-      final models = await _llmService.getAvailableModels(config);
+      final catalog = config.provider == LLMProvider.chatgptPlan
+          ? await _llmService.getChatGptModels(config)
+          : null;
+      final models = catalog?.map((m) => m.slug).toList() ??
+          await _llmService.getAvailableModels(config);
+      if (!mounted || generation != _requestGeneration) return;
       _log('Received ${models.length} models');
 
       if (models.isNotEmpty) {
@@ -1283,12 +1323,19 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
         state = ModelFetchState(
           status: ModelFetchStatus.success,
           models: models,
+          modelNames: catalog == null
+              ? const {}
+              : {for (final m in catalog) m.slug: m.name},
         );
         _log('Model fetch completed successfully');
       } else {
         // Provide helpful message based on provider
         String message;
         switch (config.provider) {
+          case LLMProvider.chatgptPlan:
+            message =
+                'No models are available for this ChatGPT plan. Check account eligibility and plan permissions.';
+            break;
           case LLMProvider.openRouter:
           case LLMProvider.gemini:
           case LLMProvider.deepSeek:
@@ -1319,6 +1366,7 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
         );
       }
     } catch (e, stackTrace) {
+      if (!mounted || generation != _requestGeneration) return;
       String errorMessage = e.toString();
       if (errorMessage.startsWith('Exception: ')) {
         errorMessage = errorMessage.substring(11);
@@ -1333,6 +1381,7 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
   }
 
   void reset() {
+    _requestGeneration++;
     _log('Resetting model fetch state');
     state = const ModelFetchState();
   }

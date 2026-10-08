@@ -610,6 +610,8 @@ final class LongTermMemoryGovernanceService {
 }
 
 bool isMemoryLlmConfigured(LLMConfig config) {
+  if (config.provider == LLMProvider.chatgptPlan &&
+      config.chatgptProfileId.isEmpty) return false;
   final uri = Uri.tryParse(config.apiUrl.trim());
   if (uri == null ||
       (uri.scheme != 'http' && uri.scheme != 'https') ||
@@ -619,7 +621,8 @@ bool isMemoryLlmConfigured(LLMConfig config) {
   if (config.provider != LLMProvider.koboldCpp && config.model.trim().isEmpty) {
     return false;
   }
-  final keyOptional = config.provider == LLMProvider.ollama ||
+  final keyOptional = config.provider == LLMProvider.chatgptPlan ||
+      config.provider == LLMProvider.ollama ||
       config.provider == LLMProvider.koboldCpp ||
       config.provider == LLMProvider.openAICompatible;
   return keyOptional || config.apiKey.trim().isNotEmpty;

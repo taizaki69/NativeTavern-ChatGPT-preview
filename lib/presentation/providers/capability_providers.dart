@@ -93,10 +93,13 @@ abstract class CapabilityInputFactory {
   }) {
     final llmLocalProvider = llm.provider == LLMProvider.ollama ||
         llm.provider == LLMProvider.koboldCpp;
-    final llmNeedsKey =
-        !llmLocalProvider && llm.provider != LLMProvider.openAICompatible;
+    final llmNeedsKey = !llmLocalProvider &&
+        llm.provider != LLMProvider.openAICompatible &&
+        llm.provider != LLMProvider.chatgptPlan;
     final llmNeedsModel = llm.provider != LLMProvider.koboldCpp;
-    final llmConfigured = _validHttpEndpoint(llm.apiUrl) &&
+    final llmConfigured = (llm.provider != LLMProvider.chatgptPlan ||
+            llm.chatgptProfileId.isNotEmpty) &&
+        _validHttpEndpoint(llm.apiUrl) &&
         (!llmNeedsModel || llm.model.trim().isNotEmpty) &&
         (!llmNeedsKey || llm.apiKey.trim().isNotEmpty);
 

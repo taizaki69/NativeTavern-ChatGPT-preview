@@ -12,6 +12,8 @@ BUILD_FOR_DEVICE="${BUILD_FOR_DEVICE:-false}"
 DEVICE_ID="${DEVICE_ID:-}"
 POD_REPO_UPDATE="${POD_REPO_UPDATE:-false}"
 CHECK_ONLY="${CHECK_ONLY:-false}"
+# Personal sideload build: no team, certificate, provisioning profile or store upload.
+UNSIGNED_SIDELOAD="${UNSIGNED_SIDELOAD:-false}"
 
 APP_DELEGATE="ios/Runner/AppDelegate.swift"
 INFO_PLIST="ios/Runner/Info.plist"
@@ -128,7 +130,14 @@ validate_app_bundle() {
     | grep -F 'com.nativetavern/live2d_render_scale' >/dev/null \
     || fail "Built Dart binary is missing the Live2D render-scale channel"
 
-  codesign --verify --deep --strict "$app_path"
+  if [[ "$UNSIGNED_SIDELOAD" == 'true' ]]; then
+    lipo -archs "$app_path/$executable" | grep -w 'arm64' >/dev/null \
+      || fail "Unsigned app is not an arm64 iPhone device build"
+    [[ ! -e "$app_path/embedded.mobileprovision" ]] \
+      || fail "Unsigned app unexpectedly includes a provisioning profile"
+  else
+    codesign --verify --deep --strict "$app_path"
+  fi
   printf 'Validated app: %s %s (%s), iOS %s+\n' \
     "$bundle_id" "$version" "$build" "$minimum_os"
 }
@@ -146,7 +155,12 @@ validate_ipa() {
   validate_app_bundle "$app_path"
 }
 
-for command_name in git flutter pod xcodebuild plutil unzip strings nm codesign shasum; do
+[[ "$(uname -s)" == 'Darwin' ]] \
+  || fail "iOS packaging requires macOS with Xcode; this host is $(uname -s)"
+[[ "$UNSIGNED_SIDELOAD" != 'true' || "$BUILD_FOR_DEVICE" != 'true' ]] \
+  || fail "UNSIGNED_SIDELOAD and BUILD_FOR_DEVICE cannot be combined"
+
+for command_name in git flutter pod xcodebuild plutil unzip strings nm codesign shasum lipo ditto zip; do
   require_command "$command_name"
 done
 
@@ -162,6 +176,34 @@ IOS_SOURCE_SNAPSHOT="$(snapshot_critical_ios_files)"
 
 if [[ "$CHECK_ONLY" == 'true' ]]; then
   printf 'Preflight passed for NativeTavern %s.\n' "$VERSION"
+  exit 0
+fi
+
+if [[ "$UNSIGNED_SIDELOAD" == 'true' ]]; then
+  TEMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/nativetavern-ios-unsigned.XXXXXX")"
+  trap 'rm -rf -- "$TEMP_DIR"' EXIT
+  FINAL_IPA="$REPO_ROOT/release/NativeTavern_ChatGPT_v${VERSION}_unsigned.ipa"
+  [[ ! -e "$FINAL_IPA" ]] || fail "Artifact already exists: $FINAL_IPA"
+  printf '=== Building unsigned NativeTavern ChatGPT %s ===\n' "$VERSION"
+  flutter clean
+  flutter pub get --enforce-lockfile
+  flutter build ios --release --no-codesign
+  assert_critical_ios_files_unchanged
+  APP_PATH="$REPO_ROOT/build/ios/iphoneos/Runner.app"
+  [[ -d "$APP_PATH" ]] || fail "Flutter did not produce the iPhone app"
+  mkdir -p "$TEMP_DIR/Payload" "$REPO_ROOT/release"
+  ditto "$APP_PATH" "$TEMP_DIR/Payload/Runner.app"
+  # Only modify the temporary copy. Any stale signatures are invalid after re-signing.
+  find "$TEMP_DIR/Payload" -type d -name _CodeSignature -prune -exec rm -rf -- {} +
+  find "$TEMP_DIR/Payload" -type f -name embedded.mobileprovision -delete
+  validate_app_bundle "$TEMP_DIR/Payload/Runner.app"
+  (cd "$TEMP_DIR" && zip -qry "$FINAL_IPA" Payload)
+  validate_ipa "$FINAL_IPA"
+  assert_critical_ios_files_unchanged
+  printf 'IPA (unsigned; re-sign before installation): %s\n' "$FINAL_IPA"
+  (cd "$REPO_ROOT/release" && shasum -a 256 "$(basename "$FINAL_IPA")" > "$(basename "$FINAL_IPA").sha256")
+  printf 'SHA-256: '
+  awk '{print $1}' "$FINAL_IPA.sha256"
   exit 0
 fi
 
