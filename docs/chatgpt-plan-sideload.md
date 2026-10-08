@@ -33,7 +33,34 @@ Sources:
 - [Preview limits](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 - [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
-## Use it after building and sideloading
+## Download this verified build
+
+[Download the IPA and checksum from the personal fork's draft release](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases/tag/untagged-f0544c2bffdabc1d643b).
+Sign into the GitHub account that owns the fork to access the draft. Download
+`NativeTavern_ChatGPT_v0.1.17+42_unsigned.ipa` and its `.sha256` companion. The verified IPA is
+**45,083,569 bytes** (about 43.0 MiB).
+
+This build passed the full Flutter suite (**566 tests, 2 skipped**), analysis,
+native compilation, and IPA inspection. Its compiled source is
+[`e7ac02ec352db8bafd46cbe1c96232ec6016f690`](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/e7ac02ec352db8bafd46cbe1c96232ec6016f690).
+[Successful CI run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37800965945).
+
+SHA-256:
+
+~~~text
+331f91cdc803f9bfadce1850dd1884a1fc097afbdccc84ceac0c9f882e4c8db0
+~~~
+
+Re-sign the complete app and its frameworks with your existing sideload tool,
+then install it. The app targets **iOS 15 or later**. Export existing app data
+before installation; your signing tool's bundle-ID/team handling determines
+whether it replaces the existing app or creates separate storage.
+
+The source bundle and this guide accompany the verified build. Their final
+source commit may contain documentation updates after the compiled commit;
+the manifest identifies both commits, and those later changes are docs only.
+
+## Use it after sideloading
 
 1. Keep an export of the data you want to preserve from the existing app.
    Re-signing with another bundle ID/team may create a separate app and
@@ -92,7 +119,9 @@ tokens, account data, certificates, provisioning profiles, or a compiled IPA.
 
 iOS compilation requires macOS and Xcode. Linux Mint can run source checks and
 tests, but cannot compile this iOS application. Use Flutter **3.44.9** (the
-repository's minimum), installed Xcode with its iOS SDK, and CocoaPods.
+repository's minimum), installed Xcode with its iOS SDK, and CocoaPods **1.17.0**.
+The native lockfile was generated with that CocoaPods version; the workflow
+checks it before building so a runner update cannot silently rewrite the lockfile.
 See [Flutter's iOS setup](https://docs.flutter.dev/platform-integration/ios/setup).
 
 From the patched repository:
