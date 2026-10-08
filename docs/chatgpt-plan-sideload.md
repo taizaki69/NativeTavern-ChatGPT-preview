@@ -104,6 +104,11 @@ The repository's iOS build script has an explicit unsigned mode. It checks
 the tracked native source, versions, iOS 15 minimum, arm64 device architecture,
 Live2D/Spine linkage, and final IPA contents. It packages only after those checks.
 The standard signed release and device-install modes remain available.
+The patch also restores standard iOS workspace, shared-scheme, bridge,
+configuration, storyboard, and asset files missing from the upstream checkout.
+They are based on the pinned Flutter template and the repository's existing
+`icon.png`; the native AppDelegate and project are preserved. Do not recreate
+the entire iOS project with `flutter create` over this checkout.
 
 Expected output **only if the build actually succeeds**:
 

@@ -21,6 +21,17 @@ PODFILE="ios/Podfile"
 PODFILE_LOCK="ios/Podfile.lock"
 PBXPROJ="ios/Runner.xcodeproj/project.pbxproj"
 
+REQUIRED_IOS_SUPPORT_FILES=(
+  "ios/Runner.xcworkspace/contents.xcworkspacedata"
+  "ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme"
+  "ios/Flutter/Debug.xcconfig"
+  "ios/Flutter/Release.xcconfig"
+  "ios/Runner/Runner-Bridging-Header.h"
+  "ios/Runner/Base.lproj/Main.storyboard"
+  "ios/Runner/Base.lproj/LaunchScreen.storyboard"
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json"
+)
+
 CRITICAL_IOS_FILES=(
   "$APP_DELEGATE"
   "$INFO_PLIST"
@@ -55,7 +66,7 @@ read_project_team_id() {
 validate_source_project() {
   printf '%s\n' '=== Validating committed iOS project ==='
 
-  for path in "${CRITICAL_IOS_FILES[@]}"; do
+  for path in "${CRITICAL_IOS_FILES[@]}" "${REQUIRED_IOS_SUPPORT_FILES[@]}"; do
     require_file "$path"
     git ls-files --error-unmatch "$path" >/dev/null 2>&1 \
       || fail "Critical iOS release file is not tracked by Git: $path"
