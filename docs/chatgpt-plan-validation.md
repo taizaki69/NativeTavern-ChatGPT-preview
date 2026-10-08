@@ -89,8 +89,9 @@ Live2D/Spine checks was used.
 - This is an **unsigned device IPA** requiring local re-signing. No Apple
   signing certificate or installable Apple-signed IPA was produced.
 
-[Draft release with actual downloads](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases/tag/untagged-f0544c2bffdabc1d643b).
-It requires the owning GitHub account's login. The source package includes
+[Draft release with actual downloads](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
+Sign in with the owning GitHub account and open
+**NativeTavern ChatGPT preview (unsigned)**. The source package includes
 `ipa-verification.json`, and the separate GitHub build report records the
 job, test counts, source commit, release target, and checksum evidence.
 

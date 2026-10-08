@@ -35,8 +35,9 @@ Sources:
 
 ## Download this verified build
 
-[Download the IPA and checksum from the personal fork's draft release](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases/tag/untagged-f0544c2bffdabc1d643b).
-Sign into the GitHub account that owns the fork to access the draft. Download
+[Download the IPA and checksum from the personal fork's draft release](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
+Sign into the GitHub account that owns the fork and open
+**NativeTavern ChatGPT preview (unsigned)**. Download
 `NativeTavern_ChatGPT_v0.1.17+42_unsigned.ipa` and its `.sha256` companion. The verified IPA is
 **45,083,569 bytes** (about 43.0 MiB).
 
