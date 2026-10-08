@@ -1,0 +1,39 @@
+name: iOS native configuration inspection
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    if: github.event.repository.private == false && github.repository != 'miaoxworld/NativeTavern'
+    runs-on: macos-15
+    timeout-minutes: 15
+    env:
+      COCOAPODS_DISABLE_STATS: "true"
+      FLUTTER_SUPPRESS_ANALYTICS: "true"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Install pinned Flutter
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch 3.44.9 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/flutter/bin/flutter" --version
+      - name: Resolve locked dependencies
+        run: flutter pub get --enforce-lockfile
+      - name: Prepare native configuration without compiling or signing
+        run: flutter build ios --release --no-codesign --config-only
+      - name: Print generated changes to tracked iOS source
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "This inspection produces no IPA and does not run the app or sign in."
+          git --no-pager diff --binary -- ios

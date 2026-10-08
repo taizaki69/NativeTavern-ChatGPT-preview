@@ -102,8 +102,10 @@ snapshot_critical_ios_files() {
 assert_critical_ios_files_unchanged() {
   local after_snapshot
   after_snapshot="$(snapshot_critical_ios_files)"
-  [[ "$after_snapshot" == "$IOS_SOURCE_SNAPSHOT" ]] \
-    || fail "The build changed committed iOS source files; refusing to package"
+  if [[ "$after_snapshot" != "$IOS_SOURCE_SNAPSHOT" ]]; then
+    git --no-pager diff -- "${CRITICAL_IOS_FILES[@]}" >&2
+    fail "The build changed committed iOS source files; refusing to package"
+  fi
 }
 
 validate_app_bundle() {

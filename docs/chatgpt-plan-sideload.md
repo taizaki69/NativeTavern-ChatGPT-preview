@@ -76,9 +76,13 @@ machine with Git:
 git clone https://github.com/miaoxworld/NativeTavern.git NativeTavern-chatgpt
 cd NativeTavern-chatgpt
 git checkout --detach 6dbd1ee042e994966db85693594ab61e4f4ec441
-git apply --check /path/to/NativeTavern-chatgpt.patch
-git apply /path/to/NativeTavern-chatgpt.patch
+git apply --index --check /path/to/NativeTavern-chatgpt.patch
+git apply --index /path/to/NativeTavern-chatgpt.patch
 ~~~
+
+`--index` stages the restored iOS support files as well as the code changes.
+This is required because the build script checks that native project files are
+tracked; it does not commit or push anything.
 
 The source archive also contains the complete modified files for inspection.
 Keep the original license and third-party notices. The patch does not include
