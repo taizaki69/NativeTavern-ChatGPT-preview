@@ -25,6 +25,8 @@ class AIConfigScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final activePreset = ref.watch(activeAIPresetProvider);
+    final isPlan =
+        ref.watch(llmConfigProvider).provider == LLMProvider.chatgptPlan;
 
     return Scaffold(
       appBar: AppBar(
@@ -128,7 +130,7 @@ class AIConfigScreen extends ConsumerWidget {
           const ChatGptPlanTile(),
           const _ApiKeyTile(),
           const _ApiUrlTile(),
-          const _ModelTile(),
+          const LLMModelTile(),
           const _OpenRouterProviderTile(),
           const _ConnectionTestTile(),
 
@@ -136,21 +138,30 @@ class AIConfigScreen extends ConsumerWidget {
           _buildSectionHeader(
               context, AppLocalizations.of(context)!.generationSettings),
           const _ContextLengthTile(),
-          const _MaxTokensTile(),
-          const _TemperatureTile(),
-          const _TopPTile(),
-          const _ReasoningEffortTile(),
-          const _PromptCacheTile(),
-          const _MergeRolesTile(),
+          if (!isPlan) ...[
+            const _MaxTokensTile(),
+            const _TemperatureTile(),
+            const _TopPTile(),
+            const _ReasoningEffortTile(),
+            const _PromptCacheTile(),
+            const _MergeRolesTile(),
+          ] else
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                  'ChatGPT manages generation parameters. Select your model above; streaming display remains configurable.'),
+            ),
           const _StreamingTile(),
-          ListTile(
-            leading: const Icon(Icons.tune),
-            title: Text(AppLocalizations.of(context)!.advancedSamplerSettings),
-            subtitle:
-                Text(AppLocalizations.of(context)!.fullControlOverSampling),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.advancedSettings),
-          ),
+          if (!isPlan)
+            ListTile(
+              leading: const Icon(Icons.tune),
+              title:
+                  Text(AppLocalizations.of(context)!.advancedSamplerSettings),
+              subtitle:
+                  Text(AppLocalizations.of(context)!.fullControlOverSampling),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(AppRoutes.advancedSettings),
+            ),
 
           const SizedBox(height: 32),
         ],
@@ -609,101 +620,185 @@ class _ApiUrlTile extends ConsumerWidget {
   }
 }
 
-class _ModelTile extends ConsumerStatefulWidget {
-  const _ModelTile();
+/// Shared model selector for API and protected ChatGPT plan connections.
+class LLMModelTile extends ConsumerStatefulWidget {
+  const LLMModelTile({super.key});
 
   @override
-  ConsumerState<_ModelTile> createState() => _ModelTileState();
+  ConsumerState<LLMModelTile> createState() => _LLMModelTileState();
 }
 
-class _ModelTileState extends ConsumerState<_ModelTile> {
+class _LLMModelTileState extends ConsumerState<LLMModelTile> {
+  bool _modelsRequested = false;
+
+  bool _hasPlanGrant(LLMConfig config) {
+    return ref.read(chatGptAccountsProvider).valueOrNull?.any((a) =>
+            a.clientId == config.chatgptProfileId &&
+            a.connected &&
+            a.sharing) ==
+        true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final config = ref.watch(llmConfigProvider);
-    if (config.provider == LLMProvider.chatgptPlan)
-      return const SizedBox.shrink();
-    final modelFetchState = ref.watch(modelFetchProvider);
-
-    ref.listen<ModelFetchState>(modelFetchProvider, (previous, next) {
-      if (next.status == ModelFetchStatus.success && next.models.isNotEmpty) {
+    final catalog = ref.watch(modelFetchProvider);
+    final isPlan = config.provider == LLMProvider.chatgptPlan;
+    if (isPlan) {
+      final accounts = ref.watch(chatGptAccountsProvider);
+      final authorized = accounts.valueOrNull?.any((a) =>
+              a.clientId == config.chatgptProfileId &&
+              a.connected &&
+              a.sharing) ==
+          true;
+      if (authorized &&
+          (!catalog.isFor(config) || catalog.status == ModelFetchStatus.idle)) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _showModelListSheet(context, ref, config, next.models);
-          }
-        });
-      } else if (next.status == ModelFetchStatus.error) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(next.errorMessage ??
-                    AppLocalizations.of(context)!.failedToFetchModels),
-                backgroundColor: Colors.red,
-              ),
-            );
+          if (!mounted) return;
+          final current = ref.read(llmConfigProvider);
+          if (current.hasSameModelConnection(config) &&
+              _hasPlanGrant(current)) {
+            ref.read(modelFetchProvider.notifier).ensureModels(current);
           }
         });
       }
-    });
-
-    return ListTile(
-      leading: const Icon(Icons.memory),
-      title: Text(AppLocalizations.of(context)!.model),
-      subtitle: _buildSubtitle(config, modelFetchState),
-      trailing: modelFetchState.status == ModelFetchStatus.loading
-          ? const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.arrow_drop_down),
-      onTap: modelFetchState.status == ModelFetchStatus.loading
-          ? null
-          : () => _showModelPicker(context, ref, config, modelFetchState),
-    );
-  }
-
-  Widget _buildSubtitle(LLMConfig config, ModelFetchState modelFetchState) {
-    if (modelFetchState.status == ModelFetchStatus.loading) {
-      return Text(AppLocalizations.of(context)!.fetchingModels);
     }
-    return Text(config.model.isEmpty
-        ? AppLocalizations.of(context)!.notSet
-        : config.model);
+    ref.listen<ModelFetchState>(modelFetchProvider, (previous, next) {
+      final current = ref.read(llmConfigProvider);
+      if (!next.isFor(current)) {
+        _modelsRequested = false;
+        return;
+      }
+      if (next.status == ModelFetchStatus.success &&
+          next.models.isNotEmpty &&
+          (current.provider != LLMProvider.chatgptPlan || _modelsRequested)) {
+        _modelsRequested = false;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted &&
+              ref.read(llmConfigProvider).hasSameModelConnection(current)) {
+            _showModelListSheet(
+                context, ref, ref.read(llmConfigProvider), next);
+          }
+        });
+      } else if (next.status == ModelFetchStatus.error) {
+        _modelsRequested = false;
+        if (current.provider != LLMProvider.chatgptPlan) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted)
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(next.errorMessage ??
+                    AppLocalizations.of(context)!.failedToFetchModels),
+                backgroundColor: Colors.red,
+              ));
+          });
+        }
+      }
+    });
+    final loading =
+        catalog.isFor(config) && catalog.status == ModelFetchStatus.loading;
+    final hasCatalog =
+        catalog.isFor(config) && catalog.status == ModelFetchStatus.success;
+    final unavailable = isPlan &&
+        hasCatalog &&
+        config.model.isNotEmpty &&
+        !catalog.models.contains(config.model);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      ListTile(
+        key: const ValueKey('llm-model'),
+        leading: const Icon(Icons.memory),
+        title: Text(AppLocalizations.of(context)!.model),
+        subtitle: Text(loading
+            ? AppLocalizations.of(context)!.fetchingModels
+            : config.model.isEmpty
+                ? AppLocalizations.of(context)!.notSet
+                : (hasCatalog ? catalog.modelNames[config.model] : null) ??
+                    config.model),
+        trailing: loading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2))
+            : const Icon(Icons.arrow_drop_down),
+        onTap: loading
+            ? null
+            : () => _showModelPicker(context, ref, config, catalog),
+      ),
+      if (isPlan &&
+          catalog.isFor(config) &&
+          catalog.status == ModelFetchStatus.error)
+        Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(catalog.errorMessage ?? 'Could not load ChatGPT models.',
+                    key: const ValueKey('model-catalog-error')),
+                TextButton.icon(
+                  onPressed: () =>
+                      ref.read(modelFetchProvider.notifier).fetchModels(config),
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry models'),
+                ),
+              ],
+            )),
+      if (unavailable)
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+              'The saved model is no longer in this account’s catalog. Choose an available model.'),
+        ),
+    ]);
   }
 
   void _showModelPicker(BuildContext context, WidgetRef ref, LLMConfig config,
-      ModelFetchState modelFetchState) {
-    if (modelFetchState.status == ModelFetchStatus.success &&
-        modelFetchState.models.isNotEmpty) {
-      _showModelListSheet(context, ref, config, modelFetchState.models);
+      ModelFetchState catalog) {
+    if (catalog.isFor(config) &&
+        catalog.status == ModelFetchStatus.success &&
+        catalog.models.isNotEmpty) {
+      _showModelListSheet(context, ref, config, catalog);
+    } else if (config.provider == LLMProvider.chatgptPlan) {
+      if (!_hasPlanGrant(config)) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(ref.read(chatGptConnectionIssueProvider) ??
+                'Authorize ChatGPT plan usage first.')));
+        return;
+      }
+      _modelsRequested = true;
+      ref.read(modelFetchProvider.notifier).fetchModels(config);
     } else {
       _showModelInputDialog(context, ref, config);
     }
   }
 
   void _showModelListSheet(BuildContext context, WidgetRef ref,
-      LLMConfig config, List<String> models) {
+      LLMConfig config, ModelFetchState catalog) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       builder: (sheetContext) => _ModelSelectionSheet(
-        models: models,
+        models: catalog.models,
+        modelNames: catalog.modelNames,
         selectedModel: config.model,
         onModelSelected: (model) {
-          ref.read(llmConfigProvider.notifier).updateModel(model);
+          if (ref.read(llmConfigProvider).hasSameModelConnection(config)) {
+            ref.read(llmConfigProvider.notifier).updateModel(model);
+          }
           Navigator.pop(sheetContext);
         },
         onRefresh: () {
           Navigator.pop(sheetContext);
-          final currentConfig = ref.read(llmConfigProvider);
-          ref.read(modelFetchProvider.notifier).fetchModels(currentConfig);
+          _modelsRequested = true;
+          ref
+              .read(modelFetchProvider.notifier)
+              .fetchModels(ref.read(llmConfigProvider));
         },
-        onManualEntry: () {
-          Navigator.pop(sheetContext);
-          final currentConfig = ref.read(llmConfigProvider);
-          _showManualInputDialog(context, ref, currentConfig);
-        },
+        onManualEntry: config.provider == LLMProvider.chatgptPlan
+            ? null
+            : () {
+                Navigator.pop(sheetContext);
+                _showManualInputDialog(
+                    context, ref, ref.read(llmConfigProvider));
+              },
       ),
     );
   }
@@ -1443,17 +1538,19 @@ class _StreamingTile extends ConsumerWidget {
 /// Model selection sheet with search functionality
 class _ModelSelectionSheet extends StatefulWidget {
   final List<String> models;
+  final Map<String, String> modelNames;
   final String selectedModel;
   final void Function(String model) onModelSelected;
   final VoidCallback onRefresh;
-  final VoidCallback onManualEntry;
+  final VoidCallback? onManualEntry;
 
   const _ModelSelectionSheet({
     required this.models,
+    this.modelNames = const {},
     required this.selectedModel,
     required this.onModelSelected,
     required this.onRefresh,
-    required this.onManualEntry,
+    this.onManualEntry,
   });
 
   @override
@@ -1485,7 +1582,9 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
         _filteredModels = widget.models;
       } else {
         _filteredModels = widget.models
-            .where((model) => model.toLowerCase().contains(query))
+            .where((model) =>
+                model.toLowerCase().contains(query) ||
+                (widget.modelNames[model] ?? '').toLowerCase().contains(query))
             .toList();
       }
     });
@@ -1518,11 +1617,12 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                     tooltip: AppLocalizations.of(context)!.refreshModels,
                     onPressed: widget.onRefresh,
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: AppLocalizations.of(context)!.enterManually,
-                    onPressed: widget.onManualEntry,
-                  ),
+                  if (widget.onManualEntry != null)
+                    IconButton(
+                      icon: const Icon(Icons.edit),
+                      tooltip: AppLocalizations.of(context)!.enterManually,
+                      onPressed: widget.onManualEntry,
+                    ),
                 ],
               ),
             ),
@@ -1602,7 +1702,7 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                         final isSelected = model == widget.selectedModel;
                         return ListTile(
                           title: Text(
-                            model,
+                            widget.modelNames[model] ?? model,
                             style: TextStyle(
                               fontWeight: isSelected
                                   ? FontWeight.bold
@@ -1610,6 +1710,9 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                               color: isSelected ? AppTheme.accentColor : null,
                             ),
                           ),
+                          subtitle: widget.modelNames.containsKey(model)
+                              ? Text(model)
+                              : null,
                           trailing: isSelected
                               ? const Icon(Icons.check,
                                   color: AppTheme.accentColor)

@@ -2,7 +2,7 @@
 
 Prepared 2026-10-08. Upstream base: `miaoxworld/NativeTavern` commit
 `6dbd1ee042e994966db85693594ab61e4f4ec441`, version `0.1.17+41`.
-This personal source modification uses version `0.1.17+42`.
+This personal source modification uses version `0.1.17+43`.
 It is not an upstream, OpenAI, App Store, or TestFlight release.
 
 ## What this adds
@@ -33,33 +33,22 @@ Sources:
 - [Preview limits](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 - [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
-## Download this verified build
+## Download build 43
 
-[Download the IPA and checksum from the personal fork's draft release](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
-Sign into the GitHub account that owns the fork and open
-**NativeTavern ChatGPT preview (unsigned)**. Download
-`NativeTavern_ChatGPT_v0.1.17+42_unsigned.ipa` and its `.sha256` companion. The verified IPA is
-**45,083,569 bytes** (about 43.0 MiB).
+The integration fix is being checked and packaged as **build 43**. It must not
+be confused with the previous build 42. When the build succeeds, its unsigned
+IPA and checksum will be in the personal fork's draft release:
+[NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
+Sign in as the fork owner and open **NativeTavern ChatGPT preview (build 43, unsigned)**.
+The build and downloaded artifact results will be recorded in the validation report.
 
-This build passed the full Flutter suite (**566 tests, 2 skipped**), analysis,
-native compilation, and IPA inspection. Its compiled source is
-[`e7ac02ec352db8bafd46cbe1c96232ec6016f690`](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/e7ac02ec352db8bafd46cbe1c96232ec6016f690).
-[Successful CI run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37800965945).
-
-SHA-256:
-
-~~~text
-331f91cdc803f9bfadce1850dd1884a1fc097afbdccc84ceac0c9f882e4c8db0
-~~~
-
-Re-sign the complete app and its frameworks with your existing sideload tool,
-then install it. The app targets **iOS 15 or later**. Export existing app data
-before installation; your signing tool's bundle-ID/team handling determines
-whether it replaces the existing app or creates separate storage.
-
-The source bundle and this guide accompany the verified build. Their final
-source commit may contain documentation updates after the compiled commit;
-the manifest identifies both commits, and those later changes are docs only.
+Re-sign the complete app and its frameworks with your existing sideload tool.
+The app targets **iOS 15 or later**. Export existing data before installation;
+your signing tool's bundle-ID/team handling determines whether it replaces the
+existing app or creates separate storage. Using the same signing identity and
+bundle ID is the best way to retain your existing protected account records.
+The source bundle identifies the exact compiled commit separately from later
+documentation-only changes.
 
 ## Use it after sideloading
 
@@ -70,11 +59,14 @@ the manifest identifies both commits, and those later changes are docs only.
    **ChatGPT plan (preview)**.
 3. Tap **Continue with ChatGPT**. Sign in and authorize the app in the
    OS-controlled Safari browser view. Keep the app foregrounded.
-4. Grant permission to use your ChatGPT plan. If only identity permission is
+4. If your saved account is already authorized, it can be reused without
+   repeating sign-in. Otherwise grant permission to use your ChatGPT plan. If only identity permission is
    granted, the app retains the sign-in and offers **Enable plan usage**;
    it cannot generate until that grant is present.
-5. Select a model from the returned **ChatGPT model** list. **Refresh available
-   models** fetches the selected account's catalog.
+5. The existing **Model** setting now loads the selected account's catalog
+   automatically. A saved model is retained; an empty selection defaults to the
+   first model in OpenAI's returned order. Tap **Model** to search display names
+   or change the selection. The refresh button in the model list reloads it.
 6. Send a short message. A successful reply requires the stream's
    `response.completed` event. **Test connection** also performs one short
    inference request, so it consumes the authorized plan/credit allowance.
@@ -83,10 +75,20 @@ the manifest identifies both commits, and those later changes are docs only.
    If you want to use only included plan allowance, keep credit usage disabled
    in that app's limits. The app does not buy credits or modify billing settings.
 
-The catalog is not hard-coded. An empty or denied catalog is a restriction to
-resolve, not a reason to paste a token into another provider. On returning
-launches, refresh the catalog if it has not loaded yet. Account switching
-clears the selected model and pending catalog request.
+The catalog is not hard-coded. Reopening AI Configuration automatically reloads
+it for an authorized account. Account switching discards stale catalog and
+connection-test results, clears the model binding, and loads the new account's
+models. Reconnecting the same registration preserves the existing selection.
+Existing connection profiles and API provider settings remain available.
+
+If the catalog is empty or denied, the Model setting shows the safe error and
+**Retry models**. Identity-only sign-in offers **Enable plan usage**. The chat
+composer uses the protected account and model settings, so this provider no
+longer needs an API key to send messages. A denied or interrupted Responses
+request remains a chat error; partial text is not saved as a completed reply.
+Errors include safe codes, HTTP status, and request IDs when supplied. An
+eligibility or regional denial must be resolved with OpenAI, not repeated
+sign-in or a token pasted into another provider.
 
 This provider always uses streaming HTTP, even when an existing preset has
 non-streaming display selected. Temperature, top-p, output token limits,
@@ -147,8 +149,8 @@ the entire iOS project with `flutter create` over this checkout.
 Expected output **only if the build actually succeeds**:
 
 ~~~
-release/NativeTavern_ChatGPT_v0.1.17+42_unsigned.ipa
-release/NativeTavern_ChatGPT_v0.1.17+42_unsigned.ipa.sha256
+release/NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa
+release/NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa.sha256
 ~~~
 
 An unsigned IPA contains a real device application, but must be locally

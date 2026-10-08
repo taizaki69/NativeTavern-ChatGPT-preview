@@ -126,17 +126,12 @@ Stream<ChatGptDelta> parseChatGptPlanStream(Stream<List<int>> bytes) async* {
       case 'response.incomplete':
       case 'error':
         final response = event['response'];
-        final error = response is Map ? response['error'] : event;
-        final candidate = error is Map ? error['code'] : null;
-        final code = candidate is String &&
-                RegExp(r'^[a-z0-9_]{1,100}$').hasMatch(candidate)
-            ? candidate
-            : null;
-        throw ChatGptPlanException(
-            code == 'subscription_sharing_usage_limit_exceeded'
-                ? 'ChatGPT plan usage limit reached. Open ChatGPT Settings → Usage.'
-                : 'ChatGPT returned a failed or incomplete response. The partial text is not a completed reply.',
-            code: code);
+        final error =
+            response is Map ? response['error'] : event['error'] ?? event;
+        throw ChatGptPlanClient.safeFailure(
+            data: {'error': error},
+            fallback:
+                'ChatGPT returned a failed or incomplete response. The partial text is not a completed reply.');
     }
   }
   throw const ChatGptPlanException(

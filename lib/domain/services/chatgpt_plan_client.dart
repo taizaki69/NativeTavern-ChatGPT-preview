@@ -478,52 +478,72 @@ class ChatGptPlanClient {
     }
   }
 
-  static ChatGptPlanException safeHttpFailure(DioException e) {
-    final data = e.response?.data;
+  static ChatGptPlanException safeHttpFailure(DioException e) => safeFailure(
+      data: e.response?.data,
+      status: e.response?.statusCode,
+      requestId: e.response?.headers.value('x-request-id'),
+      fallback:
+          e.type == DioExceptionType.cancel ? 'Request cancelled.' : null);
+
+  /// Keep stable diagnostics only. Server free-form text can echo credentials
+  /// or conversation content, so it must not enter UI errors or logs.
+  static ChatGptPlanException safeFailure({
+    dynamic data,
+    int? status,
+    String? requestId,
+    String? fallback,
+  }) {
     String? code;
     String? param;
     final shape = data is Map
-        ? (data.containsKey("error")
-            ? "error"
-            : data.containsKey("detail")
-                ? "detail"
-                : "object")
+        ? (data.containsKey('error')
+            ? 'error'
+            : data.containsKey('detail')
+                ? 'detail'
+                : 'object')
         : data == null
-            ? "empty"
-            : "non-json";
+            ? 'empty'
+            : 'non-json';
     if (data is Map) {
       final error = data['error'];
-      final candidate = error is Map ? error['code'] : error;
-      final parameter = error is Map ? error['param'] : null;
+      final detail = error is Map ? error : data;
+      final candidate = error is String ? error : detail['code'];
+      final parameter = detail['param'];
       if (parameter is String &&
-          RegExp(r'^[A-Za-z0-9_.\[\]-]{1,100}$').hasMatch(parameter))
+          RegExp(r'^[A-Za-z0-9_.\[\]-]{1,100}$').hasMatch(parameter)) {
         param = parameter;
+      }
       if (candidate is String &&
           RegExp(r'^[a-z0-9_]{1,100}$').hasMatch(candidate)) code = candidate;
     }
-    final status = e.response?.statusCode;
     final message = switch (code) {
       'subscription_sharing_user_not_eligible' =>
-        'OpenAI has not enabled ChatGPT plan usage for this account, workspace, or policy.',
+        'OpenAI has not enabled ChatGPT plan usage for this account, workspace, region, or policy. Signing in again will not enable eligibility.',
       'subscription_sharing_usage_limit_exceeded' =>
         'ChatGPT plan usage limit reached. Open ChatGPT Settings → Usage.',
       'subscription_sharing_usage_unavailable' ||
       'subscription_sharing_user_unavailable' =>
         'ChatGPT plan usage is temporarily unavailable. Try again later.',
+      'chatpass_v2_scope_not_authorized' ||
+      'subscription_sharing_chatpass_v2_scope_not_authorized' =>
+        'The selected connection does not have plan-usage permission. Choose Enable plan usage in AI Configuration.',
+      'invalid_authorization_context' ||
+      'subscription_sharing_invalid_authorization_context' =>
+        'OpenAI rejected this connection’s authorization context. Reconnect the selected account in AI Configuration.',
+      'subscription_sharing_invalid_user' =>
+        'OpenAI could not use the selected subscriber. Check the account in AI Configuration and reconnect if needed.',
       'subscription_sharing_route_not_supported' ||
       'subscription_sharing_unsupported_capability' =>
         'OpenAI does not support this request on the plan-sharing route.',
-      _ => status == 401
-          ? 'ChatGPT authentication was not accepted. Check the account or sign in again.'
-          : status == 403
-              ? 'OpenAI denied plan sharing for this request. Check permissions and regional availability.'
-              : status == 503
-                  ? 'OpenAI plan sharing is temporarily unavailable or not enabled.'
-                  : e.type == DioExceptionType.cancel
-                      ? 'Request cancelled.'
-                      : 'The official ChatGPT request failed. Try again or reconnect in account settings.',
+      _ => fallback ??
+          (status == 401
+              ? 'ChatGPT authentication was not accepted. Check the account or sign in again.'
+              : status == 403
+                  ? 'OpenAI denied plan sharing for this request. Check permissions and regional availability.'
+                  : status == 503
+                      ? 'OpenAI plan sharing is temporarily unavailable or not enabled.'
+                      : 'The official ChatGPT request failed. Try again or reconnect in account settings.'),
     };
-    final requestId = e.response?.headers.value('x-request-id');
     return ChatGptPlanException(message,
         code: code,
         status: status,

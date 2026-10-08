@@ -67,11 +67,13 @@ jobs:
         run: |
           set -euo pipefail
           preview_tag="chatgpt-preview-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          preview_version=$(awk '/^version:/{print $2; exit}' pubspec.yaml)
+          preview_build="${preview_version#*+}"
           gh release create "$preview_tag" \
             release/NativeTavern_ChatGPT_*_unsigned.ipa \
             release/NativeTavern_ChatGPT_*_unsigned.ipa.sha256 \
             --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
-            --title "NativeTavern ChatGPT preview (unsigned)" \
+            --title "NativeTavern ChatGPT preview (build $preview_build, unsigned)" \
             --notes-file docs/chatgpt-preview-release.md
           echo "Unsigned IPA and checksum saved in draft release $preview_tag." >> "$GITHUB_STEP_SUMMARY"
           echo "Re-sign locally before sideloading. No Apple or OpenAI login was used by this job." >> "$GITHUB_STEP_SUMMARY"

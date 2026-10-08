@@ -254,21 +254,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
   }
 
-  /// Check if API is properly configured
-  bool _isApiConfigured(LLMConfig config) {
-    // Local providers (Ollama, KoboldCpp) don't need API key
-    if (config.provider == LLMProvider.ollama ||
-        config.provider == LLMProvider.koboldCpp) {
-      return config.apiUrl.isNotEmpty;
-    }
-    // Cloud providers need API key
-    return config.apiKey.isNotEmpty && config.apiUrl.isNotEmpty;
-  }
+  /// Read the same connection readiness used by the reactive chat banner.
+  bool _isApiConfigured(LLMConfig config) =>
+      ref.read(llmConnectionReadyProvider);
 
   /// Show dialog to guide user to configure API
   void _showApiConfigurationDialog() {
     final parentContext = context;
     final l10n = AppLocalizations.of(context);
+    if (ref.read(llmConfigProvider).provider == LLMProvider.chatgptPlan) {
+      showDialog(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('ChatGPT setup required'),
+          content: Text(ref.read(chatGptConnectionIssueProvider) ??
+              'Choose an available ChatGPT model in AI Configuration.'),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(dialogContext),
+                child: Text(l10n.later)),
+            FilledButton(
+                onPressed: () {
+                  Navigator.pop(dialogContext);
+                  parentContext.go('/ai-config');
+                },
+                child: Text(l10n.configureNow)),
+          ],
+        ),
+      );
+      return;
+    }
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -345,7 +360,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     try {
       // Fetch available models
-      final models = await llmService.getAvailableModels(llmConfig);
+      final catalog = llmConfig.provider == LLMProvider.chatgptPlan
+          ? await llmService.getChatGptModels(llmConfig)
+          : null;
+      final models = catalog?.map((m) => m.slug).toList() ??
+          await llmService.getAvailableModels(llmConfig);
 
       if (!mounted) return;
       Navigator.pop(context); // Close loading dialog
@@ -362,10 +381,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           models: models,
           currentModel: llmConfig.model,
           providerName: llmConfig.provider.name,
+          modelNames: catalog == null
+              ? const {}
+              : {for (final m in catalog) m.slug: m.name},
         ),
       );
 
-      if (selectedModel != null && selectedModel != llmConfig.model) {
+      if (selectedModel != null &&
+          mounted &&
+          ref.read(llmConfigProvider).hasSameModelConnection(llmConfig) &&
+          selectedModel != llmConfig.model) {
         ref.read(llmConfigProvider.notifier).updateModel(selectedModel);
         _showSnackBar(l10n.modelChangedTo(selectedModel));
       }
@@ -1028,12 +1053,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget build(BuildContext context) {
     ref.watch(rpgChatExtensionsProvider);
     final chatState = ref.watch(activeChatProvider);
-    final llmConfig = ref.watch(llmConfigProvider);
-    final isConfigured = _isApiConfigured(llmConfig);
+    final isConfigured = ref.watch(llmConnectionReadyProvider);
 
     // Scroll to bottom when new messages arrive or when chat finishes loading
     ref.listen(activeChatProvider, (previous, next) {
       if (!mounted) return;
+      if (next.error != null &&
+          next.error != previous?.error &&
+          ref.read(llmConfigProvider).provider == LLMProvider.chatgptPlan) {
+        // Refresh display state if a terminal token refresh cleared the session.
+        ref.invalidate(chatGptAccountsProvider);
+      }
       // Scroll to bottom when:
       // 1. New messages are added during conversation
       // 2. Chat finishes loading (transitions from loading to loaded with messages)
@@ -1131,6 +1161,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Widget _buildApiConfigBanner() {
     final l10n = AppLocalizations.of(context);
+    final isPlan =
+        ref.watch(llmConfigProvider).provider == LLMProvider.chatgptPlan;
+    final issue = isPlan ? ref.watch(chatGptConnectionIssueProvider) : null;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       color: AppTheme.primaryColor.withValues(alpha: 0.15),
@@ -1147,14 +1180,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.apiNotConfigured,
+                  isPlan ? 'ChatGPT setup required' : l10n.apiNotConfigured,
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     color: AppTheme.textPrimary,
                   ),
                 ),
                 Text(
-                  l10n.configureApiProvider,
+                  issue ?? l10n.configureApiProvider,
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
@@ -3832,11 +3865,13 @@ class _TypingIndicatorState extends State<_TypingIndicator>
 /// Dialog for selecting a model from available models
 class _ModelSelectorDialog extends StatefulWidget {
   final List<String> models;
+  final Map<String, String> modelNames;
   final String currentModel;
   final String providerName;
 
   const _ModelSelectorDialog({
     required this.models,
+    this.modelNames = const {},
     required this.currentModel,
     required this.providerName,
   });
@@ -3869,7 +3904,9 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
         _filteredModels = widget.models;
       } else {
         _filteredModels = widget.models
-            .where((model) => model.toLowerCase().contains(query))
+            .where((model) =>
+                model.toLowerCase().contains(query) ||
+                (widget.modelNames[model] ?? '').toLowerCase().contains(query))
             .toList();
       }
     });
@@ -3973,7 +4010,7 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                             size: 20,
                           ),
                           title: Text(
-                            model,
+                            widget.modelNames[model] ?? model,
                             style: TextStyle(
                               fontWeight: isSelected
                                   ? FontWeight.bold

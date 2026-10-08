@@ -150,4 +150,42 @@ void main() {
     expect(notifier.state.apiKey, '');
     expect(notifier.state.apiUrl, 'https://api.openai.com/v1');
   });
+  test(
+      'incomplete plan snapshots recover only their saved account and model binding',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      'llm_config': jsonEncode(const LLMConfig(
+        provider: LLMProvider.chatgptPlan,
+        model: 'orphan-model',
+        apiKey: '',
+        apiUrl: 'https://api.openai.com/v1',
+      ).toJson()),
+      'llm_provider_config_chatgptPlan': jsonEncode({
+        'apiKey': '',
+        'apiUrl': 'https://api.openai.com/v1',
+        'chatgptProfileId': 'oaiapp_saved',
+        'model': 'saved-model',
+      }),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final database = AppDatabase.forTesting(NativeDatabase.memory());
+    final settings = LLMConfigNotifier(prefs, database);
+    await Future<void>.delayed(const Duration(milliseconds: 30));
+    await settings.flushPersistence();
+    expect(settings.state.chatgptProfileId, 'oaiapp_saved');
+    expect(settings.state.model, 'saved-model');
+    expect(settings.state.apiKey, isEmpty);
+    await settings.applyConfig(const LLMConfig(
+      provider: LLMProvider.chatgptPlan,
+      model: '',
+      apiKey: '',
+      apiUrl: 'https://api.openai.com/v1',
+      temperature: 0.5,
+    ));
+    expect(settings.state.chatgptProfileId, 'oaiapp_saved');
+    expect(settings.state.model, 'saved-model');
+    expect(settings.state.temperature, 0.5);
+    settings.dispose();
+    await database.close();
+  });
 }

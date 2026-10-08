@@ -383,6 +383,30 @@ class LLMConfig {
     this.disabledParameters = const <String>{},
   });
 
+  /// Local settings only. OAuth grants and account eligibility are checked by
+  /// the protected auth client and by the actual Responses request.
+  bool get hasConnectionSettings {
+    final uri = Uri.tryParse(apiUrl.trim());
+    if (uri == null ||
+        !const {'http', 'https'}.contains(uri.scheme) ||
+        uri.host.isEmpty) return false;
+    if (provider != LLMProvider.koboldCpp && model.trim().isEmpty) return false;
+    if (provider == LLMProvider.chatgptPlan) {
+      return chatgptProfileId.trim().isNotEmpty;
+    }
+    final keyOptional = provider == LLMProvider.ollama ||
+        provider == LLMProvider.koboldCpp ||
+        provider == LLMProvider.openAICompatible;
+    return keyOptional || apiKey.trim().isNotEmpty;
+  }
+
+  /// Public identity of a model catalog; never includes credentials.
+  String get modelConnectionKey =>
+      '${provider.name}|${apiUrl.trim()}|$chatgptProfileId';
+
+  bool hasSameModelConnection(LLMConfig other) =>
+      modelConnectionKey == other.modelConnectionKey && apiKey == other.apiKey;
+
   /// Whether [key] should be written into the provider request body.
   bool sendsParameter(String key) => !disabledParameters.contains(key);
 

@@ -1,148 +1,36 @@
-# Validation of the NativeTavern ChatGPT preview
+# NativeTavern ChatGPT integration validation — build 43
 
 Date: 2026-10-08. Upstream base: `6dbd1ee042e994966db85693594ab61e4f4ec441`.
-Personal version: `0.1.17+42`. This is a source and unsigned-device-build
-preview; successful source checks cannot establish live ChatGPT eligibility.
+Personal version: `0.1.17+43`. The previous delivered build was `0.1.17+42`.
+This report distinguishes source tests, a compiled unsigned device IPA, and live account/device verification.
 
-## Verified source and CI checks
+## Reproduced defect and changes
 
-- Auth, Responses streaming, provider persistence, and existing-provider
-  regression checks passed. The final focused Linux run recorded **35 passing
-  tests**. OpenAI endpoints and browser callbacks were mocked; the local
-  callback listener itself was exercised over real loopback HTTP.
-- macOS analysis passed with **zero errors**; existing repository warnings
-  remain. The workflow treats analysis errors as fatal.
-- Three macOS build runs completed the full mobile test gate, each recording
-  **566 Flutter tests passed and 2 skipped**. The final successful job log
-  and exact compiled source commit were downloaded and checked.
-- The Live2D development gate checked **61 artifacts**. The mobile development
-  gate passed while explicitly reporting that no device evidence was recorded.
-- Changed Dart formatting, shell syntax, workflow YAML, patch whitespace,
-  restored iOS XML and asset JSON were checked.
-- Existing API providers retain their configuration and transport paths.
-  The ChatGPT provider has separate credentials and cannot fall back to a
-  separately billed API key.
-- Two pre-existing backup-screen compilation errors were corrected using the
-  cloud-backup API's required lazy export callback. This does not perform a
-  backup or upload data.
+The previous chat screen considered every cloud connection configured only when an API key was present. The ChatGPT provider correctly keeps its OAuth credentials in protected storage and its API-key field empty. A widget regression test reproduced the resulting **API Not Configured** banner before the fix.
 
-The auth tests cover fresh PKCE/state/nonce, callback rejection, verified RSA
-identity signatures and claims, identity-only consent, registration retention,
-account isolation, serialized refresh rotation, temporary versus terminal
-errors, revocation, and cancellation. Stream tests cover ordered multimodal
-history, fragmented UTF-8/SSE, completed versus interrupted/incomplete replies,
-safe diagnostics, and the fixed public Responses endpoint.
+The chat composer and other chat actions now use the shared connection settings plus the selected protected account's connection and plan-scope state. Identity-only sign-in is not marked ready for inference. The existing Model setting is available for the plan provider; it automatically restores the selected account's catalog, displays and searches server-provided model names, and keeps the selected slug in the normal saved provider settings. An empty selection defaults to the first server-ordered available model. A saved selection survives reconnecting the same registration. Account/provider changes invalidate stale catalog and connection-test results. Older connection snapshots recover their public account/model binding without recovering or exporting OAuth tokens.
 
-## Native build history
+HTTP and nested SSE errors preserve safe codes, parameters, request IDs, and status when available. Free-form server text is excluded because it can echo credentials or conversation content. Eligibility, permission, usage, incomplete, and interrupted failures remain failures through the existing chat pipeline. A partial stream is not persisted as a completed assistant reply. Unsupported sampling and token-cap controls are hidden for this provider. Existing API providers, connection profiles, and saved API keys are preserved.
 
-The source is in the isolated public personal fork
-[taizaki69/NativeTavern-ChatGPT-preview](https://github.com/taizaki69/NativeTavern-ChatGPT-preview).
-GitHub access and repository write/Actions permissions were verified without
-printing credentials. The workflow runs on a standard `macos-15` runner with
-Flutter **3.44.9**, Dart **3.12.2**, Xcode **16.4**, and CocoaPods **1.17.0**.
-No Apple signing or OpenAI account is used by the job.
+## Verified local checks
 
-1. [Initial run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37794490930):
-   analysis and the complete test gate passed. Compilation stopped because
-   upstream did not track the required Xcode workspace and other support files.
-2. [Restored-project run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37797390199):
-   analysis and the complete gate passed again. Xcode compiled a **77.3 MB**
-   iPhone `Runner.app`; packaging correctly refused a regenerated dependency
-   lockfile. No IPA or draft release came from this run.
-3. [Configuration inspection](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37799910615):
-   Flutter's official `--config-only` route succeeded. The exact changes were
-   CocoaPods 1.17.0 dependency checksums and its workspace project reference.
-   Those changes were reviewed and committed; the source consistency check
-   remains active.
-4. [Corrected-configuration build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37800965945):
-   commit `e7ac02ec352db8bafd46cbe1c96232ec6016f690`. Analysis, the complete test
-   gate, native compilation, packaging checks,
-   and draft release upload all succeeded. The IPA and checksum were downloaded
-   and independently inspected.
+- **65 focused tests passed** on Mint for the final build-43 source before CI. These include the actual chat composer, real chat notifier/context pipeline, real LLM service, streamed Responses parser, SQLite persistence, restored settings, model UI, account switching, and safe errors.
+- The transport and protected account records in these tests are synthetic. They do not establish live OpenAI admission. Existing auth tests separately exercise PKCE/state/nonce, RSA identity validation, consent gating, refresh rotation, cancellation, account isolation, and revocation.
+- The real app pipeline was exercised with streaming display both enabled and disabled. In both cases the official Responses request has `stream: true`, `store: false`, and no separately billed API-key fallback.
+- The initial API-key-banner regression failed before the patch and passes afterward.
 
-The restored support files came from the pinned official Flutter template and
-upstream `icon.png`. The existing native AppDelegate and Xcode project were
-preserved. No whole-project regeneration, signing bypass, or removal of native
-Live2D/Spine checks was used.
+Full-project local analysis completed with zero errors (existing warnings remain). Changed Dart formatting, patch whitespace, shell syntax, and workflow YAML passed. The Live2D development gate passed with 61 artifacts; the mobile development gate passed while reporting no device evidence. The complete macOS suite and new unsigned iPhone build are pending. Their actual results and the downloaded IPA checksum will be recorded after the workflow completes.
 
-## Verified compiled artifact
+## Build route and prior evidence
 
-- Filename: `NativeTavern_ChatGPT_v0.1.17+42_unsigned.ipa`.
-- Compiled source: `e7ac02ec352db8bafd46cbe1c96232ec6016f690`.
-- Size: **45,083,569 bytes** (about 43.0 MiB).
-- SHA-256: `331f91cdc803f9bfadce1850dd1884a1fc097afbdccc84ceac0c9f882e4c8db0`.
-- Version **0.1.17**, build **42**, bundle ID
-  `com.miaomiaoxworld.nativetavern`, minimum **iOS 15.0**.
-- The downloaded checksum matches the checksum in the actual CI log, and the
-  asset byte count matches GitHub release metadata.
-- Independent Info-ZIP validation and the final Python streaming inspector
-  passed ZIP CRC checks for the **444 entries**.
-- Mach-O inspection verified **arm64 iOS device** binaries for the app,
-  `App.framework`, and `Flutter.framework`.
-- Compiled Dart AOT markers for ChatGPT sign-in, plan consent, and the official
-  auth/API origins were found. Native Live2D/render-scale and Spine markers
-  remain present; the macOS packaging script also checked the Spine export.
-- No provisioning profile or `_CodeSignature` directories are packaged.
-  The main app executable has no code-signature load command. SDK frameworks
-  retain signature load-command metadata; the sideload tool must re-sign
-  the complete app and its frameworks.
-- This is an **unsigned device IPA** requiring local re-signing. No Apple
-  signing certificate or installable Apple-signed IPA was produced.
+The isolated public personal fork is [taizaki69/NativeTavern-ChatGPT-preview](https://github.com/taizaki69/NativeTavern-ChatGPT-preview). Its existing manual workflow uses a standard `macos-15` runner, Flutter 3.44.9, and CocoaPods 1.17.0. Final packaging uses the repository's `build_ios.sh` in unsigned mode, preserving its native source, architecture, minimum-iOS, Live2D, Spine, and ZIP checks. It saves the actual verified output and checksum in a draft release. No Apple signing material or OpenAI account is used by CI, and no paid resources are configured.
 
-[Draft release with actual downloads](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
-Sign in with the owning GitHub account and open
-**NativeTavern ChatGPT preview (unsigned)**. The source package includes
-`ipa-verification.json`, and the separate GitHub build report records the
-job, test counts, source commit, release target, and checksum evidence.
+Build 42 was previously compiled and verified in [run 37800965945](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37800965945), with 566 tests passed and 2 skipped. That evidence applies to build 42; it is not substituted for this update's checks.
 
-## Linux limits
+## Live verification limits
 
-The initial broader Linux suite reached **546 passing tests and 2 skipped**,
-then failed when a Flutter test subprocess crashed and some unrelated UI tests
-did not finish. It is not reported as passing. The subsequent macOS full-suite
-runs resolve the source-suite uncertainty, but do not establish device behavior.
+The maintainer has not inspected or used the owner's OpenAI credentials, cookies, account session, plan allowance, or signing material. A reported successful sign-in does not prove the selected account has `chatgpt.tokens.use.direct` or that OpenAI admits a Responses request for this mobile client.
 
-The Dart tool/analyzer also crashed with default concurrent garbage collection
-on Mint. Successful final local source analysis and the focused test driver
-used serialized marking. The official Flutter test engine was restored after
-unsuccessful private launcher experiments. No local GC workaround is present
-in the application or macOS workflow.
+Still to verify on the re-signed iPhone build: live catalog admission and completed inference, session refresh and Keychain persistence under the signing identity, Safari routing, cancellation, account switching, and remote revocation. Eligibility and workspace/region policy are server decisions. The [official preview requirements](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations) and [error guidance](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery) remain the integration contract; no unofficial Codex bridge or internal ChatGPT endpoint is used.
 
-Local iOS packaging correctly returned:
-
-~~~
-ERROR: iOS packaging requires macOS with Xcode; this host is Linux
-~~~
-
-One initial local Python member read reported a CRC error. The unchanged
-IPA then passed independent Info-ZIP validation, repeated Python full and
-streamed reads, and the final streaming inspector. Its SHA-256 remained
-identical to the CI checksum throughout.
-
-## Not verified on a live iPhone
-
-No owner OpenAI credentials, cookies, Codex auth files, live account/session,
-plan allowance, or signing material were inspected or used. The following
-remain untested:
-
-- Whether the preview admits this personal iOS client and the owner's account,
-  plan, workspace, or region.
-- Safari browser-view routing to the app's temporary loopback callback.
-- Keychain access and persistence under the final sideload signing identity.
-- Live model discovery, a completed Responses inference, refresh after restart,
-  cancellation, switching accounts, and remote revocation.
-- Native rendering, voice, and other existing app features on the device.
-
-OpenAI's OSS/local-client documentation establishes the implemented protocol;
-it does not promise support for this particular iOS build. Test rejection or
-unsupported routing must be reported as a restriction, without substituting
-an unofficial bridge or ChatGPT internal endpoint.
-
-## Device verification after re-signing
-
-Export existing data first. Re-sign the unsigned IPA with the owner's existing
-trusted sideload tool. Then test initial consent, callback completion, catalog
-selection, one short completed reply, restart/refresh, cancellation, account
-switching, and sign-out. Generation and the app's Test connection consume the
-authorized plan/credit allowance. Keep credit usage disabled in ChatGPT's app
-limits if only included allowance is intended.
+The unsigned IPA needs local re-signing before installation. Export current app data first and use the same signing identity/bundle ID to retain storage where possible. Open AI Configuration, select ChatGPT plan (preview), reuse or authorize the saved account, verify the normal Model setting, and send a short message. Test connection also performs inference and consumes the authorized allowance. Report any exact safe error code/status/request ID; do not share credentials. A policy/eligibility denial cannot be fixed by repeating sign-in or changing to an API key.

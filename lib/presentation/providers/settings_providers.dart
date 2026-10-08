@@ -4,6 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:native_tavern/domain/services/llm_service.dart';
+import 'package:native_tavern/domain/services/chatgpt_plan_client.dart';
+import 'package:native_tavern/domain/services/chatgpt_plan_platform.dart';
 import 'package:native_tavern/domain/services/chat_summarization_service.dart';
 import 'package:native_tavern/domain/services/tokenizer_service.dart';
 import 'package:drift/drift.dart' as drift;
@@ -38,6 +40,48 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 /// Provider for LLM service
 final llmServiceProvider = Provider<LLMService>((ref) {
   throw UnimplementedError('Must be overridden in ProviderScope');
+});
+
+/// UI, model discovery, and chat share the same protected auth service.
+final chatGptPlanPlatformProvider = Provider<ChatGptPlanPlatform>((ref) {
+  return ChatGptPlanPlatform.instance;
+});
+
+final chatGptAccountsProvider = FutureProvider<List<ChatGptAccount>>((ref) {
+  return ref.watch(chatGptPlanPlatformProvider).client.accounts();
+});
+
+final chatGptConnectionIssueProvider = Provider<String?>((ref) {
+  final config = ref.watch(llmConfigProvider);
+  if (config.provider != LLMProvider.chatgptPlan) return null;
+  if (config.chatgptProfileId.isEmpty) {
+    return 'Sign in with ChatGPT in AI Configuration.';
+  }
+  final accounts = ref.watch(chatGptAccountsProvider);
+  if (accounts.isLoading) return 'Checking your saved ChatGPT account…';
+  if (accounts.hasError) {
+    return 'Protected ChatGPT account settings could not be read. Reopen AI Configuration.';
+  }
+  final selected = accounts.valueOrNull
+      ?.where((a) => a.clientId == config.chatgptProfileId)
+      .firstOrNull;
+  if (selected?.connected != true) {
+    return 'Reconnect your saved ChatGPT account in AI Configuration.';
+  }
+  if (selected?.sharing != true) {
+    return 'Choose Enable plan usage in AI Configuration. Sign-in alone does not authorize model requests.';
+  }
+  if (config.model.isEmpty) {
+    return 'Choose an available ChatGPT model in AI Configuration.';
+  }
+  return null;
+});
+
+final llmConnectionReadyProvider = Provider<bool>((ref) {
+  final config = ref.watch(llmConfigProvider);
+  return config.hasConnectionSettings &&
+      (config.provider != LLMProvider.chatgptPlan ||
+          ref.watch(chatGptConnectionIssueProvider) == null);
 });
 
 class LLMConfigNotifier extends StateNotifier<LLMConfig> {
@@ -277,6 +321,17 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
             healed = true;
           }
         }
+        if (loaded.provider == LLMProvider.chatgptPlan) {
+          final recovered = await _loadProviderConfig(loaded.provider);
+          final profile = recovered['chatgptProfileId'] ?? '';
+          if (loaded.chatgptProfileId.isEmpty && profile.isNotEmpty) {
+            loaded = loaded.copyWith(
+              chatgptProfileId: profile,
+              model: recovered['model'] ?? '',
+            );
+            healed = true;
+          }
+        }
         if (!_stateChangedBeforeLoad) {
           state = loaded.copyWith(
             apiUrl: _normalizeApiUrl(loaded.provider, loaded.apiUrl),
@@ -288,7 +343,7 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
           _enqueuePersistence(); // Save to DB
         } else if (healed) {
           _log(
-              'Recovered missing API key for ${loaded.provider.name} from its provider config');
+              'Recovered missing connection settings for ${loaded.provider.name}');
           _enqueuePersistence();
         }
       } catch (e) {
@@ -400,7 +455,12 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
   }
 
   void updateChatGptProfile(String clientId) {
-    state = state.copyWith(chatgptProfileId: clientId, apiKey: '', model: '');
+    if (state.provider != LLMProvider.chatgptPlan) return;
+    state = state.copyWith(
+      chatgptProfileId: clientId,
+      apiKey: '',
+      model: state.chatgptProfileId == clientId ? state.model : '',
+    );
     _enqueuePersistence(providerConfig: true);
   }
 
@@ -510,10 +570,27 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
   Future<void> applyConfig(LLMConfig config) async {
     _stateChangedBeforeLoad = true;
     await _enqueueWrite(() async {
-      final applied = config.copyWith(
+      var applied = config.copyWith(
         apiUrl: _normalizeApiUrl(config.provider, config.apiUrl),
         apiKey: await _resolveAppliedApiKey(config),
       );
+      if (config.provider == LLMProvider.chatgptPlan &&
+          config.chatgptProfileId.isEmpty) {
+        // Older connection-profile snapshots may omit the public registration.
+        // Reuse this provider's saved binding, never an API key or OAuth token.
+        final saved = await _loadProviderConfig(LLMProvider.chatgptPlan);
+        final currentPlan = state.provider == LLMProvider.chatgptPlan;
+        applied = applied.copyWith(
+          chatgptProfileId: currentPlan && state.chatgptProfileId.isNotEmpty
+              ? state.chatgptProfileId
+              : saved['chatgptProfileId'],
+          model: config.model.isNotEmpty
+              ? config.model
+              : currentPlan
+                  ? state.model
+                  : saved['model'],
+        );
+      }
       state = applied;
       await _saveConfig(state);
       await _saveCurrentProviderConfig(state);
@@ -1196,10 +1273,12 @@ class ConnectionTestState {
 /// Connection test notifier
 class ConnectionTestNotifier extends StateNotifier<ConnectionTestState> {
   final LLMService _llmService;
+  int _requestGeneration = 0;
 
   ConnectionTestNotifier(this._llmService) : super(const ConnectionTestState());
 
   Future<void> testConnection(LLMConfig config) async {
+    final generation = ++_requestGeneration;
     _log('Starting connection test for ${config.provider.name}');
     _log('API URL: ${config.apiUrl}');
     _log(
@@ -1212,6 +1291,7 @@ class ConnectionTestNotifier extends StateNotifier<ConnectionTestState> {
       // testConnection now returns a success message or throws an exception
       _log('Calling LLMService.testConnection...');
       final successMessage = await _llmService.testConnection(config);
+      if (!mounted || generation != _requestGeneration) return;
       _log('Connection test successful: $successMessage');
 
       // Try to get available models
@@ -1226,6 +1306,7 @@ class ConnectionTestNotifier extends StateNotifier<ConnectionTestState> {
             error: e.toString(), stackTrace: stackTrace);
       }
 
+      if (!mounted || generation != _requestGeneration) return;
       state = ConnectionTestState(
         status: ConnectionStatus.success,
         message: successMessage,
@@ -1233,6 +1314,7 @@ class ConnectionTestNotifier extends StateNotifier<ConnectionTestState> {
       );
       _log('Connection test completed successfully');
     } catch (e, stackTrace) {
+      if (!mounted || generation != _requestGeneration) return;
       // Extract the error message from the exception
       String errorMessage = e.toString();
       if (errorMessage.startsWith('Exception: ')) {
@@ -1250,6 +1332,7 @@ class ConnectionTestNotifier extends StateNotifier<ConnectionTestState> {
   }
 
   void reset() {
+    _requestGeneration++;
     _log('Resetting connection test state');
     state = const ConnectionTestState();
   }
@@ -1259,7 +1342,13 @@ class ConnectionTestNotifier extends StateNotifier<ConnectionTestState> {
 final connectionTestProvider =
     StateNotifierProvider<ConnectionTestNotifier, ConnectionTestState>((ref) {
   final llmService = ref.watch(llmServiceProvider);
-  return ConnectionTestNotifier(llmService);
+  final notifier = ConnectionTestNotifier(llmService);
+  ref.listen<LLMConfig>(llmConfigProvider, (previous, next) {
+    if (previous != null &&
+        (!previous.hasSameModelConnection(next) ||
+            previous.model != next.model)) notifier.reset();
+  });
+  return notifier;
 });
 
 /// Model fetching state
@@ -1269,25 +1358,31 @@ class ModelFetchState {
   final ModelFetchStatus status;
   final List<String> models;
   final Map<String, String> modelNames;
+  final String connectionKey;
   final String? errorMessage;
 
   const ModelFetchState({
     this.status = ModelFetchStatus.idle,
     this.models = const [],
     this.modelNames = const {},
+    this.connectionKey = '',
     this.errorMessage,
   });
+
+  bool isFor(LLMConfig config) => connectionKey == config.modelConnectionKey;
 
   ModelFetchState copyWith({
     ModelFetchStatus? status,
     List<String>? models,
     Map<String, String>? modelNames,
+    String? connectionKey,
     String? errorMessage,
   }) {
     return ModelFetchState(
       status: status ?? this.status,
       models: models ?? this.models,
       modelNames: modelNames ?? this.modelNames,
+      connectionKey: connectionKey ?? this.connectionKey,
       errorMessage: errorMessage,
     );
   }
@@ -1298,14 +1393,24 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
   final LLMService _llmService;
   int _requestGeneration = 0;
 
-  ModelFetchNotifier(this._llmService) : super(const ModelFetchState());
+  ModelFetchNotifier(this._llmService, {this.onCatalog, this.onFailure})
+      : super(const ModelFetchState());
+  final void Function(LLMConfig config, List<String> models)? onCatalog;
+  final void Function(LLMConfig config)? onFailure;
+
+  Future<void> ensureModels(LLMConfig config) async {
+    if (state.isFor(config) && state.status != ModelFetchStatus.idle) return;
+    await fetchModels(config);
+  }
 
   Future<void> fetchModels(LLMConfig config) async {
     final generation = ++_requestGeneration;
     _log('Starting model fetch for ${config.provider.name}');
     _log('API URL: ${config.apiUrl}');
 
-    state = const ModelFetchState(status: ModelFetchStatus.loading);
+    state = ModelFetchState(
+        status: ModelFetchStatus.loading,
+        connectionKey: config.modelConnectionKey);
 
     try {
       _log('Calling LLMService.getAvailableModels...');
@@ -1322,11 +1427,13 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
             'Models: ${models.take(10).join(", ")}${models.length > 10 ? "..." : ""}');
         state = ModelFetchState(
           status: ModelFetchStatus.success,
+          connectionKey: config.modelConnectionKey,
           models: models,
           modelNames: catalog == null
               ? const {}
               : {for (final m in catalog) m.slug: m.name},
         );
+        onCatalog?.call(config, models);
         _log('Model fetch completed successfully');
       } else {
         // Provide helpful message based on provider
@@ -1362,6 +1469,7 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
         _log('No models found: $message');
         state = ModelFetchState(
           status: ModelFetchStatus.error,
+          connectionKey: config.modelConnectionKey,
           errorMessage: message,
         );
       }
@@ -1371,10 +1479,12 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
       if (errorMessage.startsWith('Exception: ')) {
         errorMessage = errorMessage.substring(11);
       }
+      onFailure?.call(config);
       _log('Model fetch failed: $errorMessage',
           error: e.toString(), stackTrace: stackTrace);
       state = ModelFetchState(
         status: ModelFetchStatus.error,
+        connectionKey: config.modelConnectionKey,
         errorMessage: errorMessage,
       );
     }
@@ -1391,7 +1501,26 @@ class ModelFetchNotifier extends StateNotifier<ModelFetchState> {
 final modelFetchProvider =
     StateNotifierProvider<ModelFetchNotifier, ModelFetchState>((ref) {
   final llmService = ref.watch(llmServiceProvider);
-  return ModelFetchNotifier(llmService);
+  final notifier = ModelFetchNotifier(llmService, onCatalog: (config, models) {
+    final current = ref.read(llmConfigProvider);
+    if (config.provider == LLMProvider.chatgptPlan &&
+        current.hasSameModelConnection(config) &&
+        current.model.isEmpty) {
+      // Use the account's server-ordered default, preserving any saved choice.
+      ref.read(llmConfigProvider.notifier).updateModel(models.first);
+    }
+  }, onFailure: (config) {
+    if (config.provider == LLMProvider.chatgptPlan &&
+        ref.read(llmConfigProvider).hasSameModelConnection(config)) {
+      ref.invalidate(chatGptAccountsProvider);
+    }
+  });
+  ref.listen<LLMConfig>(llmConfigProvider, (previous, next) {
+    if (previous != null && !previous.hasSameModelConnection(next)) {
+      notifier.reset();
+    }
+  });
+  return notifier;
 });
 
 /// Provider for tokenizer service

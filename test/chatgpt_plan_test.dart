@@ -737,4 +737,26 @@ void main() {
     expect(e.status, 403);
     expect(e.toString(), isNot(contains('fixture-secret')));
   });
+  test(
+      'nested SSE permission errors retain safe code and parameter diagnostics',
+      () async {
+    try {
+      await parseChatGptPlanStream(_sse([
+        {
+          'type': 'error',
+          'error': {
+            'code': 'chatpass_v2_scope_not_authorized',
+            'param': 'input',
+            'message': 'fixture-secret-must-not-be-shown',
+          }
+        }
+      ])).toList();
+      fail('A permission failure must not complete successfully.');
+    } on ChatGptPlanException catch (e) {
+      expect(e.code, 'chatpass_v2_scope_not_authorized');
+      expect(e.param, 'input');
+      expect(e.toString(), contains('Enable plan usage'));
+      expect(e.toString(), isNot(contains('fixture-secret')));
+    }
+  });
 }

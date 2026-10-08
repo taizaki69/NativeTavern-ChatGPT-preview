@@ -609,24 +609,7 @@ final class LongTermMemoryGovernanceService {
   }
 }
 
-bool isMemoryLlmConfigured(LLMConfig config) {
-  if (config.provider == LLMProvider.chatgptPlan &&
-      config.chatgptProfileId.isEmpty) return false;
-  final uri = Uri.tryParse(config.apiUrl.trim());
-  if (uri == null ||
-      (uri.scheme != 'http' && uri.scheme != 'https') ||
-      uri.host.isEmpty) {
-    return false;
-  }
-  if (config.provider != LLMProvider.koboldCpp && config.model.trim().isEmpty) {
-    return false;
-  }
-  final keyOptional = config.provider == LLMProvider.chatgptPlan ||
-      config.provider == LLMProvider.ollama ||
-      config.provider == LLMProvider.koboldCpp ||
-      config.provider == LLMProvider.openAICompatible;
-  return keyOptional || config.apiKey.trim().isNotEmpty;
-}
+bool isMemoryLlmConfigured(LLMConfig config) => config.hasConnectionSettings;
 
 String normalizeMemoryIdentity(String input) {
   return RegExp(r'[\p{L}\p{N}]+', unicode: true)

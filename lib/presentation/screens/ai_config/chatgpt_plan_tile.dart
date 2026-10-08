@@ -14,15 +14,13 @@ class ChatGptPlanTile extends ConsumerStatefulWidget {
 }
 
 class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
-  final _platform = ChatGptPlanPlatform.instance;
-  Future<List<ChatGptAccount>>? _accounts;
+  ChatGptPlanPlatform? _activePlatform;
+  ChatGptPlanPlatform get _platform => ref.read(chatGptPlanPlatformProvider);
   bool _busy = false;
   String? _message;
 
   void _reload() {
-    setState(() {
-      _accounts = _platform.client.accounts();
-    });
+    ref.invalidate(chatGptAccountsProvider);
   }
 
   Future<void> _signIn({String? clientId, bool enableSharing = false}) async {
@@ -32,19 +30,23 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
     });
     ref.read(llmServiceProvider).cancelActiveRequest();
     try {
-      final account = await _platform.signIn(
-          clientId: clientId, enableSharing: enableSharing);
+      _activePlatform = _platform;
+      final account = await _activePlatform!
+          .signIn(clientId: clientId, enableSharing: enableSharing);
       if (!mounted) return;
       ref
           .read(llmConfigProvider.notifier)
           .updateChatGptProfile(account.clientId);
       ref.read(modelFetchProvider.notifier).reset();
+      ref.read(connectionTestProvider.notifier).reset();
       setState(() {
         _message = account.sharing
-            ? 'Connected. Select a model below to use your ChatGPT plan.'
+            ? 'Plan usage authorized. The Model setting will load the available models.'
             : 'Signed in. Plan usage is disabled; choose Enable plan usage to authorize it.';
       });
-      if (account.sharing) {
+      _reload();
+      if (account.sharing &&
+          ref.read(llmConfigProvider).provider == LLMProvider.chatgptPlan) {
         await ref
             .read(modelFetchProvider.notifier)
             .fetchModels(ref.read(llmConfigProvider));
@@ -75,7 +77,11 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
     try {
       final revoked = await _platform.client.signOut(clientId);
       if (!mounted) return;
-      ref.read(llmConfigProvider.notifier).updateModel('');
+      final current = ref.read(llmConfigProvider);
+      if (current.provider == LLMProvider.chatgptPlan &&
+          current.chatgptProfileId == clientId) {
+        ref.read(llmConfigProvider.notifier).updateModel('');
+      }
       ref.read(modelFetchProvider.notifier).reset();
       setState(() {
         _message = revoked
@@ -100,7 +106,7 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
 
   @override
   void dispose() {
-    if (_busy) _platform.cancelSignIn();
+    if (_busy) _activePlatform?.cancelSignIn();
     super.dispose();
   }
 
@@ -109,13 +115,13 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
     final config = ref.watch(llmConfigProvider);
     if (config.provider != LLMProvider.chatgptPlan)
       return const SizedBox.shrink();
-    _accounts ??= _platform.client.accounts();
+    final accountsState = ref.watch(chatGptAccountsProvider);
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: FutureBuilder<List<ChatGptAccount>>(
-        future: _accounts,
-        builder: (context, snapshot) {
-          final accounts = snapshot.data ?? const <ChatGptAccount>[];
+      child: Builder(
+        builder: (context) {
+          final accounts =
+              accountsState.valueOrNull ?? const <ChatGptAccount>[];
           final selected = accounts
               .where((a) => a.clientId == config.chatgptProfileId)
               .firstOrNull;
@@ -124,7 +130,7 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
               children: [
                 Text(
                     selected?.connected == true && selected?.sharing == true
-                        ? 'Using ChatGPT plan'
+                        ? 'ChatGPT plan usage authorized'
                         : 'Connect your ChatGPT account',
                     style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 8),
@@ -165,7 +171,7 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
                             });
                           },
                   ),
-                if (snapshot.hasError)
+                if (accountsState.hasError)
                   const Text('Protected account settings could not be loaded.'),
                 const SizedBox(height: 8),
                 Wrap(spacing: 8, runSpacing: 8, children: [
@@ -201,8 +207,7 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
                         onPressed: _platform.cancelSignIn,
                         child: const Text('Cancel sign-in')),
                 ]),
-                if (selected?.connected == true && selected?.sharing == true)
-                  const ChatGptPlanModelPicker(),
+                if (accountsState.isLoading) const LinearProgressIndicator(),
                 if (_busy) const LinearProgressIndicator(),
                 if (_message != null)
                   Padding(
@@ -215,57 +220,5 @@ class _ChatGptPlanTileState extends ConsumerState<ChatGptPlanTile> {
         },
       ),
     );
-  }
-}
-
-class ChatGptPlanModelPicker extends ConsumerWidget {
-  const ChatGptPlanModelPicker({super.key});
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final config = ref.watch(llmConfigProvider);
-    final catalog = ref.watch(modelFetchProvider);
-    final loading = catalog.status == ModelFetchStatus.loading;
-    final selected =
-        catalog.models.contains(config.model) ? config.model : null;
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      const SizedBox(height: 12),
-      DropdownButtonFormField<String>(
-        key: ValueKey(
-            '${config.chatgptProfileId}:$selected:${catalog.models.join(",")}'),
-        initialValue: selected,
-        isExpanded: true,
-        decoration: const InputDecoration(labelText: 'ChatGPT model'),
-        hint: const Text('Select an available model'),
-        items: catalog.models
-            .map((slug) => DropdownMenuItem(
-                  value: slug,
-                  child: Text(catalog.modelNames[slug] ?? slug,
-                      overflow: TextOverflow.ellipsis),
-                ))
-            .toList(),
-        onChanged: loading
-            ? null
-            : (slug) {
-                if (slug != null)
-                  ref.read(llmConfigProvider.notifier).updateModel(slug);
-              },
-      ),
-      TextButton.icon(
-        onPressed: loading
-            ? null
-            : () => ref
-                .read(modelFetchProvider.notifier)
-                .fetchModels(ref.read(llmConfigProvider)),
-        icon: const Icon(Icons.refresh),
-        label: const Text('Refresh available models'),
-      ),
-      if (loading) const LinearProgressIndicator(),
-      if (catalog.errorMessage != null) Text(catalog.errorMessage!),
-      if (catalog.status == ModelFetchStatus.success &&
-          config.model.isNotEmpty &&
-          selected == null)
-        const Text(
-            'The previously selected model is unavailable. Select a model from this account.'),
-    ]);
   }
 }
