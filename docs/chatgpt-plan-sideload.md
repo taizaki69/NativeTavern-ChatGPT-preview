@@ -35,26 +35,31 @@ Sources:
 
 ## Download build 44
 
-Build 44 fixes the response-decoding check that produced
-**OpenAI returned an unexpected response type.** It is a new build; the
-previous build 43 does not contain this transport update.
+**Build 44 has been compiled and its downloaded unsigned IPA verified.**
+Sign in as the fork owner at [NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
+and open **NativeTavern ChatGPT preview (build 44, unsigned)**. Download `NativeTavern_ChatGPT_v0.1.17+44_unsigned.ipa` and its `.sha256` companion.
+The previous build 43 does not contain this response-transport update.
 
-The unsigned IPA and its checksum will be saved only after the build succeeds
-in the personal fork's draft release:
-[NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
-Sign in as the fork owner and open
-**NativeTavern ChatGPT preview (build 44, unsigned)**.
-The validation report will record the actual run, compiled source, downloaded
-artifact checks, and checksum. A prepared source patch is not evidence that
-the new IPA has been built.
+The IPA is 45,100,794 bytes (43.0 MiB), above this chat's
+9 MiB attachment limit. SHA-256:
+
+~~~
+acde21dc00c8bbd6b74a2cc2e306effc5906a76072cde4cc117291d6b0262004
+~~~
+
+[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37823359670) passed **613 Flutter tests, with
+2 skipped**, and completed analysis with zero errors.
+[Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/7411415ef0bc8b6ca2bb413f7d849d22a9e6e5a8):
+`7411415ef0bc8b6ca2bb413f7d849d22a9e6e5a8`. The source packet's manifest separately identifies any
+documentation-only changes made after this build.
 
 Re-sign the complete app and its frameworks with your existing sideload tool.
 The app targets **iOS 15 or later**. Export existing data before installation;
-your signing tool's bundle-ID/team handling determines whether it replaces the
-existing app or creates separate storage. Using the same signing identity and
-bundle ID is the best way to retain your existing protected account records.
-The source bundle identifies the exact compiled commit separately from later
-documentation-only changes.
+your signing tool's bundle-ID/team handling determines whether it replaces
+the existing app or creates separate storage. Keeping the same signing identity
+and bundle ID helps retain the existing protected account records.
+The verification report separates a real compiled device app from unverified
+live OpenAI admission and final signed-device behavior.
 
 ## Use it after sideloading
 

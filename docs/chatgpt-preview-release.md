@@ -18,9 +18,21 @@ persistence and safe denial display. These use synthetic account records and
 local/mocked endpoints. They do not establish live eligibility or success on
 the owner's phone.
 
-The full macOS test gate and native packaging will finish before this draft's
-IPA is saved. The validation report and matching source packet will record
-the actual successful run and downloaded artifact results.
+Verified build: **613 Flutter tests passed, 2 skipped**, with zero
+analysis errors. Development gates passed, including
+61 Live2D artifacts. The actual downloaded IPA passed
+checksum, all-member ZIP CRC, arm64 iOS-device, version 44, new transport-code
+AOT markers, and native Live2D/Spine checks.
+
+[Successful build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37823359670).
+[Compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/7411415ef0bc8b6ca2bb413f7d849d22a9e6e5a8).
+IPA: `NativeTavern_ChatGPT_v0.1.17+44_unsigned.ipa` (45,100,794 bytes).
+SHA-256: `acde21dc00c8bbd6b74a2cc2e306effc5906a76072cde4cc117291d6b0262004`.
+
+The matching source archive, patch, checksum and English guides accompany
+this build. These checks do not show what body the owner's original request
+received and do not prove completed live inference. A server/account denial
+remains an error with safe diagnostics.
 
 The IPA is unsigned, for arm64 iPhone devices with iOS 15 or later. Export
 existing app data and re-sign the complete app with your existing sideload tool.

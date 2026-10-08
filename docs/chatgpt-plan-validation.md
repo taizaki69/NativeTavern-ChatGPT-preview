@@ -51,24 +51,51 @@ build-43 provider/model configuration fixes remain intact.
   error reaches the actual chat banner, retains safe diagnostics, and creates
   no completed assistant reply or automatic retry.
 - Full-project analysis completed with **zero errors**; existing warnings remain.
-  Formatting, whitespace, development gates, full macOS tests, compilation
-  and final artifact results are recorded below as each is verified.
+  Changed Dart formatting, patch whitespace and shell checks passed.
+  Development gates, full macOS tests, compilation and artifact checks
+  also passed, as recorded below.
 
-## Build and artifact status
+## Verified build 44 and downloaded artifact
 
-The new full macOS gate and unsigned build are pending. No build-44 IPA is
-claimed until the actual workflow and downloaded artifact checks succeed.
-The isolated public fork is
-[taizaki69/NativeTavern-ChatGPT-preview](https://github.com/taizaki69/NativeTavern-ChatGPT-preview).
-Its manual standard `macos-15` workflow uses Flutter 3.44.9 and CocoaPods 1.17.0,
-then delegates final compilation and packaging to the checked-in `build_ios.sh`
-unsigned mode. Native project checks and Live2D/Spine capabilities are preserved.
-No OpenAI account or Apple signing material is used by CI; no paid resources
-are configured.
+The full macOS gate and new unsigned iPhone build succeeded.
+[Run 37823359670](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37823359670) compiled `7411415ef0bc8b6ca2bb413f7d849d22a9e6e5a8`.
+The full suite passed **613 tests, with 2 skipped**, and analysis
+completed with zero errors. The development gate checked
+61 Live2D artifacts and recorded no device evidence.
 
-The previous [build-43 run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37817606854)
-passed 585 tests with 2 skipped and produced a verified unsigned IPA. That
-evidence applies to build 43 and is not substituted for this update's results.
+The workflow used its standard `macos-15` runner, Flutter 3.44.9 and
+CocoaPods 1.17.0. Final compilation and packaging ran through the checked-in
+`build_ios.sh` unsigned mode, preserving native project checks and Live2D/Spine.
+No OpenAI account, Apple signing material, or paid resource was used by CI.
+
+Downloaded artifact:
+
+- Filename: `NativeTavern_ChatGPT_v0.1.17+44_unsigned.ipa`.
+- Size: 45,100,794 bytes.
+- SHA-256: `acde21dc00c8bbd6b74a2cc2e306effc5906a76072cde4cc117291d6b0262004`, matching the successful CI log,
+  release checksum companion, and GitHub asset digest.
+- Version 0.1.17 build 44; bundle `com.miaomiaoxworld.nativetavern`;
+  minimum iOS 15.0.
+- All 444 ZIP entries passed streamed CRC validation.
+  Runner, App.framework, and Flutter.framework are arm64 iOS-device binaries.
+- The compiled Dart app contains the prior ChatGPT/provider integration and
+  the new response-transport diagnostic markers. Native Live2D/Spine markers
+  remain present.
+- The main executable is unsigned. There is no provisioning profile or bundle
+  signature directory; SDK framework signature metadata can remain. The entire
+  app requires local re-signing.
+- The draft release targets the exact compiled commit. While signed into
+  the fork owner, open **NativeTavern ChatGPT preview (build 44, unsigned)** from
+  [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
+- Matching source and the complete binary patch are supplied. The packet
+  identifies compiled and packaged source commits separately. Any difference
+  after the compiled source is documentation only.
+
+The previous build-43 release remains available separately. Its 585 passed,
+2 skipped result does not replace this update's full suite or artifact checks.
+These checks establish source behavior with synthetic responses, a compiled
+unsigned device app, and matching downloadable assets. They do not establish
+the actual server response or completed inference on the owner's account.
 
 ## Live verification and remaining limits
 
