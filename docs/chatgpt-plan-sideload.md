@@ -35,12 +35,25 @@ Sources:
 
 ## Download build 43
 
-The integration fix is being checked and packaged as **build 43**. It must not
-be confused with the previous build 42. When the build succeeds, its unsigned
-IPA and checksum will be in the personal fork's draft release:
-[NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
-Sign in as the fork owner and open **NativeTavern ChatGPT preview (build 43, unsigned)**.
-The build and downloaded artifact results will be recorded in the validation report.
+**Build 43 has been compiled and its downloaded unsigned IPA verified.**
+Sign in as the fork owner at [NativeTavern ChatGPT previews](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
+and open **NativeTavern ChatGPT preview (build 43, unsigned)**. Download
+`NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa` and its `.sha256` companion.
+Keep the previous build 42 separate; it does not contain the chat integration fix.
+
+The IPA is 45,088,282 bytes (43.0 MiB), above this chat's
+9 MiB attachment limit. Its SHA-256 is:
+
+~~~
+d25cb1a66fd66881eb32274580b0b25e2168fd25917c984e8779cbceea0828ed
+~~~
+
+[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37817606854) passed
+**585 Flutter tests, with 2 skipped**, and completed analysis with zero
+errors. The exact compiled source is
+[`1ae5695467f76c2ffd11fb81ef8e8b584e97995d`](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/1ae5695467f76c2ffd11fb81ef8e8b584e97995d).
+The validation report separates compilation and simulated integration tests
+from unverified live account/device behavior.
 
 Re-sign the complete app and its frameworks with your existing sideload tool.
 The app targets **iOS 15 or later**. Export existing data before installation;
@@ -57,11 +70,11 @@ documentation-only changes.
    separate storage. Do not uninstall your existing app to make room.
 2. Open NativeTavern's AI connection settings and select
    **ChatGPT plan (preview)**.
-3. Tap **Continue with ChatGPT**. Sign in and authorize the app in the
-   OS-controlled Safari browser view. Keep the app foregrounded.
-4. If your saved account is already authorized, it can be reused without
-   repeating sign-in. Otherwise grant permission to use your ChatGPT plan. If only identity permission is
-   granted, the app retains the sign-in and offers **Enable plan usage**;
+3. Reuse your saved authorized account if it is still connected. Otherwise
+   tap **Continue with ChatGPT**, sign in and authorize the app in the
+   OS-controlled Safari browser view, keeping the app foregrounded.
+4. Grant permission to use your ChatGPT plan if that grant is missing.
+   Identity-only sign-in is retained and offers **Enable plan usage**;
    it cannot generate until that grant is present.
 5. The existing **Model** setting now loads the selected account's catalog
    automatically. A saved model is retained; an empty selection defaults to the
@@ -75,8 +88,9 @@ documentation-only changes.
    If you want to use only included plan allowance, keep credit usage disabled
    in that app's limits. The app does not buy credits or modify billing settings.
 
-The catalog is not hard-coded. Reopening AI Configuration automatically reloads
-it for an authorized account. Account switching discards stale catalog and
+The catalog is not hard-coded. Opening AI Configuration automatically loads
+a missing catalog for an authorized account, including after an app restart.
+The model list's refresh button explicitly reloads a cached catalog. Account switching discards stale catalog and
 connection-test results, clears the model binding, and loads the new account's
 models. Reconnecting the same registration preserves the existing selection.
 Existing connection profiles and API provider settings remain available.

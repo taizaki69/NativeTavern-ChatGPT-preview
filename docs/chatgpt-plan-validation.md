@@ -19,7 +19,20 @@ HTTP and nested SSE errors preserve safe codes, parameters, request IDs, and sta
 - The real app pipeline was exercised with streaming display both enabled and disabled. In both cases the official Responses request has `stream: true`, `store: false`, and no separately billed API-key fallback.
 - The initial API-key-banner regression failed before the patch and passes afterward.
 
-Full-project local analysis completed with zero errors (existing warnings remain). Changed Dart formatting, patch whitespace, shell syntax, and workflow YAML passed. The Live2D development gate passed with 61 artifacts; the mobile development gate passed while reporting no device evidence. The complete macOS suite and new unsigned iPhone build are pending. Their actual results and the downloaded IPA checksum will be recorded after the workflow completes.
+Full-project local analysis completed with zero errors (existing warnings remain). Changed Dart formatting, patch whitespace, shell syntax, and workflow YAML passed. The Live2D development gate passed with 61 artifacts; the mobile development gate passed while reporting no device evidence. The completed macOS build passed the full suite: **585 tests passed, 2 skipped**. Its analysis, mobile checks, native compilation, unsigned packaging, and release-save steps all succeeded.
+
+## Verified build 43 and downloaded artifact
+
+- [Successful run 37817606854](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37817606854) compiled source `1ae5695467f76c2ffd11fb81ef8e8b584e97995d`.
+- Flutter 3.44.9, CocoaPods 1.17.0, and the workflow's macOS/Xcode runner built the real arm64 device app through `build_ios.sh`.
+- The IPA is `NativeTavern_ChatGPT_v0.1.17+43_unsigned.ipa`, 45,088,282 bytes, version 0.1.17 build 43, minimum iOS 15.0.
+- Downloaded SHA-256: `d25cb1a66fd66881eb32274580b0b25e2168fd25917c984e8779cbceea0828ed`. It matches the checksum in the successful build log and the release checksum companion.
+- Every ZIP member passed CRC validation. Runner, App.framework, and Flutter.framework are arm64 iOS-device binaries. The compiled app contains the ChatGPT provider and new integration UI markers; Live2D and Spine markers remain present.
+- The main executable is unsigned, with no provisioning profile or bundle signature directories. SDK framework signature metadata may remain; the entire app still needs local re-signing.
+- The release targets the exact compiled commit and remains a draft. Download while signed into the fork owner from [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases); open **NativeTavern ChatGPT preview (build 43, unsigned)**.
+- Matching source, a complete binary patch, and English instructions accompany the IPA. Any later commit in this source packet changes documentation only; the manifest records both source and compiled commits.
+
+These are build and artifact checks. They do not establish live OpenAI eligibility, completed inference on the owner's account, or installation under the final signing identity.
 
 ## Build route and prior evidence
 
