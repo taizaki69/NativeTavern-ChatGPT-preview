@@ -38,6 +38,11 @@ jobs:
           "$RUNNER_TEMP/flutter/bin/flutter" --version
           xcodebuild -version
           pod --version
+          # Podspec checksums in the committed lockfile were generated with this version.
+          [[ "$(pod --version)" == '1.17.0' ]] || {
+            echo 'CocoaPods 1.17.0 is required for this locked native build.' >&2
+            exit 1
+          }
 
       - name: Resolve locked dependencies
         run: flutter pub get --enforce-lockfile
