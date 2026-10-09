@@ -1,3 +1,4 @@
+import 'package:native_tavern/presentation/widgets/chat/prompt_cache_usage_preview.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -3340,6 +3341,9 @@ class _MessageBubbleState extends State<_MessageBubble> {
                                 DataBankCitationPreview(
                                   message: widget.message,
                                 ),
+                              if (!isUser && !widget.isGenerating)
+                                PromptCacheUsagePreview(
+                                    message: widget.message),
                             ],
                           ),
                   ),

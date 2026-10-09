@@ -357,6 +357,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
       return LLMResponse(
         content: result.content,
         reasoning: result.reasoning,
+        cacheUsage: result.cacheUsage,
       );
     } on ToolProtocolException catch (error) {
       if (error.code == 'cancelled') {
@@ -378,6 +379,9 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
     );
     final prefill = state.chat?.startReplyWith ?? '';
     if (toolResponse != null) {
+      if (toolResponse.cacheUsage != null) {
+        yield LLMStreamChunk(cacheUsage: toolResponse.cacheUsage);
+      }
       if (prefill.isNotEmpty) yield LLMStreamChunk(content: prefill);
       if (toolResponse.reasoning?.isNotEmpty == true) {
         yield LLMStreamChunk(
@@ -444,6 +448,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         return LLMResponse(
           content: prefill + response.content,
           reasoning: response.reasoning,
+          cacheUsage: response.cacheUsage,
         );
       }
       return await session.generate(context, (request) async {
@@ -459,6 +464,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         return LLMResponse(
           content: prefill + response.content,
           reasoning: response.reasoning,
+          cacheUsage: response.cacheUsage,
         );
       });
     } finally {
@@ -967,12 +973,14 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
 
       String finalContent;
       String? finalReasoning;
+      PromptCacheUsage? finalCacheUsage;
 
       if (config.streamEnabled) {
         // Stream the response with reasoning support
         final contentBuffer = StringBuffer();
         final reasoningBuffer = StringBuffer();
         await for (final chunk in _generateStreamWithPrefill(context, config)) {
+          finalCacheUsage = chunk.cacheUsage ?? finalCacheUsage;
           if (chunk.isReasoningChunk && chunk.reasoning != null) {
             reasoningBuffer.write(chunk.reasoning);
           }
@@ -1001,6 +1009,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         final response = await _generateWithPrefill(context, config);
         finalContent = response.content;
         finalReasoning = response.reasoning;
+        finalCacheUsage = response.cacheUsage;
 
         // Update the message with final content
         final updatedMessage = assistantMessage.copyWith(
@@ -1018,8 +1027,11 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         swipes: [finalContent],
         reasoning: finalReasoning,
         reasoningSwipes: finalReasoning != null ? [finalReasoning] : null,
+        metadata: PromptCacheUsage.forMessage(
+            assistantMessage.metadata, finalCacheUsage, 0),
       );
       await _chatRepository.addMessage(finalMessage);
+      _replaceMessage(finalMessage.id, finalMessage);
 
       state = state.copyWith(isGenerating: false);
       await _restoreRecentMessagesPage();
@@ -1059,6 +1071,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
 
       String finalContent;
       String? finalReasoning;
+      PromptCacheUsage? finalCacheUsage;
 
       if (config.streamEnabled) {
         // Streaming mode
@@ -1070,6 +1083,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
             break;
           }
 
+          finalCacheUsage = chunk.cacheUsage ?? finalCacheUsage;
           if (chunk.isReasoningChunk && chunk.reasoning != null) {
             reasoningBuffer.write(chunk.reasoning);
           }
@@ -1119,6 +1133,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         final response = await _generateWithPrefill(context, config);
         finalContent = response.content;
         finalReasoning = response.reasoning;
+        finalCacheUsage = response.cacheUsage;
       }
 
       // Save the updated message
@@ -1143,9 +1158,11 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         reasoning: finalReasoning,
         reasoningSwipes:
             newReasoningSwipes.isNotEmpty ? newReasoningSwipes : null,
-        metadata: responseMetadata,
+        metadata: PromptCacheUsage.forMessage(
+            responseMetadata, finalCacheUsage, newSwipes.length - 1),
       );
       await _chatRepository.updateMessage(finalMessage);
+      _replaceMessage(finalMessage.id, finalMessage);
 
       state = state.copyWith(isGenerating: false);
       await _restoreRecentMessagesPage();
@@ -1204,9 +1221,12 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
       content: updatedSwipes[newIndex],
       swipes: updatedSwipes,
       currentSwipeIndex: newIndex,
-      metadata: removeDataBankContextMetadataAt(
-        metadata: message.metadata,
-        swipeIndex: swipeIndex,
+      metadata: PromptCacheUsage.removeSwipe(
+        removeDataBankContextMetadataAt(
+          metadata: message.metadata,
+          swipeIndex: swipeIndex,
+        ),
+        swipeIndex,
       ),
     );
 
@@ -1322,6 +1342,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
 
       String finalContent;
       String? finalReasoning;
+      PromptCacheUsage? finalCacheUsage;
 
       if (config.streamEnabled) {
         // Streaming mode
@@ -1333,6 +1354,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
             break;
           }
 
+          finalCacheUsage = chunk.cacheUsage ?? finalCacheUsage;
           if (chunk.isReasoningChunk && chunk.reasoning != null) {
             reasoningBuffer.write(chunk.reasoning);
           }
@@ -1387,6 +1409,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         final response = await _generateWithPrefill(context, config);
         finalContent = response.content;
         finalReasoning = response.reasoning;
+        finalCacheUsage = response.cacheUsage;
       }
 
       // Save the updated message
@@ -1411,9 +1434,11 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         reasoning: finalReasoning,
         reasoningSwipes:
             newReasoningSwipes.isNotEmpty ? newReasoningSwipes : null,
-        metadata: responseMetadata,
+        metadata: PromptCacheUsage.forMessage(
+            responseMetadata, finalCacheUsage, newSwipes.length - 1),
       );
       await _chatRepository.updateMessage(finalMessage);
+      _replaceMessage(finalMessage.id, finalMessage);
 
       state = state.copyWith(isGenerating: false);
       await _restoreRecentMessagesPage();
@@ -1557,6 +1582,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
 
       String finalContent;
       String? finalReasoning;
+      PromptCacheUsage? finalCacheUsage;
 
       if (config.streamEnabled) {
         // Stream the response with reasoning support
@@ -1568,6 +1594,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
             break;
           }
 
+          finalCacheUsage = chunk.cacheUsage ?? finalCacheUsage;
           if (chunk.isReasoningChunk && chunk.reasoning != null) {
             reasoningBuffer.write(chunk.reasoning);
           }
@@ -1596,6 +1623,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         final response = await _generateWithPrefill(context, config);
         finalContent = response.content;
         finalReasoning = response.reasoning;
+        finalCacheUsage = response.cacheUsage;
 
         // Update the message with final content
         final updatedMessage = assistantMessage.copyWith(
@@ -1613,8 +1641,11 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         swipes: [finalContent],
         reasoning: finalReasoning,
         reasoningSwipes: finalReasoning != null ? [finalReasoning] : null,
+        metadata: PromptCacheUsage.forMessage(
+            assistantMessage.metadata, finalCacheUsage, 0),
       );
       await _chatRepository.addMessage(finalMessage);
+      _replaceMessage(finalMessage.id, finalMessage);
 
       state = state.copyWith(isGenerating: false);
       await _restoreRecentMessagesPage();
@@ -3380,6 +3411,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
     try {
       String finalContent;
       String? finalReasoning;
+      PromptCacheUsage? finalCacheUsage;
 
       if (config.streamEnabled) {
         final contentBuffer = StringBuffer();
@@ -3390,6 +3422,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
           generationSession: prepared.session,
         )) {
           if (_isCancelling) break;
+          finalCacheUsage = chunk.cacheUsage ?? finalCacheUsage;
           if (chunk.isReasoningChunk && chunk.reasoning != null) {
             reasoningBuffer.write(chunk.reasoning);
           }
@@ -3419,6 +3452,7 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         );
         finalContent = response.content;
         finalReasoning = response.reasoning;
+        finalCacheUsage = response.cacheUsage;
       }
 
       final finalMessage = assistantMessage.copyWith(
@@ -3426,9 +3460,11 @@ class ActiveChatNotifier extends StateNotifier<ActiveChatState> {
         swipes: [finalContent],
         reasoning: finalReasoning,
         reasoningSwipes: finalReasoning != null ? [finalReasoning] : null,
+        metadata: PromptCacheUsage.forMessage(
+            assistantMessage.metadata, finalCacheUsage, 0),
       );
-      _replaceMessage(assistantMessage.id, finalMessage);
       await _chatRepository.addMessage(finalMessage);
+      _replaceMessage(finalMessage.id, finalMessage);
     } on ChatGenerationCancelledException {
       _removeEmptyMessage(assistantMessage.id);
     } catch (error, stackTrace) {

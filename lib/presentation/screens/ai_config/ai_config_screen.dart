@@ -1477,7 +1477,22 @@ class _PromptCacheTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
-    // Prompt caching is a Claude (Anthropic API) feature
+    if (config.supportsOpenRouterPromptCaching) {
+      return SwitchListTile(
+        secondary: const Icon(Icons.savings_outlined),
+        title: const Text('Automatic OpenRouter caching'),
+        subtitle: const Text(
+          'Reuses prompt prefixes for Claude. Five-minute cache; writes cost '
+          'extra, reads can lower input costs. Actual hits appear under replies.',
+        ),
+        value: config.openRouterPromptCacheEnabled,
+        onChanged: (value) {
+          ref
+              .read(llmConfigProvider.notifier)
+              .updateOpenRouterPromptCacheEnabled(value);
+        },
+      );
+    }
     if (config.provider != LLMProvider.claude) {
       return const SizedBox.shrink();
     }

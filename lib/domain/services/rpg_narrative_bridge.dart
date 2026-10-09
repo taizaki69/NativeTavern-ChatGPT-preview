@@ -265,6 +265,7 @@ class RpgNarrativeMiddleware extends ChatGenerationMiddleware
       return LLMResponse(
         content: result.feedback,
         reasoning: response.reasoning,
+        cacheUsage: response.cacheUsage,
       );
     }
 
@@ -280,6 +281,7 @@ class RpgNarrativeMiddleware extends ChatGenerationMiddleware
       return LLMResponse(
         content: envelope.narrative,
         reasoning: response.reasoning,
+        cacheUsage: response.cacheUsage,
       );
     }
 
@@ -312,6 +314,7 @@ class RpgNarrativeMiddleware extends ChatGenerationMiddleware
       return LLMResponse(
         content: '${envelope.narrative}\n\n$feedback',
         reasoning: response.reasoning,
+        cacheUsage: response.cacheUsage,
       );
     } on RpgRuleViolation catch (error) {
       return _rejectedResponse(
@@ -357,6 +360,7 @@ class RpgNarrativeMiddleware extends ChatGenerationMiddleware
     return LLMResponse(
       content: '${envelope.narrative}\n\n$feedback',
       reasoning: response.reasoning,
+      cacheUsage: response.cacheUsage,
     );
   }
 

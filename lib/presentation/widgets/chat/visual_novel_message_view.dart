@@ -1,3 +1,4 @@
+import 'package:native_tavern/presentation/widgets/chat/prompt_cache_usage_preview.dart';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -228,6 +229,8 @@ class _VisualNovelMessageViewState
               ),
             if (!isUser && !isGenerating)
               DataBankCitationPreview(message: message),
+            if (!isUser && !isGenerating)
+              PromptCacheUsagePreview(message: message),
             // Swipe controls
             if (hasSwipes && !isGenerating) _buildSwipeControls(message),
           ],

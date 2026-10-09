@@ -969,6 +969,7 @@ class ChatGenerationSession {
     var recovered = false;
     Object? terminalError;
     StackTrace? terminalStackTrace;
+    PromptCacheUsage? cacheUsage;
 
     try {
       if (!cancellationToken.isCancelled) {
@@ -976,6 +977,7 @@ class ChatGenerationSession {
           if (cancellationToken.isCancelled) break;
           if (chunk.content != null) content.write(chunk.content);
           if (chunk.reasoning != null) reasoning.write(chunk.reasoning);
+          cacheUsage = chunk.cacheUsage ?? cacheUsage;
           if (!buffersResponse) yield chunk;
         }
       }
@@ -990,6 +992,7 @@ class ChatGenerationSession {
         );
         if (recovery != null) {
           recovered = true;
+          cacheUsage = recovery.cacheUsage;
           if (recovery.reasoning?.isNotEmpty == true) {
             reasoning.write(recovery.reasoning);
             if (!buffersResponse) {
@@ -1015,6 +1018,7 @@ class ChatGenerationSession {
     var response = LLMResponse(
       content: content.toString(),
       reasoning: reasoning.isEmpty ? null : reasoning.toString(),
+      cacheUsage: cacheUsage,
     );
     if (terminalError == null && !cancellationToken.isCancelled) {
       response = await _runTransforms(
@@ -1054,6 +1058,9 @@ class ChatGenerationSession {
       );
     }
     if (buffersResponse) {
+      if (response.cacheUsage != null) {
+        yield LLMStreamChunk(cacheUsage: response.cacheUsage);
+      }
       if (response.reasoning?.isNotEmpty == true) {
         yield LLMStreamChunk(
           reasoning: response.reasoning,

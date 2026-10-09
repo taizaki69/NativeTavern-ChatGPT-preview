@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'openrouter_prompt_cache.dart';
+export 'openrouter_prompt_cache.dart' show PromptCacheUsage;
 import 'chatgpt_plan_client.dart';
 import 'chatgpt_plan_platform.dart';
 import 'chatgpt_plan_responses.dart';
@@ -34,10 +36,12 @@ enum LLMProvider {
 class LLMResponse {
   final String content;
   final String? reasoning;
+  final PromptCacheUsage? cacheUsage;
 
   const LLMResponse({
     required this.content,
     this.reasoning,
+    this.cacheUsage,
   });
 
   bool get hasReasoning => reasoning != null && reasoning!.isNotEmpty;
@@ -48,11 +52,13 @@ class LLMStreamChunk {
   final String? content;
   final String? reasoning;
   final bool isReasoningChunk;
+  final PromptCacheUsage? cacheUsage;
 
   const LLMStreamChunk({
     this.content,
     this.reasoning,
     this.isReasoningChunk = false,
+    this.cacheUsage,
   });
 }
 
@@ -334,6 +340,14 @@ class LLMConfig {
   // to cut input token costs on subsequent turns
   final bool promptCacheEnabled;
 
+  /// Defaults on for existing OpenRouter Claude connections; explicit opt-out
+  /// persists independently of direct Anthropic API caching.
+  final bool openRouterPromptCacheEnabled;
+
+  bool get supportsOpenRouterPromptCaching =>
+      provider == LLMProvider.openRouter &&
+      OpenRouterPromptCache.supportsModel(model);
+
   // Merge consecutive same-role messages (prompt post-processing).
   // Required by endpoints that enforce strict user/assistant alternation
   // (e.g. deepseek-reasoner and some proxies)
@@ -378,6 +392,7 @@ class LLMConfig {
     this.autoSummarizeThreshold = 0.8,
     this.reasoningEffort = ReasoningEffort.auto,
     this.promptCacheEnabled = false,
+    this.openRouterPromptCacheEnabled = true,
     this.mergeConsecutiveRoles = false,
     this.openRouterProvider = '',
     this.disabledParameters = const <String>{},
@@ -439,6 +454,7 @@ class LLMConfig {
     double? autoSummarizeThreshold,
     String? reasoningEffort,
     bool? promptCacheEnabled,
+    bool? openRouterPromptCacheEnabled,
     bool? mergeConsecutiveRoles,
     String? openRouterProvider,
     Set<String>? disabledParameters,
@@ -474,6 +490,8 @@ class LLMConfig {
           autoSummarizeThreshold ?? this.autoSummarizeThreshold,
       reasoningEffort: reasoningEffort ?? this.reasoningEffort,
       promptCacheEnabled: promptCacheEnabled ?? this.promptCacheEnabled,
+      openRouterPromptCacheEnabled:
+          openRouterPromptCacheEnabled ?? this.openRouterPromptCacheEnabled,
       mergeConsecutiveRoles:
           mergeConsecutiveRoles ?? this.mergeConsecutiveRoles,
       openRouterProvider: openRouterProvider ?? this.openRouterProvider,
@@ -510,6 +528,7 @@ class LLMConfig {
         'autoSummarizeThreshold': autoSummarizeThreshold,
         'reasoningEffort': reasoningEffort,
         'promptCacheEnabled': promptCacheEnabled,
+        'openRouterPromptCacheEnabled': openRouterPromptCacheEnabled,
         'mergeConsecutiveRoles': mergeConsecutiveRoles,
         'openRouterProvider': openRouterProvider,
         'disabledParameters': disabledParameters.toList(),
@@ -554,6 +573,8 @@ class LLMConfig {
         reasoningEffort:
             json['reasoningEffort'] as String? ?? ReasoningEffort.auto,
         promptCacheEnabled: json['promptCacheEnabled'] as bool? ?? false,
+        openRouterPromptCacheEnabled:
+            json['openRouterPromptCacheEnabled'] as bool? ?? true,
         mergeConsecutiveRoles: json['mergeConsecutiveRoles'] as bool? ?? false,
         openRouterProvider: json['openRouterProvider'] as String? ?? '',
         disabledParameters: (json['disabledParameters'] as List<dynamic>?)
@@ -609,6 +630,10 @@ class LLMService {
     List<Map<String, dynamic>> messages,
     LLMConfig config,
   ) {
+    if (config.supportsOpenRouterPromptCaching &&
+        config.openRouterPromptCacheEnabled) {
+      return OpenRouterPromptCache.apply(messages);
+    }
     if (!_isGroqCompound(config) ||
         messages.isEmpty ||
         messages.last['role'] != 'assistant') {
@@ -741,6 +766,9 @@ class LLMService {
     }
     return ToolProviderTurn(
       assistant: adapter.parseResponse(data),
+      cacheUsage: config.provider == LLMProvider.openRouter
+          ? PromptCacheUsage.fromOpenRouter(data['usage'])
+          : null,
       continuationMessage: rawMessage,
     );
   }
@@ -1406,7 +1434,10 @@ class LLMService {
     if (!response.hasReasoning) {
       final (content, reasoning) = ThinkTagParser.extract(response.content);
       if (reasoning != null) {
-        return LLMResponse(content: content, reasoning: reasoning);
+        return LLMResponse(
+            content: content,
+            reasoning: reasoning,
+            cacheUsage: response.cacheUsage);
       }
     }
     return response;
@@ -1514,6 +1545,9 @@ class LLMService {
           }
           if (content.isNotEmpty) {
             yield LLMStreamChunk(content: content);
+          }
+          if (chunk.cacheUsage != null) {
+            yield LLMStreamChunk(cacheUsage: chunk.cacheUsage);
           }
         } else {
           yield chunk;
@@ -2263,7 +2297,13 @@ class LLMService {
         contentPreview:
             content.length > 100 ? '${content.substring(0, 100)}...' : content);
 
-    return LLMResponse(content: content, reasoning: reasoning);
+    return LLMResponse(
+      content: content,
+      reasoning: reasoning,
+      cacheUsage: config.provider == LLMProvider.openRouter
+          ? PromptCacheUsage.fromOpenRouter(data['usage'])
+          : null,
+    );
   }
 
   Stream<String> _streamOpenAI(
@@ -2885,6 +2925,10 @@ class LLMService {
             try {
               final json =
                   jsonDecode(line.substring(6)) as Map<String, dynamic>;
+              if (config.provider == LLMProvider.openRouter) {
+                final usage = PromptCacheUsage.fromOpenRouter(json['usage']);
+                if (usage != null) yield LLMStreamChunk(cacheUsage: usage);
+              }
               final choices = json['choices'] as List<dynamic>?;
               if (choices != null && choices.isNotEmpty) {
                 final choice = choices[0] as Map<String, dynamic>;

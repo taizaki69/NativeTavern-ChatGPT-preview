@@ -66,6 +66,7 @@ final class ToolGenerationLoop {
     var estimatedTokens = 0;
     String? lastText;
     String? lastReasoning;
+    PromptCacheUsage? cacheUsage;
 
     try {
       while (true) {
@@ -87,6 +88,7 @@ final class ToolGenerationLoop {
           localCancellation,
         );
         localCancellation.token.throwIfCancelled();
+        cacheUsage = PromptCacheUsage.combine(cacheUsage, turn.cacheUsage);
         lastText = turn.assistant.text;
         lastReasoning = turn.assistant.reasoning;
         estimatedTokens += _estimateTurn(turn.assistant);
@@ -99,6 +101,7 @@ final class ToolGenerationLoop {
             toolRounds: toolRounds,
             callCount: callCount,
             estimatedTokens: estimatedTokens,
+            cacheUsage: cacheUsage,
           );
         }
         if (!turn.assistant.hasToolCalls) {
@@ -108,6 +111,7 @@ final class ToolGenerationLoop {
             toolRounds: toolRounds,
             callCount: callCount,
             estimatedTokens: estimatedTokens,
+            cacheUsage: cacheUsage,
           );
         }
         if (toolRounds >= limits.maxToolRounds) {
@@ -126,6 +130,7 @@ final class ToolGenerationLoop {
             toolRounds: toolRounds,
             callCount: callCount,
             estimatedTokens: estimatedTokens,
+            cacheUsage: cacheUsage,
           );
         }
         if (callCount + turn.assistant.toolCalls.length > limits.maxCalls) {
@@ -144,6 +149,7 @@ final class ToolGenerationLoop {
             toolRounds: toolRounds,
             callCount: callCount,
             estimatedTokens: estimatedTokens,
+            cacheUsage: cacheUsage,
           );
         }
 
@@ -193,6 +199,7 @@ final class ToolGenerationLoop {
               toolRounds: toolRounds,
               callCount: callCount,
               estimatedTokens: estimatedTokens,
+              cacheUsage: cacheUsage,
             );
           }
         }
@@ -209,6 +216,7 @@ final class ToolGenerationLoop {
         toolRounds: toolRounds,
         callCount: callCount,
         estimatedTokens: estimatedTokens,
+        cacheUsage: cacheUsage,
       );
     } finally {
       stopwatch.stop();
@@ -593,6 +601,7 @@ ToolGenerationResult _limited({
   required int toolRounds,
   required int callCount,
   required int estimatedTokens,
+  PromptCacheUsage? cacheUsage,
 }) {
   final prefix = lastText?.trim() ?? '';
   return ToolGenerationResult(
@@ -601,6 +610,7 @@ ToolGenerationResult _limited({
     toolRounds: toolRounds,
     callCount: callCount,
     estimatedTokens: estimatedTokens,
+    cacheUsage: cacheUsage,
     stopCode: code,
   );
 }

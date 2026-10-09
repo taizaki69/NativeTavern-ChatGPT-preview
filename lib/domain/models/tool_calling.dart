@@ -1,3 +1,4 @@
+import 'prompt_cache_usage.dart';
 import 'dart:convert';
 
 enum ToolChoiceMode { auto, none, required, named }
@@ -339,10 +340,12 @@ final class ToolAssistantMessage {
 final class ToolProviderTurn {
   ToolProviderTurn({
     required this.assistant,
+    this.cacheUsage,
     required Map<String, dynamic> continuationMessage,
   }) : continuationMessage = copyToolJsonObject(continuationMessage);
 
   final ToolAssistantMessage assistant;
+  final PromptCacheUsage? cacheUsage;
   final Map<String, dynamic> continuationMessage;
 }
 

@@ -1,3 +1,4 @@
+import 'prompt_cache_usage.dart';
 import 'package:native_tavern/domain/models/built_in_tool.dart';
 
 enum ToolCallProgressStatus {
@@ -43,11 +44,11 @@ final class ToolLoopLimits {
   }
 
   Map<String, dynamic> toJson() => {
-    'maxToolRounds': maxToolRounds,
-    'maxCalls': maxCalls,
-    'maxElapsedSeconds': maxElapsed.inSeconds,
-    'maxTokenBudget': maxTokenBudget,
-  };
+        'maxToolRounds': maxToolRounds,
+        'maxCalls': maxCalls,
+        'maxElapsedSeconds': maxElapsed.inSeconds,
+        'maxTokenBudget': maxTokenBudget,
+      };
 
   factory ToolLoopLimits.fromJson(Map<String, dynamic> json) {
     final value = ToolLoopLimits(
@@ -67,10 +68,10 @@ final class ToolCallingSettings {
     Iterable<String> enabledBuiltInTools = const [],
     this.limits = const ToolLoopLimits(),
   }) : enabledBuiltInTools = Set<String>.unmodifiable(
-         enabledBuiltInTools
-             .map((name) => name.trim())
-             .where((name) => name.isNotEmpty),
-       ) {
+          enabledBuiltInTools
+              .map((name) => name.trim())
+              .where((name) => name.isNotEmpty),
+        ) {
     limits.validate();
   }
 
@@ -91,11 +92,11 @@ final class ToolCallingSettings {
   }
 
   Map<String, dynamic> toJson() => {
-    'version': 1,
-    'enabled': enabled,
-    'enabledBuiltInTools': enabledBuiltInTools.toList()..sort(),
-    'limits': limits.toJson(),
-  };
+        'version': 1,
+        'enabled': enabled,
+        'enabledBuiltInTools': enabledBuiltInTools.toList()..sort(),
+        'limits': limits.toJson(),
+      };
 
   factory ToolCallingSettings.fromJson(Map<String, dynamic> json) {
     return ToolCallingSettings(
@@ -152,6 +153,7 @@ final class ToolGenerationResult {
     required this.callCount,
     required this.estimatedTokens,
     this.stopCode,
+    this.cacheUsage,
   });
 
   final String content;
@@ -160,4 +162,5 @@ final class ToolGenerationResult {
   final int callCount;
   final int estimatedTokens;
   final String? stopCode;
+  final PromptCacheUsage? cacheUsage;
 }
