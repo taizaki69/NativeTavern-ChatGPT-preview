@@ -45,16 +45,33 @@ Live cache hits and savings are not established by synthetic tests.
 
 ## Download build 45
 
-The build-45 source is prepared; its new IPA is not verified yet. The previous
-build-44 IPA does not contain automatic OpenRouter cache markers.
-Once the build and downloaded artifact pass verification, this section will
-identify the exact IPA, successful CI run, compiled source and checksum.
+**Build 45 has been compiled and its downloaded unsigned IPA verified.**
+Sign in as the fork owner at [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
+and open **NativeTavern ChatGPT preview (build 45, unsigned)**.
+Download `NativeTavern_ChatGPT_v0.1.17+45_unsigned.ipa` and its `.sha256` companion.
+Earlier build 44 does not contain automatic OpenRouter prompt-cache markers.
 
-The stable download location is [the fork's Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases),
-accessible while signed in as the fork owner. Re-sign the complete app and its
-frameworks with your existing sideload tool. It targets iOS 15 or later.
-Export existing data before installation; preserving the same signing identity
-and bundle ID helps retain app storage and protected account records.
+The IPA is 45,111,769 bytes (43.0 MiB), above this
+chat's 9 MiB file limit. SHA-256:
+
+~~~
+9ae9f1f934280b216ad484016fd0634e23abe9db68b992005b790094cc10e6ff
+~~~
+
+[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37894204117) passed **640 Flutter tests,
+with 2 skipped**, and analysis completed with zero errors.
+[Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/6fab43d0cda0b55c5ef61dbdc5237f6962474693): `6fab43d0cda0b55c5ef61dbdc5237f6962474693`.
+The source packet identifies any documentation-only changes after compilation.
+
+Re-sign the complete app and its frameworks with your existing sideload tool.
+The app targets **iOS 15 or later**. Export existing data before installation.
+Your signing tool's bundle-ID/team handling determines whether it updates the
+existing app or creates separate storage. Keeping the same signing identity
+and bundle ID helps retain protected accounts and saved configuration.
+
+For Sonnet 5.5, keep your existing OpenRouter provider and model, and follow
+[the caching guide](openrouter-prompt-caching.md). The instructions below concern
+the separate ChatGPT provider; using OpenRouter does not require its sign-in.
 
 ## Use it after sideloading
 

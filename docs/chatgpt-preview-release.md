@@ -1,24 +1,36 @@
 NativeTavern ChatGPT preview, version 0.1.17 build 45.
 
 This update adds automatic prompt caching for supported OpenRouter Claude
-models, including Sonnet 5.5. It marks reusable instruction/history prefixes
-in streaming, non-streaming and tool requests without changing prompt text,
-provider routing or the newest question. The setting defaults on and can be
-turned off in AI configuration. Replies show OpenRouter's reported cache reads
-and writes for the selected reply alternative.
+models, including Sonnet 5.5. The existing provider, model, prompt content and
+routing are preserved. Caching defaults on; use **Automatic OpenRouter caching**
+in AI settings to opt out. Replies show reported cache reads and writes for the
+selected alternative, including totals from tool generation rounds.
 
-See [the caching guide](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/blob/main/docs/openrouter-prompt-caching.md).
-The default retention is five minutes. Writes cost extra; hits and savings
-depend on actual reuse, model minimums, unchanged content and provider routing.
-No live paid inference or owner API credentials are used to test this change.
+[English caching instructions](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/blob/main/docs/openrouter-prompt-caching.md).
+Default retention is five minutes. Writes cost extra; reuse depends on model
+minimums, exact content, retention and provider routing. Live cache hits and
+billed savings are unverified. No live paid inference or owner API credentials
+were used to test this change.
 
-The official ChatGPT plan-sharing provider and build-44 response transport
-remain in use. Completed live Responses inference and account eligibility are
-still unverified. No Codex bridge or API-key fallback was introduced.
+**640 full Flutter tests passed, 2 skipped**, with zero analysis errors.
+The final source also passed 129 focused tests, including 27 caching tests.
+The native development gates passed, and the downloaded IPA passed checksum,
+all-member ZIP CRC, version, arm64 iOS-device, caching/ChatGPT compiled markers
+and Live2D/Spine checks.
 
-129 focused source tests passed, including 27 caching tests. Analysis reports
-zero errors, and native development gates passed. These checks use synthetic
-responses and local/mock HTTP. The new CI run and downloaded IPA are not verified yet;
-this draft's validation details will be updated after those checks complete.
-The IPA must be re-signed locally before sideloading. Preserve your existing
-app data and signing identity. Earlier preview builds remain separate.
+[Successful build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37894204117).
+[Compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/6fab43d0cda0b55c5ef61dbdc5237f6962474693).
+IPA: `NativeTavern_ChatGPT_v0.1.17+45_unsigned.ipa` (45,111,769 bytes).
+SHA-256: `9ae9f1f934280b216ad484016fd0634e23abe9db68b992005b790094cc10e6ff`.
+
+Matching source, complete patch, checksums, English guides and verification
+reports accompany the build. Earlier preview drafts remain unchanged.
+
+The official ChatGPT provider and build-44 transport are retained. Completed
+live Responses inference and account/mobile eligibility remain unverified.
+No Codex bridge or paid API-key fallback was added.
+
+This is an unsigned device app for iOS 15 or later. Export your existing data,
+then re-sign the complete app with your existing sideload tool. Keep your
+OpenRouter connection and Sonnet 5.5 model; no ChatGPT login is needed for that
+provider. Reported counters appear under completed replies when supplied.

@@ -83,3 +83,14 @@ The matching build report records the actual macOS test gate and IPA inspection.
 Live cache hits, billed savings and behavior on a re-signed iPhone remain
 unverified. A successful OAuth sign-in in the separate ChatGPT provider also
 does not establish completed Responses inference or account eligibility.
+
+## Verified build 45
+
+[The macOS run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37894204117) passed **640 tests, with 2 skipped**,
+and analysis completed with zero errors. The downloaded unsigned device IPA
+passed checksum, all-member ZIP CRC and compiled cache/ChatGPT/native feature
+checks. Its matching source and reports accompany the release.
+
+These checks establish request behavior with synthetic responses and a compiled
+device app. They do not establish live cache hits, paid savings or the final
+re-signed phone's behavior.
