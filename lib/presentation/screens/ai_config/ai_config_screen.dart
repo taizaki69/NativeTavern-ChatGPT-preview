@@ -1477,33 +1477,30 @@ class _PromptCacheTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final config = ref.watch(llmConfigProvider);
-    if (config.supportsOpenRouterPromptCaching) {
-      return SwitchListTile(
-        secondary: const Icon(Icons.savings_outlined),
-        title: const Text('Automatic OpenRouter caching'),
-        subtitle: const Text(
-          'Reuses prompt prefixes for Claude. Five-minute cache; writes cost '
-          'extra, reads can lower input costs. Actual hits appear under replies.',
-        ),
-        value: config.openRouterPromptCacheEnabled,
-        onChanged: (value) {
-          ref
-              .read(llmConfigProvider.notifier)
-              .updateOpenRouterPromptCacheEnabled(value);
-        },
+    final policy = config.promptCachePolicy;
+    if (!policy.appControlled) {
+      return ListTile(
+        leading: const Icon(Icons.cached),
+        title: const Text('Prompt caching'),
+        subtitle: Text(policy.description),
       );
     }
-    if (config.provider != LLMProvider.claude) {
-      return const SizedBox.shrink();
-    }
-
     return SwitchListTile(
-      secondary: const Icon(Icons.savings_outlined),
-      title: Text(AppLocalizations.of(context)!.promptCaching),
-      subtitle: Text(AppLocalizations.of(context)!.promptCachingDescription),
-      value: config.promptCacheEnabled,
+      title: Text(config.provider == LLMProvider.openRouter
+          ? 'Automatic OpenRouter caching'
+          : 'Automatic prompt caching'),
+      subtitle: Text(policy.description),
+      value: config.automaticCacheEnabled,
       onChanged: (value) {
-        ref.read(llmConfigProvider.notifier).updatePromptCacheEnabled(value);
+        final notifier = ref.read(llmConfigProvider.notifier);
+        switch (config.provider) {
+          case LLMProvider.claude:
+            notifier.updatePromptCacheEnabled(value);
+          case LLMProvider.openRouter:
+            notifier.updateOpenRouterPromptCacheEnabled(value);
+          default:
+            notifier.updateAutomaticPromptCacheEnabled(value);
+        }
       },
     );
   }

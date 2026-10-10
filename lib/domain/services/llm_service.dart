@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'openrouter_prompt_cache.dart';
+import 'prompt_cache_policy.dart';
 export 'openrouter_prompt_cache.dart' show PromptCacheUsage;
 import 'chatgpt_plan_client.dart';
 import 'chatgpt_plan_platform.dart';
@@ -343,6 +344,16 @@ class LLMConfig {
   /// Defaults on for existing OpenRouter Claude connections; explicit opt-out
   /// persists independently of direct Anthropic API caching.
   final bool openRouterPromptCacheEnabled;
+  final bool automaticPromptCacheEnabled;
+
+  PromptCachePolicy get promptCachePolicy =>
+      PromptCachePolicy.forConnection(provider.name, model, apiUrl);
+
+  bool get automaticCacheEnabled => switch (provider) {
+        LLMProvider.claude => promptCacheEnabled,
+        LLMProvider.openRouter => openRouterPromptCacheEnabled,
+        _ => automaticPromptCacheEnabled,
+      };
 
   bool get supportsOpenRouterPromptCaching =>
       provider == LLMProvider.openRouter &&
@@ -391,12 +402,14 @@ class LLMConfig {
     this.autoSummarizeEnabled = true,
     this.autoSummarizeThreshold = 0.8,
     this.reasoningEffort = ReasoningEffort.auto,
-    this.promptCacheEnabled = false,
+    bool? promptCacheEnabled,
     this.openRouterPromptCacheEnabled = true,
+    this.automaticPromptCacheEnabled = true,
     this.mergeConsecutiveRoles = false,
     this.openRouterProvider = '',
     this.disabledParameters = const <String>{},
-  });
+  }) : promptCacheEnabled =
+            promptCacheEnabled ?? (provider == LLMProvider.claude);
 
   /// Local settings only. OAuth grants and account eligibility are checked by
   /// the protected auth client and by the actual Responses request.
@@ -455,6 +468,7 @@ class LLMConfig {
     String? reasoningEffort,
     bool? promptCacheEnabled,
     bool? openRouterPromptCacheEnabled,
+    bool? automaticPromptCacheEnabled,
     bool? mergeConsecutiveRoles,
     String? openRouterProvider,
     Set<String>? disabledParameters,
@@ -492,6 +506,8 @@ class LLMConfig {
       promptCacheEnabled: promptCacheEnabled ?? this.promptCacheEnabled,
       openRouterPromptCacheEnabled:
           openRouterPromptCacheEnabled ?? this.openRouterPromptCacheEnabled,
+      automaticPromptCacheEnabled:
+          automaticPromptCacheEnabled ?? this.automaticPromptCacheEnabled,
       mergeConsecutiveRoles:
           mergeConsecutiveRoles ?? this.mergeConsecutiveRoles,
       openRouterProvider: openRouterProvider ?? this.openRouterProvider,
@@ -529,6 +545,7 @@ class LLMConfig {
         'reasoningEffort': reasoningEffort,
         'promptCacheEnabled': promptCacheEnabled,
         'openRouterPromptCacheEnabled': openRouterPromptCacheEnabled,
+        'automaticPromptCacheEnabled': automaticPromptCacheEnabled,
         'mergeConsecutiveRoles': mergeConsecutiveRoles,
         'openRouterProvider': openRouterProvider,
         'disabledParameters': disabledParameters.toList(),
@@ -572,9 +589,11 @@ class LLMConfig {
             (json['autoSummarizeThreshold'] as num?)?.toDouble() ?? 0.8,
         reasoningEffort:
             json['reasoningEffort'] as String? ?? ReasoningEffort.auto,
-        promptCacheEnabled: json['promptCacheEnabled'] as bool? ?? false,
+        promptCacheEnabled: json['promptCacheEnabled'] as bool?,
         openRouterPromptCacheEnabled:
             json['openRouterPromptCacheEnabled'] as bool? ?? true,
+        automaticPromptCacheEnabled:
+            json['automaticPromptCacheEnabled'] as bool? ?? true,
         mergeConsecutiveRoles: json['mergeConsecutiveRoles'] as bool? ?? false,
         openRouterProvider: json['openRouterProvider'] as String? ?? '',
         disabledParameters: (json['disabledParameters'] as List<dynamic>?)
@@ -630,10 +649,6 @@ class LLMService {
     List<Map<String, dynamic>> messages,
     LLMConfig config,
   ) {
-    if (config.supportsOpenRouterPromptCaching &&
-        config.openRouterPromptCacheEnabled) {
-      return OpenRouterPromptCache.apply(messages);
-    }
     if (!_isGroqCompound(config) ||
         messages.isEmpty ||
         messages.last['role'] != 'assistant') {
@@ -748,7 +763,8 @@ class LLMService {
     _applyOpenAIReasoning(baseRequest, config);
     final data = await _postToolJson(
       endpoint: endpoint,
-      data: adapter.decorateRequest(baseRequest, toolConfiguration),
+      data: _cacheToolRequest(
+          adapter.decorateRequest(baseRequest, toolConfiguration), config),
       headers: {
         'Authorization': 'Bearer ${config.apiKey}',
         'Content-Type': 'application/json',
@@ -766,9 +782,7 @@ class LLMService {
     }
     return ToolProviderTurn(
       assistant: adapter.parseResponse(data),
-      cacheUsage: config.provider == LLMProvider.openRouter
-          ? PromptCacheUsage.fromOpenRouter(data['usage'])
-          : null,
+      cacheUsage: PromptCacheUsage.fromOpenAi(data['usage']),
       continuationMessage: rawMessage,
     );
   }
@@ -799,7 +813,8 @@ class LLMService {
     };
     final data = await _postToolJson(
       endpoint: '${config.apiUrl}/v1/messages',
-      data: adapter.decorateRequest(baseRequest, toolConfiguration),
+      data: _cacheToolRequest(
+          adapter.decorateRequest(baseRequest, toolConfiguration), config),
       headers: {
         'x-api-key': config.apiKey,
         'anthropic-version': '2023-06-01',
@@ -816,6 +831,7 @@ class LLMService {
     }
     return ToolProviderTurn(
       assistant: adapter.parseResponse(data),
+      cacheUsage: PromptCacheUsage.fromAnthropic(data['usage']),
       continuationMessage: {'role': 'assistant', 'content': content},
     );
   }
@@ -854,7 +870,8 @@ class LLMService {
     final data = await _postToolJson(
       endpoint:
           '${config.apiUrl}/models/${Uri.encodeComponent(config.model)}:generateContent?key=${Uri.encodeQueryComponent(config.apiKey)}',
-      data: adapter.decorateRequest(baseRequest, toolConfiguration),
+      data: _cacheToolRequest(
+          adapter.decorateRequest(baseRequest, toolConfiguration), config),
       headers: {'Content-Type': 'application/json'},
       cancellationToken: cancellationToken,
     );
@@ -869,8 +886,15 @@ class LLMService {
     }
     return ToolProviderTurn(
       assistant: adapter.parseResponse(data),
+      cacheUsage: PromptCacheUsage.fromGemini(data['usageMetadata']),
       continuationMessage: {...content, 'role': content['role'] ?? 'model'},
     );
+  }
+
+  Map<String, dynamic> _cacheToolRequest(
+      Map<String, dynamic> request, LLMConfig config) {
+    _applyPromptCacheRequest(request, config);
+    return request;
   }
 
   Future<Map<String, dynamic>> _postToolJson({
@@ -1133,48 +1157,44 @@ class LLMService {
   /// Marks the system prompt and the second-to-last user message with
   /// ephemeral cache_control so the stable prefix of the conversation is
   /// cached between turns (mirrors ST's system-prompt cache + cachingAtDepth).
-  void _applyClaudePromptCaching(
-    Map<String, dynamic> requestData,
-    LLMConfig config,
-  ) {
-    if (!config.promptCacheEnabled) return;
-
-    const cacheControl = {'type': 'ephemeral'};
-
-    // System prompt -> text block with cache_control
-    final system = requestData['system'];
-    if (system is String && system.isNotEmpty) {
-      requestData['system'] = [
-        {'type': 'text', 'text': system, 'cache_control': cacheControl},
-      ];
+  void _applyPromptCacheRequest(
+      Map<String, dynamic> request, LLMConfig config) {
+    final policy = config.promptCachePolicy;
+    if (policy.mode == PromptCacheMode.openAiBreakpoints) {
+      request['prompt_cache_options'] = {'mode': 'explicit'};
     }
-
-    // Mark the second-to-last user message so the history prefix caches
-    // incrementally as the chat grows
-    final messages = requestData['messages'];
-    if (messages is List) {
-      final userIndexes = <int>[];
-      for (var i = 0; i < messages.length; i++) {
-        final msg = messages[i];
-        if (msg is Map && msg['role'] == 'user') userIndexes.add(i);
-      }
-      if (userIndexes.length >= 2) {
-        final target = userIndexes[userIndexes.length - 2];
-        final msg = Map<String, dynamic>.from(messages[target] as Map);
-        final content = msg['content'];
-        if (content is String) {
-          msg['content'] = [
-            {'type': 'text', 'text': content, 'cache_control': cacheControl},
-          ];
-          messages[target] = msg;
-        } else if (content is List && content.isNotEmpty) {
-          final lastBlock = Map<String, dynamic>.from(content.last as Map);
-          lastBlock['cache_control'] = cacheControl;
-          content[content.length - 1] = lastBlock;
-        }
-      }
+    if (request['stream'] == true &&
+        PromptCachePolicy.requestsStreamUsage(
+            config.provider.name, config.apiUrl)) {
+      request['stream_options'] = {'include_usage': true};
+    }
+    if (!policy.appControlled || !config.automaticCacheEnabled) return;
+    final messages = request['messages'];
+    if (messages is! List) return;
+    final instructions = request['system'];
+    final combined = <Map<String, dynamic>>[
+      if (instructions != null) {'role': 'system', 'content': instructions},
+      ...messages.map((m) => Map<String, dynamic>.from(m as Map)),
+    ];
+    final openAi = policy.mode == PromptCacheMode.openAiBreakpoints;
+    final marked = OpenRouterPromptCache.apply(
+      combined,
+      markerField: openAi ? 'prompt_cache_breakpoint' : 'cache_control',
+      marker: openAi ? const {'mode': 'explicit'} : const {'type': 'ephemeral'},
+      reservedBreakpoints:
+          OpenRouterPromptCache.countBreakpoints(request['tools']),
+    );
+    if (instructions != null) {
+      request['system'] = marked.first['content'];
+      request['messages'] = marked.skip(1).toList();
+    } else {
+      request['messages'] = marked;
     }
   }
+
+  void _applyClaudePromptCaching(
+          Map<String, dynamic> request, LLMConfig config) =>
+      _applyPromptCacheRequest(request, config);
 
   /// Apply reasoning effort for OpenAI-compatible endpoints
   void _applyOpenAIReasoning(
@@ -1397,7 +1417,8 @@ class LLMService {
       yield LLMStreamChunk(
           content: delta.text,
           reasoning: delta.reasoning,
-          isReasoningChunk: delta.reasoning != null);
+          isReasoningChunk: delta.reasoning != null,
+          cacheUsage: delta.cacheUsage);
     }
   }
 
@@ -1405,13 +1426,16 @@ class LLMService {
       List<Map<String, dynamic>> messages, LLMConfig config) async {
     final content = StringBuffer();
     final reasoning = StringBuffer();
+    PromptCacheUsage? cacheUsage;
     await for (final chunk in _streamChatGptPlan(messages, config)) {
+      cacheUsage = PromptCacheUsage.snapshot(cacheUsage, chunk.cacheUsage);
       if (chunk.content != null) content.write(chunk.content);
       if (chunk.reasoning != null) reasoning.write(chunk.reasoning);
     }
     return LLMResponse(
         content: content.toString(),
-        reasoning: reasoning.isEmpty ? null : reasoning.toString());
+        reasoning: reasoning.isEmpty ? null : reasoning.toString(),
+        cacheUsage: cacheUsage);
   }
 
   /// Generate a response (non-streaming) - content only for backward compatibility
@@ -2241,6 +2265,7 @@ class LLMService {
 
     _applyOpenAIReasoning(requestData, config);
 
+    _applyPromptCacheRequest(requestData, config);
     _logRequest(endpoint, requestData, config);
 
     final response = await _dio.post(
@@ -2300,9 +2325,7 @@ class LLMService {
     return LLMResponse(
       content: content,
       reasoning: reasoning,
-      cacheUsage: config.provider == LLMProvider.openRouter
-          ? PromptCacheUsage.fromOpenRouter(data['usage'])
-          : null,
+      cacheUsage: PromptCacheUsage.fromOpenAi(data['usage']),
     );
   }
 
@@ -2459,7 +2482,10 @@ class LLMService {
         contentPreview:
             content.length > 100 ? '${content.substring(0, 100)}...' : content);
 
-    return LLMResponse(content: content, reasoning: reasoning);
+    return LLMResponse(
+        content: content,
+        reasoning: reasoning,
+        cacheUsage: PromptCacheUsage.fromAnthropic(data['usage']));
   }
 
   Stream<String> _streamClaude(
@@ -2603,7 +2629,10 @@ class LLMService {
         contentPreview:
             content.length > 100 ? '${content.substring(0, 100)}...' : content);
 
-    return LLMResponse(content: content, reasoning: reasoning);
+    return LLMResponse(
+        content: content,
+        reasoning: reasoning,
+        cacheUsage: PromptCacheUsage.fromGemini(data['usageMetadata']));
   }
 
   Stream<String> _streamGemini(
@@ -2847,6 +2876,7 @@ class LLMService {
     List<Map<String, dynamic>> messages,
     LLMConfig config,
   ) async* {
+    PromptCacheUsage? cacheUsage;
     try {
       final endpoint = '${config.apiUrl}/chat/completions';
       final requestData = <String, dynamic>{
@@ -2865,6 +2895,7 @@ class LLMService {
 
       _applyOpenAIReasoning(requestData, config);
 
+      _applyPromptCacheRequest(requestData, config);
       _logRequest(endpoint, requestData, config);
 
       final response = await _dio.post<ResponseBody>(
@@ -2925,10 +2956,8 @@ class LLMService {
             try {
               final json =
                   jsonDecode(line.substring(6)) as Map<String, dynamic>;
-              if (config.provider == LLMProvider.openRouter) {
-                final usage = PromptCacheUsage.fromOpenRouter(json['usage']);
-                if (usage != null) yield LLMStreamChunk(cacheUsage: usage);
-              }
+              final usage = PromptCacheUsage.fromOpenAi(json['usage']);
+              cacheUsage = PromptCacheUsage.snapshot(cacheUsage, usage);
               final choices = json['choices'] as List<dynamic>?;
               if (choices != null && choices.isNotEmpty) {
                 final choice = choices[0] as Map<String, dynamic>;
@@ -2981,6 +3010,7 @@ class LLMService {
       }
 
       _logStreamComplete(config.provider.name, fullContent.toString());
+      if (cacheUsage != null) yield LLMStreamChunk(cacheUsage: cacheUsage);
       if (fullReasoning.isNotEmpty) {
         _log('Reasoning content: ${fullReasoning.toString()}');
       }
@@ -3041,6 +3071,7 @@ class LLMService {
     final fullContent = StringBuffer();
     final fullThinking = StringBuffer();
     var isFirst = true;
+    PromptCacheUsage? cacheUsage;
     var currentBlockType = ''; // Track current content block type
 
     await for (final chunk in stream) {
@@ -3054,6 +3085,13 @@ class LLMService {
           try {
             final json = jsonDecode(line.substring(6)) as Map<String, dynamic>;
             final eventType = json['type'] as String?;
+            final message = json['message'];
+            cacheUsage = PromptCacheUsage.snapshot(
+                cacheUsage,
+                PromptCacheUsage.fromAnthropic(
+                    eventType == 'message_start' && message is Map
+                        ? message['usage']
+                        : json['usage']));
 
             // Track content block type for thinking blocks
             if (eventType == 'content_block_start') {
@@ -3115,6 +3153,7 @@ class LLMService {
       }
     }
 
+    if (cacheUsage != null) yield LLMStreamChunk(cacheUsage: cacheUsage);
     _logStreamComplete(config.provider.name, fullContent.toString());
     if (fullThinking.isNotEmpty) {
       _log('Thinking content: ${fullThinking.toString()}');
@@ -3165,9 +3204,12 @@ class LLMService {
     final fullContent = StringBuffer();
     final fullThought = StringBuffer();
     var isFirst = true;
+    PromptCacheUsage? cacheUsage;
 
     await for (final chunk in stream) {
       for (final json in decoder.add(chunk)) {
+        cacheUsage = PromptCacheUsage.snapshot(
+            cacheUsage, PromptCacheUsage.fromGemini(json['usageMetadata']));
         final candidates = json['candidates'] as List<dynamic>?;
         if (candidates == null || candidates.isEmpty) continue;
 
@@ -3215,6 +3257,7 @@ class LLMService {
       }
     }
 
+    if (cacheUsage != null) yield LLMStreamChunk(cacheUsage: cacheUsage);
     _logStreamComplete(config.provider.name, fullContent.toString());
     if (fullThought.isNotEmpty) {
       _log('Thought content: ${fullThought.toString()}');

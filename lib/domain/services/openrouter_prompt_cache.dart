@@ -1,16 +1,22 @@
 export '../models/prompt_cache_usage.dart';
 
-/// Explicit five-minute Claude caching for the OpenRouter Chat Completions API.
+import 'prompt_cache_policy.dart';
+
+/// Stable prefix breakpoints for audited content-block protocols.
+/// The legacy class name is retained for build-45 source compatibility.
 /// This edits only request copies, never persisted prompts or message history.
 class OpenRouterPromptCache {
-  static bool supportsModel(String model) => RegExp(
-        r'^anthropic/claude-(sonnet|opus|haiku)-[45](?:[.-][0-9]+)*(?::[a-z0-9_-]+)*$',
-      ).hasMatch(model.trim().toLowerCase());
+  static bool supportsModel(String model) => PromptCachePolicy.forConnection(
+          'openRouter', model, 'https://openrouter.ai/api/v1')
+      .appControlled;
 
   static List<Map<String, dynamic>> apply(
-    List<Map<String, dynamic>> messages,
-  ) {
-    final existing = _breakpointCount(messages);
+    List<Map<String, dynamic>> messages, {
+    String markerField = 'cache_control',
+    Map<String, String> marker = const {'type': 'ephemeral'},
+    int reservedBreakpoints = 0,
+  }) {
+    final existing = countBreakpoints(messages) + reservedBreakpoints;
     if (existing >= 4) return messages;
 
     // Leading instruction sections provide independent fallbacks when later
@@ -58,7 +64,7 @@ class OpenRouterPromptCache {
           {
             'type': 'text',
             'text': content,
-            'cache_control': {'type': 'ephemeral'},
+            markerField: Map<String, String>.from(marker),
           },
         ];
         remaining--;
@@ -69,10 +75,13 @@ class OpenRouterPromptCache {
             part['text'] is String &&
             (part['text'] as String).isNotEmpty);
         if (target < 0 ||
-            (content[target] as Map).containsKey('cache_control')) {
+            ((content[target] as Map).containsKey('cache_control') ||
+                (content[target] as Map)
+                    .containsKey('prompt_cache_breakpoint'))) {
           continue;
         }
-        (content[target] as Map)['cache_control'] = {'type': 'ephemeral'};
+        (content[target] as Map)[markerField] =
+            Map<String, String>.from(marker);
         remaining--;
       }
     }
@@ -91,14 +100,15 @@ class OpenRouterPromptCache {
                 (part['text'] as String).isNotEmpty);
   }
 
-  static int _breakpointCount(Object? value) {
+  static int countBreakpoints(Object? value) {
     if (value is List) {
-      return value.fold(0, (total, item) => total + _breakpointCount(item));
+      return value.fold(0, (total, item) => total + countBreakpoints(item));
     }
     if (value is Map) {
       return (value.containsKey('cache_control') ? 1 : 0) +
+          (value.containsKey('prompt_cache_breakpoint') ? 1 : 0) +
           value.values
-              .fold<int>(0, (total, item) => total + _breakpointCount(item));
+              .fold<int>(0, (total, item) => total + countBreakpoints(item));
     }
     return 0;
   }

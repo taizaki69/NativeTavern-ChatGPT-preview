@@ -555,6 +555,11 @@ class LLMConfigNotifier extends StateNotifier<LLMConfig> {
     _enqueuePersistence();
   }
 
+  void updateAutomaticPromptCacheEnabled(bool enabled) {
+    state = state.copyWith(automaticPromptCacheEnabled: enabled);
+    _enqueuePersistence();
+  }
+
   void updateOpenRouterPromptCacheEnabled(bool enabled) {
     state = state.copyWith(openRouterPromptCacheEnabled: enabled);
     _enqueuePersistence();

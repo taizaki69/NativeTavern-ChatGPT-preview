@@ -359,7 +359,8 @@ void main() {
     expect(response.cacheUsage!.cachedTokens, 1000);
   });
 
-  test('other OpenRouter models and ordinary OpenAI requests stay unchanged',
+  test(
+      'other model request payloads stay unchanged while reporting supplied usage',
       () async {
     for (final config in [
       router.copyWith(model: 'openai/gpt-fixture'),
@@ -371,8 +372,7 @@ void main() {
           await LLMService(dio: h.dio).generateWithReasoning(prompt, config);
       expect((h.requests.single.data as Map)['messages'], prompt);
       expect(_count(h.requests.single.data), 0);
-      if (config.provider != LLMProvider.openRouter)
-        expect(response.cacheUsage, isNull);
+      expect(response.cacheUsage!.cachedTokens, 1000);
     }
   });
 

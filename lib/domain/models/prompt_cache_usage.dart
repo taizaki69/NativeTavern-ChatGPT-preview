@@ -11,6 +11,44 @@ class PromptCacheUsage {
     return fromJson(details);
   }
 
+  static PromptCacheUsage? fromOpenAi(Object? usage) {
+    if (usage is! Map) return null;
+    final details =
+        usage['prompt_tokens_details'] ?? usage['input_tokens_details'];
+    final map = details is Map ? details : const {};
+    return fromJson({
+      'cached_tokens': map['cached_tokens'] ?? usage['prompt_cache_hit_tokens'],
+      'cache_write_tokens': map['cache_write_tokens'] ??
+          map['cache_creation_input_tokens'] ??
+          usage['cache_creation_input_tokens'],
+    });
+  }
+
+  static PromptCacheUsage? fromAnthropic(Object? usage) {
+    if (usage is! Map) return null;
+    return fromJson({
+      'cached_tokens': usage['cache_read_input_tokens'],
+      'cache_write_tokens': usage['cache_creation_input_tokens'],
+    });
+  }
+
+  static PromptCacheUsage? fromGemini(Object? usage) {
+    if (usage is! Map) return null;
+    return fromJson({'cached_tokens': usage['cachedContentTokenCount']});
+  }
+
+  /// Streaming usage is cumulative for one request. Merge the latest reported
+  /// counters, never sum repeated snapshots. Tool-round aggregation uses combine.
+  static PromptCacheUsage? snapshot(
+      PromptCacheUsage? previous, PromptCacheUsage? next) {
+    if (previous == null) return next;
+    if (next == null) return previous;
+    return PromptCacheUsage(
+      cachedTokens: next.cachedTokens ?? previous.cachedTokens,
+      cacheWriteTokens: next.cacheWriteTokens ?? previous.cacheWriteTokens,
+    );
+  }
+
   static PromptCacheUsage? fromJson(Object? json) {
     if (json is! Map) return null;
     final read = _counter(json['cached_tokens']);
@@ -41,6 +79,7 @@ class PromptCacheUsage {
         if (cacheWriteTokens != null) 'cache_write_tokens': cacheWriteTokens,
       };
 
+  // Retained to read build-45 reply metrics without a database migration.
   static const metadataKey = 'openRouterCacheUsageBySwipe';
 
   static Map<String, dynamic> forMessage(

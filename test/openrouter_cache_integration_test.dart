@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:native_tavern/presentation/screens/ai_config/ai_config_screen.dart';
 import 'package:native_tavern/core/services/initialization_service.dart';
 import 'package:native_tavern/data/database/database.dart';
 import 'package:native_tavern/data/models/character.dart' as models;
@@ -97,7 +98,8 @@ void main() {
     await notifier.regenerateLastMessage(config.copyWith(
         provider: LLMProvider.openai, model: 'fixture-other-provider'));
     saved = await h.repository.getMessages(h.chatId);
-    expect(PromptCacheUsage.forSwipe(saved.last.metadata, 2), isNull);
+    expect(
+        PromptCacheUsage.forSwipe(saved.last.metadata, 2)!.cachedTokens, 2000);
     expect(
         PromptCacheUsage.forSwipe(saved.last.metadata, 0)!.cachedTokens, 1000);
     await notifier.deleteSwipe(saved.last.id, 0);
@@ -105,8 +107,69 @@ void main() {
     expect(saved.last.swipes, hasLength(2));
     expect(
         PromptCacheUsage.forSwipe(saved.last.metadata, 0)!.cachedTokens, 2000);
-    expect(PromptCacheUsage.forSwipe(saved.last.metadata, 1), isNull);
+    expect(
+        PromptCacheUsage.forSwipe(saved.last.metadata, 1)!.cachedTokens, 2000);
     expect(PromptCacheUsage.forSwipe(saved.last.metadata, 2), isNull);
+  });
+
+  test(
+      'native providers save actual reported cache usage through the existing chat pipeline',
+      () async {
+    final notifier = h.container.read(activeChatProvider.notifier);
+    final base = h.container.read(llmConfigProvider);
+    final cases = [
+      base.copyWith(
+          provider: LLMProvider.claude,
+          model: 'claude-sonnet-5-5',
+          apiUrl: 'https://api.anthropic.com',
+          promptCacheEnabled: true),
+      base.copyWith(
+          provider: LLMProvider.gemini,
+          model: 'gemini-2.5-flash',
+          apiUrl: 'https://generativelanguage.googleapis.com/v1beta'),
+      base.copyWith(
+          provider: LLMProvider.openai,
+          model: 'gpt-6.1-sol',
+          apiUrl: 'https://api.openai.com/v1'),
+      base.copyWith(
+          provider: LLMProvider.qwen,
+          model: 'qwen3.8-max',
+          apiUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'),
+    ];
+    for (final config in cases) {
+      for (final streaming in [true, false]) {
+        await notifier.sendMessage('Synthetic provider question',
+            config.copyWith(streamEnabled: streaming));
+        final saved = await h.repository.getMessages(h.chatId);
+        expect(saved.last.content, 'Cached fixture reply');
+        expect(PromptCacheUsage.forSwipe(saved.last.metadata, 0)!.cachedTokens,
+            1000,
+            reason: config.provider.name);
+        expect(h.container.read(activeChatProvider).error, isNull);
+      }
+    }
+    expect(h.fixture.requests, hasLength(8));
+  });
+
+  testWidgets(
+      'provider settings expose explicit caching and honest server-managed status',
+      (tester) async {
+    await tester.pumpWidget(h.app(const AIConfigScreen()));
+    await tester.pump();
+    await tester.scrollUntilVisible(
+        find.text('Automatic OpenRouter caching'), 250,
+        maxScrolls: 30);
+    expect(find.text('Automatic OpenRouter caching'), findsOneWidget);
+    await tester.runAsync(() => h.container
+        .read(llmConfigProvider.notifier)
+        .updateProvider(LLMProvider.ollama));
+    await tester.pump();
+    expect(find.text('Prompt caching'), findsOneWidget);
+    expect(find.textContaining('Local context reuse depends on the server'),
+        findsOneWidget);
+    expect(find.text('Automatic OpenRouter caching'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await _closeWidgetHarness(tester, h);
   });
 
   testWidgets('composer renders cache counters from the saved reply',
@@ -168,7 +231,8 @@ class _RouterFixture implements HttpClientAdapter {
   @override
   Future<ResponseBody> fetch(RequestOptions request,
       Stream<Uint8List>? requestStream, Future<void>? cancelFuture) async {
-    if (request.uri.host == 'api.openai.com') return await plan.handle(request);
+    if (request.uri.host == 'api.openai.com' &&
+        request.path.endsWith('/responses')) return await plan.handle(request);
     if (request.method == 'GET')
       return fixtureJson({
         'data': [
@@ -176,6 +240,58 @@ class _RouterFixture implements HttpClientAdapter {
         ]
       });
     requests.add(request);
+    if (request.uri.host == 'api.anthropic.com') {
+      final counters = {
+        'cache_read_input_tokens': cachedTokens,
+        'cache_creation_input_tokens': 100
+      };
+      if ((request.data as Map)['stream'] == true) {
+        final events = [
+          {
+            'type': 'message_start',
+            'message': {'usage': counters}
+          },
+          {
+            'type': 'content_block_delta',
+            'delta': {'type': 'text_delta', 'text': 'Cached fixture reply'}
+          },
+          {'type': 'message_delta', 'usage': counters},
+          {'type': 'message_stop'},
+        ];
+        return ResponseBody.fromString(
+            events.map((e) => 'data: ${jsonEncode(e)}\n\n').join(), 200,
+            headers: {
+              'content-type': ['text/event-stream']
+            });
+      }
+      return fixtureJson({
+        'content': [
+          {'type': 'text', 'text': 'Cached fixture reply'}
+        ],
+        'usage': counters
+      });
+    }
+    if (request.uri.host == 'generativelanguage.googleapis.com') {
+      final response = {
+        'candidates': [
+          {
+            'content': {
+              'parts': [
+                {'text': 'Cached fixture reply'}
+              ]
+            }
+          }
+        ],
+        'usageMetadata': {'cachedContentTokenCount': cachedTokens},
+      };
+      if (request.path.contains('streamGenerateContent')) {
+        return ResponseBody.fromString(jsonEncode([response]), 200, headers: {
+          'content-type': ['application/json']
+        });
+      }
+      return fixtureJson(response);
+    }
+
     final cacheUsage = {
       'prompt_tokens_details': {
         'cached_tokens': cachedTokens,
@@ -305,7 +421,7 @@ class _Harness {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: child is ChatScreen
+          home: child is ChatScreen || child is AIConfigScreen
               ? child
               : Scaffold(body: SingleChildScrollView(child: child)),
         ),

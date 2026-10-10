@@ -1,3 +1,5 @@
+> Build 46 extends this feature to additional audited models and direct providers. See [provider-wide caching guide](provider-prompt-caching.md) for current support and controls. The Sonnet/OpenRouter instructions below remain applicable.
+
 # NativeTavern: automatic OpenRouter prompt caching — build 45
 
 Prepared 2026-10-09. Personal version: `0.1.17+45`.

@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 
 import 'chatgpt_plan_client.dart';
+import '../models/prompt_cache_usage.dart';
 
 class ChatGptDelta {
-  const ChatGptDelta({this.text, this.reasoning});
+  const ChatGptDelta({this.text, this.reasoning, this.cacheUsage});
   final String? text;
   final String? reasoning;
+  final PromptCacheUsage? cacheUsage;
 }
 
 /// Converts the existing transcript to the documented SIWC Responses format.
@@ -121,6 +123,8 @@ Stream<ChatGptDelta> parseChatGptPlanStream(Stream<List<int>> bytes) async* {
           throw const ChatGptPlanException(
               'ChatGPT did not confirm successful completion.');
         }
+        final usage = PromptCacheUsage.fromOpenAi(response['usage']);
+        if (usage != null) yield ChatGptDelta(cacheUsage: usage);
         return;
       case 'response.failed':
       case 'response.incomplete':
