@@ -20,7 +20,7 @@ The audit covers all 14 providers exposed by this app. Custom URLs can implement
 | Gemini | Gemini 2.5 and newer use implicit caching without new fields. | Native `usageMetadata.cachedContentTokenCount` is displayed, including final usage-only stream objects. Older controlled caches require separate resources; these are not created automatically. |
 | DeepSeek | Official prefix caching remains automatic. | Reported `prompt_cache_hit_tokens` is read usage. Cache misses are not mislabelled as writes. |
 | Moonshot / Kimi | The official Chat Completions route keeps its automatic/default caching behavior. | No unsupported explicit-block markers or longer TTL are added. Reported standard token details are displayed. Current Kimi cache-write pricing is distinct from older assumptions. |
-| Z.AI | Official eligible GLM models retain server-side caching. | Standard reported cached-token details are displayed. No invented enable/disable parameter. |
+| Z.AI | Eligible GLM models on the audited international `api.z.ai` route retain server-side caching. The app's default regional BigModel endpoint remains server-controlled in the policy. | Standard reported cached-token details are displayed for both. No international-only controls are sent to the regional endpoint. |
 | MiniMax | Its OpenAI-compatible route retains passive caching. | Standard reported cached-token details are displayed. The app does not switch to another API protocol to force caching. |
 | SiliconFlow | Model-specific cache pricing/support is controlled by its endpoint. | No universal cache toggle is asserted. Standard counters are displayed when actually supplied. Check the selected model's current pricing and API contract. |
 | Ollama | Local server context reuse is preserved. | No cloud-cache fields or fabricated cache counters. Model keep-alive and prompt evaluation counts are not cache-hit or savings measurements. |
@@ -63,3 +63,14 @@ Automated tests use synthetic accounts and mocked/local HTTP. Live cache hits, a
 - [SiliconFlow caching/pricing guidance](https://www.siliconflow.com/blog/siliconflow-prompt-caching-api-costs) and [API contract](https://docs.siliconflow.com/en/api-reference/chat-completions/chat-completions).
 - [Ollama chat API](https://docs.ollama.com/api/chat) and [KoboldCpp Smart Context](https://github.com/LostRuins/koboldcpp/wiki#what-is-smart-context).
 - [Official ChatGPT preview limitations](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations).
+
+## Verified build 46
+
+[The actual macOS run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/38014008008) passed **671 tests, with 2 skipped**,
+with zero analysis errors. The final source passed 149 focused tests, including
+58 caching tests. The downloaded IPA passed checksum, all-member ZIP CRC,
+version, arm64 iOS-device, compiled general cache/ChatGPT and Live2D/Spine checks.
+Matching source and verification reports accompany the unsigned release.
+
+These results verify the request formats, saved controls, numerical reporting
+and actual compiled artifact. They do not establish live cache hits or savings.

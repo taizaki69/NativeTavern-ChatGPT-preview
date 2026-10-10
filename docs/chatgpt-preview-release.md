@@ -8,7 +8,18 @@ AI Configuration explains app-controlled, provider-managed, local, unknown and r
 
 Cache writes can cost extra. Hits and savings depend on exact reusable content, model support, minimum length, retention and routing. No paid cache resources, extra warm-up inference or longer retention are requested. Live cache hits and billed savings remain unverified. Tests use synthetic accounts and local/mock HTTP, without owner API credentials.
 
-The build workflow runs full analysis, the full Flutter suite, native development gates, device compilation and unsigned packaging. Exact completed build results and verified artifact details will be added after download inspection.
+**671 full Flutter tests passed, 2 skipped**, with zero analysis errors.
+The source also passed 149 focused tests, including 58 caching tests. Native
+development gates, device compilation and unsigned packaging succeeded.
+The downloaded IPA passed checksum, all-member ZIP CRC, version, arm64 device,
+provider caching/ChatGPT compiled markers and native Live2D/Spine checks.
+
+[Successful build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/38014008008). [Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/820c196ed0c9c100edded8411b1fd8e8e2758a97).
+IPA: `NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa` (45,121,961 bytes).
+SHA-256: `41a88d671c138d7d97dfcf9b688559605a9f1c17fd8db6f05fa027938a1c5238`.
+
+Matching source, complete patch, checksums, English guides and verification
+reports accompany this build. Earlier draft releases remain unchanged.
 
 The official ChatGPT provider and existing response transport are retained. Completed live Responses inference, account/mobile admission and re-signed device behavior remain unverified. No Codex bridge or API-key fallback was added.
 

@@ -1,98 +1,94 @@
-# NativeTavern provider validation — build 45
+# NativeTavern provider validation — build 46
 
 Date: 2026-10-09. Upstream base: `6dbd1ee042e994966db85693594ab61e4f4ec441`.
-Personal version: `0.1.17+45`. Previous delivered version: `0.1.17+44`.
+Personal version: `0.1.17+46`. Previous delivered version: `0.1.17+45`.
 
-## OpenRouter caching change
+## Provider caching changes
 
-The active OpenRouter Chat Completions connector previously omitted Claude
-cache_control blocks. This update adds request-only explicit markers to reusable
-instruction and history prefixes for recognized Claude Sonnet/Opus/Haiku 4/5
-model IDs. Markers use the default five-minute TTL, fit the four-marker limit,
-preserve existing manual message markers, and do not rewrite or reorder content.
-Context fitting and role processing occur first. Newest input and trailing
-assistant prefill remain outside the growing-history boundary.
+All 14 app providers have an explicit support policy. Supported direct Claude,
+DashScope/Qwen and OpenRouter content-block routes use stable-prefix markers.
+New OpenAI API routes use their own explicit breakpoint format. Eligible implicit
+caching remains managed by the serving provider. Unknown compatible servers get
+no speculative fields, local servers retain their behavior, and older Gemini
+cache resources are not provisioned.
 
-A separate persisted `openRouterPromptCacheEnabled` defaults true for existing
-configurations; disabling it removes app-added markers on subsequent requests.
-The direct Anthropic setting and non-supported provider/model paths are retained.
-No provider order, fallback behavior or deprecated usage parameter is added.
+Markers operate on request copies after prompt fitting and tool decoration.
+Text, roles, order, images, thinking signatures and tool identities are
+preserved. Existing message/system/tool markers share the four-marker budget.
+The newest input and trailing assistant prefill remain outside app-added
+history boundaries. Manual markers and longer Claude TTL ordering are retained.
 
-Only recognized numeric cached_tokens/cache_write_tokens from OpenRouter's
-prompt_tokens_details are retained. Streaming terminal usage, non-streaming
-responses and tool-round totals reach the chat pipeline, SQLite metadata and
-selected reply alternative. Deleted alternatives remap these counters.
-Raw response data and prompts are not copied into this new cache metadata.
-Existing citation metadata remains separate. The normal and visual novel chat
-views display reported counts, not estimated cost savings.
+A new persisted `automaticPromptCacheEnabled` defaults on. Existing OpenRouter
+and direct Claude switches are retained; saved false values are honored.
+Settings display the selected connection's supported controls or limitations.
+
+Reported native/normalized numeric cache reads/writes reach streaming,
+non-streaming and tool requests, the real composer/pipeline, SQLite and reply
+alternatives. Repeated cumulative stream snapshots are merged rather than
+summed; separate tool rounds are aggregated. DeepSeek misses are not labelled
+writes. Build-45 reply metadata remains readable. No raw prompt or response is
+added to cache metadata.
 
 ## Verified source checks
 
-- **27 caching tests passed**: request payloads, legacy settings, model/provider
-  gating, stable and edited prefixes, four-marker limits, manual TTL ordering,
-  images/thinking preservation, reported zero/absent counters, tool rounds,
-  reply alternatives/deletion, SQLite persistence and the actual chat composer.
-- **129 focused tests passed** on the final source, including the existing
-  ChatGPT auth/transport/chat, generation pipeline, tool behavior, saved settings,
-  parameter controls and Gemini streaming regressions.
-- The OpenRouter tool-loop test uses Dio's real IO adapter with a loopback HTTP
-  server. Other caching and chat cases use mocked HTTP. All credentials and
-  prompts in these tests are synthetic; no paid inference request is made.
-- Full-project analysis completed with **zero errors**. The existing 811 warning
-  diagnostics remain; no new cache-file warning was added.
-- Changed Dart formatting and patch whitespace checks passed. The Live2D
-  development gate checked **61 artifacts**. The mobile development gate passed
-  with **zero device-evidence runs**.
+- **149 focused tests passed**, including **58 caching tests** covering outgoing
+  requests, provider/model/host gating, manual marker budgets, stable and edited
+  prefixes, saved opt-outs, native usage-only chunks, stream snapshot merging,
+  native and compatible tool rounds, settings UI and actual chat/SQLite storage.
+- Existing ChatGPT auth, public Responses transport, chat integration, tool
+  execution, parameter controls and Gemini streaming regressions passed.
+- The tool-loop tests use Dio's actual IO adapter against a local HTTP server.
+  Other request and chat cases use mocked HTTP with synthetic credentials.
+- Local full-project analysis completed with **zero errors** and 810 warning
+  diagnostics. Formatting and whitespace checks passed.
+- Development gates checked **61 Live2D artifacts** and recorded
+  **zero device-evidence runs**.
 
-## Verified macOS gate and downloaded build 45
+## Verified macOS gate and downloaded build 46
 
-[The successful workflow](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37894204117) compiled `6fab43d0cda0b55c5ef61dbdc5237f6962474693`.
-The full suite passed **640 tests, with 2 skipped**. Analysis completed
-with zero errors. The development gate checked 61
-Live2D artifacts and recorded no device-evidence runs.
+[The successful workflow](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/38014008008) compiled `820c196ed0c9c100edded8411b1fd8e8e2758a97`.
+The full suite passed **671 tests, with 2 skipped**. Analysis completed
+with zero errors. The native development gates passed.
 
-The workflow used the standard public `macos-15` runner, Flutter 3.44.9 and
-CocoaPods 1.17.0. Final compilation and packaging ran through the existing
-`build_ios.sh` unsigned mode. Locked native project checks and Live2D/Spine
-were retained. No Apple, OpenAI or OpenRouter owner login was used by CI.
+The workflow used standard public `macos-15`, Flutter 3.44.9 and CocoaPods
+1.17.0. Native compilation and packaging ran through the original
+`build_ios.sh` unsigned mode, retaining locked native source checks.
 
-Downloaded artifact:
-
-- `NativeTavern_ChatGPT_v0.1.17+45_unsigned.ipa`, 45,111,769 bytes.
-- SHA-256: `9ae9f1f934280b216ad484016fd0634e23abe9db68b992005b790094cc10e6ff`; matches the actual CI log, checksum companion
-  and GitHub asset digest.
-- Version 0.1.17 build 45; bundle `com.miaomiaoxworld.nativetavern`;
+- `NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa`: 45,121,961 bytes.
+- SHA-256: `41a88d671c138d7d97dfcf9b688559605a9f1c17fd8db6f05fa027938a1c5238`, matching CI, its checksum companion and GitHub's digest.
+- Version 0.1.17 build 46, bundle `com.miaomiaoxworld.nativetavern`,
   minimum iOS 15.0.
-- All 444 ZIP entries passed streamed CRC validation.
+- All 444 ZIP members passed streamed CRC validation.
   Runner, App.framework and Flutter.framework are arm64 iOS-device binaries.
-- Compiled Dart markers for the OpenRouter cache setting, saved usage and reply
-  counters are present, together with the prior ChatGPT provider/configuration/
-  response transport markers. Native Live2D/Spine markers remain present.
+- Compiled general caching policy/settings/usage markers are present alongside
+  the earlier OpenRouter and ChatGPT configuration/transport markers.
+  Native Live2D and Spine markers remain present.
 - The main executable is unsigned. No provisioning profile or bundle signature
-  directory is included. SDK framework signature metadata can remain; the
-  complete app requires local re-signing.
-- The new draft targets the exact compiled commit. While signed in as the fork
-  owner, open **NativeTavern ChatGPT preview (build 45, unsigned)** from
-  [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases).
-- The source packet identifies compiled and packaged commits separately.
-  Later changes are documentation only. The complete patch is checked against
-  the exact upstream base and every modified file is byte-compared.
+  directory is included. Framework signature metadata may remain; the complete
+  app needs local re-signing.
+- The draft targets the exact compiled source. Open **NativeTavern ChatGPT
+  preview (build 46, unsigned)** at [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
+  while signed in as the fork owner.
+- Matching source identifies compiled and packaged commits separately.
+  Changes after compilation are documentation only. The complete binary patch
+  is applied to a fresh upstream checkout and every modified file is compared.
 
-Earlier builds 42, 43 and 44 remain separate. Their test results and downloaded
-files do not substitute for this update's source, CI or artifact verification.
+Earlier builds 42–45 stay separate. Their test results and artifacts do not
+substitute for this update's verification.
 
 ## Preserved integration and live limits
 
-The build-44 official ChatGPT provider, public Responses transport and secure
-account/model configuration are preserved. That transport requires its successful
-terminal event; JSON errors, partial text and account denials remain errors.
-No Codex bridge, internal endpoint or automatic paid API-key fallback is added.
+The official ChatGPT route retains OAuth-protected public Responses,
+`store: false`, `stream: true`, and confirmed `response.completed` admission.
+Only confirmed final numeric usage is added; API-only caching options are not
+sent. JSON errors, partial text and account denials remain failed requests.
+No Codex bridge, private endpoint or paid API-key fallback is introduced.
 
-Tests use synthetic credentials and local/mock HTTP. They do not demonstrate
-real OpenRouter cache hits, billed savings, a completed live ChatGPT reply,
-account/mobile eligibility or re-signed iPhone Keychain behavior. No owner
-credentials, Apple signing material, paid inference or purchased resources are
-used by these tests or the unsigned build workflow.
+No owner credentials, Apple signing material, paid inference, paid cache storage
+or purchases were used. Live hits, billed savings, account/model admission,
+completed live ChatGPT inference and re-signed device/Keychain behavior remain
+unverified. Explicit cache writes can cost extra. A local app switch cannot
+disable mandatory server caching.
 
-See [OpenRouter setup and limitations](openrouter-prompt-caching.md) and
-[the build/sideload guide](chatgpt-plan-sideload.md).
+See [provider support and controls](provider-prompt-caching.md) and
+[build/sideload instructions](chatgpt-plan-sideload.md).

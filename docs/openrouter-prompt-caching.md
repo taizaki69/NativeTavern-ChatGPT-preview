@@ -1,15 +1,13 @@
-> Build 46 extends this feature to additional audited models and direct providers. See [provider-wide caching guide](provider-prompt-caching.md) for current support and controls. The Sonnet/OpenRouter instructions below remain applicable.
+# NativeTavern: automatic OpenRouter prompt caching — build 46
 
-# NativeTavern: automatic OpenRouter prompt caching — build 45
-
-Prepared 2026-10-09. Personal version: `0.1.17+45`.
+Prepared 2026-10-09. Personal version: `0.1.17+46`.
 This update retains the official ChatGPT plan-sharing preview and existing API
 providers. OpenRouter requests continue to use your existing OpenRouter
 connection and its billing; caching does not consume your ChatGPT subscription.
 
 ## Use it
 
-1. Export your existing app data before updating. Download the build-45 unsigned
+1. Export your existing app data before updating. Download the build-46 unsigned
    IPA from [the fork's Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
    while signed in as the fork owner. Re-sign the entire app with your existing
    sideload tool, preferably keeping the same bundle ID and signing identity.
@@ -17,7 +15,8 @@ connection and its billing; caching does not consume your ChatGPT subscription.
    `anthropic/claude-sonnet-5.5` in the normal **Model** setting.
 3. **Automatic OpenRouter caching** is enabled by default, including for saved
    connections created before this update. This switch appears in AI settings
-   for recognized OpenRouter Claude Sonnet, Opus and Haiku 4/5 model IDs. Turn it
+   for recognized explicit-cache Claude, Alibaba and newer OpenAI routes.
+   Each route receives its own documented cache format. Turn it
    off there if you do not want the app to add cache markers. Your choice survives
    app restarts and switching providers. Direct Anthropic's existing caching
    setting remains separate.
@@ -43,7 +42,7 @@ trailing assistant prefill stay outside the growing-history boundary.
 
 Prompt text, role order, images, tools, provider selection and fallback policy
 are preserved. The app adds at most four markers, accounting for existing
-message markers. New five-minute markers stay after any existing one-hour
+message, system and tool markers. New five-minute markers stay after any existing one-hour
 message marker. It does not reorder lore, strip needed context, pad short
 prompts, retain a local plaintext cache, force another provider, or request
 the more expensive one-hour retention. It handles streaming and non-streaming
@@ -53,9 +52,14 @@ The automatic placement runs after the app's existing context fitting and
 role processing. A changed card, prompt, lore, RAG result, summary or trimmed
 history is still sent as changed content. No cached answer replaces generation.
 
+Newer OpenAI routes use their own `prompt_cache_breakpoint` format and default
+retention. Eligible implicit routes add no explicit-block fields. See
+[the provider-wide audit](provider-prompt-caching.md) for the full model/protocol
+policy and additional direct API providers.
+
 ## Why a cache may miss
 
-The default retention is five minutes. Sonnet 5.5 currently requires a cacheable
+Claude's default retention is five minutes. Sonnet 5.5 currently requires a cacheable
 prefix of at least 512 tokens; other models/routes can have different minimums.
 Cache writes cost extra, so enabling caching does not guarantee savings.
 A cold or expired cache, changed prompt prefix, changed model or a provider
@@ -86,13 +90,13 @@ Live cache hits, billed savings and behavior on a re-signed iPhone remain
 unverified. A successful OAuth sign-in in the separate ChatGPT provider also
 does not establish completed Responses inference or account eligibility.
 
-## Verified build 45
+## Verified build 46
 
-[The macOS run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37894204117) passed **640 tests, with 2 skipped**,
+[The macOS run](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/38014008008) passed **671 tests, with 2 skipped**,
 and analysis completed with zero errors. The downloaded unsigned device IPA
-passed checksum, all-member ZIP CRC and compiled cache/ChatGPT/native feature
-checks. Its matching source and reports accompany the release.
+passed checksum, all-member ZIP CRC and compiled provider/cache/ChatGPT/native
+feature checks. Its matching source and reports accompany the release.
 
-These checks establish request behavior with synthetic responses and a compiled
-device app. They do not establish live cache hits, paid savings or the final
-re-signed phone's behavior.
+Tests establish request behavior with synthetic responses and a compiled device
+app. They do not establish live cache hits, billed savings or final re-signed
+phone behavior.

@@ -2,7 +2,7 @@
 
 Prepared 2026-10-09. Upstream base: `miaoxworld/NativeTavern` commit
 `6dbd1ee042e994966db85693594ab61e4f4ec441`, version `0.1.17+41`.
-This personal source modification uses version `0.1.17+45`.
+This personal source modification uses version `0.1.17+46`.
 It is not an upstream, OpenAI, App Store, or TestFlight release.
 
 ## What this adds
@@ -33,35 +33,40 @@ Sources:
 - [Preview limits](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 - [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
-## OpenRouter caching in build 45
+## Provider caching in build 46
 
-Build 45 adds automatic prompt-cache markers for supported OpenRouter Claude
-models, including `anthropic/claude-sonnet-5.5`. It keeps your existing provider,
-model, API connection and billing configuration. The separate **Automatic
-OpenRouter caching** switch defaults on and provides a persisted opt-out.
-Completed replies show reported cache reads and writes when available.
-See [the caching guide](openrouter-prompt-caching.md) for setup and limitations.
-Live cache hits and savings are not established by synthetic tests.
+Build 46 expands caching across all 14 provider choices, using only supported
+model/protocol controls. Keep your current connection and model. AI Configuration
+shows **Automatic prompt caching** or the existing **Automatic OpenRouter caching**
+switch for explicit caching, and explains server-managed, local, unknown or
+resource-based behavior for other connections. New supported configurations
+default on; saved opt-outs remain off. The switch controls app-added markers,
+not a provider's implicit cache.
 
-## Download build 45
+Completed replies show reported numeric cache reads/writes when supplied.
+See [the provider guide](provider-prompt-caching.md) for support, costs,
+retention, limitations and opt-outs. No paid cache resource or warm-up request
+is created. Live hits and savings remain unverified.
 
-**Build 45 has been compiled and its downloaded unsigned IPA verified.**
+## Download build 46
+
+**Build 46 has been compiled and its downloaded unsigned IPA verified.**
 Sign in as the fork owner at [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
-and open **NativeTavern ChatGPT preview (build 45, unsigned)**.
-Download `NativeTavern_ChatGPT_v0.1.17+45_unsigned.ipa` and its `.sha256` companion.
-Earlier build 44 does not contain automatic OpenRouter prompt-cache markers.
+and open **NativeTavern ChatGPT preview (build 46, unsigned)**.
+Download `NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa` and its `.sha256` companion.
+Build 45 contains the earlier OpenRouter Claude feature, not this broader audit.
 
-The IPA is 45,111,769 bytes (43.0 MiB), above this
+The IPA is 45,121,961 bytes (43.0 MiB), above this
 chat's 9 MiB file limit. SHA-256:
 
 ~~~
-9ae9f1f934280b216ad484016fd0634e23abe9db68b992005b790094cc10e6ff
+41a88d671c138d7d97dfcf9b688559605a9f1c17fd8db6f05fa027938a1c5238
 ~~~
 
-[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/37894204117) passed **640 Flutter tests,
+[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/38014008008) passed **671 Flutter tests,
 with 2 skipped**, and analysis completed with zero errors.
-[Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/6fab43d0cda0b55c5ef61dbdc5237f6962474693): `6fab43d0cda0b55c5ef61dbdc5237f6962474693`.
-The source packet identifies any documentation-only changes after compilation.
+[Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/820c196ed0c9c100edded8411b1fd8e8e2758a97): `820c196ed0c9c100edded8411b1fd8e8e2758a97`.
+The source packet identifies documentation-only changes after compilation.
 
 Re-sign the complete app and its frameworks with your existing sideload tool.
 The app targets **iOS 15 or later**. Export existing data before installation.
@@ -69,9 +74,9 @@ Your signing tool's bundle-ID/team handling determines whether it updates the
 existing app or creates separate storage. Keeping the same signing identity
 and bundle ID helps retain protected accounts and saved configuration.
 
-For Sonnet 5.5, keep your existing OpenRouter provider and model, and follow
-[the caching guide](openrouter-prompt-caching.md). The instructions below concern
-the separate ChatGPT provider; using OpenRouter does not require its sign-in.
+Use your normal provider/model settings for API providers. The instructions
+below concern the separate ChatGPT provider; caching does not require signing
+into ChatGPT or change your API provider's billing.
 
 ## Use it after sideloading
 
@@ -182,8 +187,8 @@ the entire iOS project with `flutter create` over this checkout.
 Expected output **only if the build actually succeeds**:
 
 ~~~
-release/NativeTavern_ChatGPT_v0.1.17+45_unsigned.ipa
-release/NativeTavern_ChatGPT_v0.1.17+45_unsigned.ipa.sha256
+release/NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa
+release/NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa.sha256
 ~~~
 
 An unsigned IPA contains a real device application, but must be locally
