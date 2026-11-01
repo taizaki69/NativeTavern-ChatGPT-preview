@@ -3753,6 +3753,18 @@ class PagedChatsNotifier extends AutoDisposeAsyncNotifier<List<Chat>> {
       _loadingMore = false;
     }
   }
+
+  /// Drop a deleted chat from the loaded pages without refetching, keeping
+  /// the next page offset aligned with the database.
+  void removeChat(String chatId) {
+    final current = state.valueOrNull;
+    if (current == null) return;
+    final remaining =
+        current.where((chat) => chat.id != chatId).toList(growable: false);
+    if (remaining.length == current.length) return;
+    _offset = max(0, _offset - 1);
+    state = AsyncData(remaining);
+  }
 }
 
 /// Recent chats

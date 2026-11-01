@@ -235,26 +235,25 @@ class TranslationSettingsScreen extends ConsumerWidget {
             title: AppLocalizations.of(context)!.information,
             children: [
               ListTile(
-                leading:
-                    const Icon(Icons.info_outline, color: AppTheme.accentColor),
+                leading: Icon(Icons.info_outline, color: context.tavern.accent),
                 title: Text(l10n.aboutTranslation),
                 subtitle: Text(l10n.aboutTranslationDescription),
               ),
               if (settings.provider == TranslationProvider.google)
                 ListTile(
-                  leading: const Icon(Icons.cloud, color: AppTheme.textMuted),
+                  leading: Icon(Icons.cloud, color: context.tavern.textMuted),
                   title: Text(l10n.googleTranslate),
                   subtitle: Text(l10n.googleTranslateDescription),
                 ),
               if (settings.provider == TranslationProvider.deepl)
                 ListTile(
-                  leading: const Icon(Icons.cloud, color: AppTheme.textMuted),
+                  leading: Icon(Icons.cloud, color: context.tavern.textMuted),
                   title: Text(l10n.deepL),
                   subtitle: Text(l10n.deepLDescription),
                 ),
               if (settings.provider == TranslationProvider.libre)
                 ListTile(
-                  leading: const Icon(Icons.public, color: AppTheme.textMuted),
+                  leading: Icon(Icons.public, color: context.tavern.textMuted),
                   title: Text(l10n.libreTranslate),
                   subtitle: Text(l10n.libreTranslateDescription),
                 ),
@@ -271,7 +270,7 @@ class TranslationSettingsScreen extends ConsumerWidget {
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -279,10 +278,10 @@ class TranslationSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -392,23 +391,22 @@ class _TranslationTestWidgetState
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.tavern.background,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.accentColor),
+                border: Border.all(color: context.tavern.accent),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.check,
-                          size: 16, color: AppTheme.accentColor),
+                      Icon(Icons.check, size: 16, color: context.tavern.accent),
                       const SizedBox(width: 8),
                       Text(
                         '${translationState.result!.sourceLanguage} → ${translationState.result!.targetLanguage}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.textMuted,
+                          color: context.tavern.textMuted,
                         ),
                       ),
                     ],
@@ -500,25 +498,24 @@ class TranslationDisplay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: AppTheme.accentColor.withValues(alpha: 0.1),
+        color: context.tavern.accent.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.accentColor.withValues(alpha: 0.3)),
+        border: Border.all(color: context.tavern.accent.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.translate,
-                  size: 14, color: AppTheme.accentColor),
+              Icon(Icons.translate, size: 14, color: context.tavern.accent),
               const SizedBox(width: 4),
               Text(
                 l10n.translatedFromLanguage(
                   _getLanguageName(result.sourceLanguage),
                 ),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
               ),
             ],
@@ -529,9 +526,9 @@ class TranslationDisplay extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               l10n.originalText(result.originalText),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
                 fontStyle: FontStyle.italic,
               ),
             ),

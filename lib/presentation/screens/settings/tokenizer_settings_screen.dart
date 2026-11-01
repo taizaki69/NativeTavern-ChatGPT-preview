@@ -157,7 +157,7 @@ class _TokenizerSettingsScreenState
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppTheme.accentColor,
+            color: context.tavern.accent,
             fontWeight: FontWeight.bold,
           ),
     );

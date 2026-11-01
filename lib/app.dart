@@ -37,7 +37,19 @@ class _NativeTavernAppState extends ConsumerState<NativeTavernApp> {
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
-    final activeTheme = ref.watch(activeThemeConfigProvider);
+    final followSystem = ref.watch(themeFollowSystemProvider);
+    final ThemeData theme;
+    final ThemeData darkTheme;
+    final ThemeMode themeMode;
+    if (followSystem) {
+      theme = ref.watch(lightThemeDataProvider);
+      darkTheme = ref.watch(darkThemeDataProvider);
+      themeMode = ThemeMode.system;
+    } else {
+      theme = darkTheme = ref.watch(activeThemeDataProvider);
+      themeMode =
+          ref.watch(isDarkModeProvider) ? ThemeMode.dark : ThemeMode.light;
+    }
     final locale = ref.watch(localeProvider);
     final settings = ref.watch(appSettingsProvider);
     ref.watch(worldRuntimeProvider);
@@ -56,9 +68,9 @@ class _NativeTavernAppState extends ConsumerState<NativeTavernApp> {
     return MaterialApp.router(
       title: 'NativeTavern',
       debugShowCheckedModeBanner: false,
-      theme: activeTheme.toThemeData(),
-      darkTheme: activeTheme.toThemeData(),
-      themeMode: activeTheme.isDark ? ThemeMode.dark : ThemeMode.light,
+      theme: theme,
+      darkTheme: darkTheme,
+      themeMode: themeMode,
       routerConfig: router,
       locale: locale,
       localizationsDelegates: const [

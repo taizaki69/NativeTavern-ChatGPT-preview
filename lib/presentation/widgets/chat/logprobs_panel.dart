@@ -242,10 +242,10 @@ class _TokenSpan extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 1, vertical: 2),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.accentColor.withValues(alpha: 0.3)
+              ? context.tavern.accent.withValues(alpha: 0.3)
               : tintColor.withValues(alpha: 0.15),
           border: isSelected
-              ? Border.all(color: AppTheme.accentColor, width: 2)
+              ? Border.all(color: context.tavern.accent, width: 2)
               : null,
           borderRadius: BorderRadius.circular(2),
         ),
@@ -255,7 +255,7 @@ class _TokenSpan extends StatelessWidget {
             fontFamily: 'monospace',
             fontSize: 14,
             color: isSelected
-                ? AppTheme.accentColor
+                ? context.tavern.accent
                 : Theme.of(context).textTheme.bodyMedium?.color,
           ),
         ),
@@ -381,7 +381,7 @@ class _CandidateChip extends StatelessWidget {
 
     return Material(
       color: isSelected
-          ? AppTheme.accentColor.withValues(alpha: 0.2)
+          ? context.tavern.accent.withValues(alpha: 0.2)
           : Theme.of(context).colorScheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(8),
       child: InkWell(

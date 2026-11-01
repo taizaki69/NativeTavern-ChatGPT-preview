@@ -51,16 +51,16 @@ class CloudBackupScreen extends ConsumerWidget {
                       width: 200,
                       child: LinearProgressIndicator(
                         value: operationState.progress,
-                        backgroundColor: AppTheme.darkCard,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.accentColor),
+                        backgroundColor: context.tavern.card,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            context.tavern.accent),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${(operationState.progress! * 100).toInt()}%',
-                      style: const TextStyle(
-                          color: AppTheme.textMuted, fontSize: 12),
+                      style: TextStyle(
+                          color: context.tavern.textMuted, fontSize: 12),
                     ),
                   ],
                 ],
@@ -75,8 +75,8 @@ class CloudBackupScreen extends ConsumerWidget {
                   title: l10n.cloudBackupInfo,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.cloud_outlined,
-                          color: AppTheme.accentColor),
+                      leading: Icon(Icons.cloud_outlined,
+                          color: context.tavern.accent),
                       title: Text(l10n.cloudBackupDescription),
                       subtitle: Text(l10n.cloudBackupSubtitle),
                     ),
@@ -174,8 +174,8 @@ class CloudBackupScreen extends ConsumerWidget {
                         data: (available) {
                           if (!available) {
                             return ListTile(
-                              leading: const Icon(Icons.cloud_off,
-                                  color: AppTheme.textMuted),
+                              leading: Icon(Icons.cloud_off,
+                                  color: context.tavern.textMuted),
                               title: Text(l10n.iCloudNotAvailable),
                               subtitle:
                                   Text(l10n.iCloudNotAvailableDescription),
@@ -244,13 +244,14 @@ class CloudBackupScreen extends ConsumerWidget {
                               child: Center(
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.cloud_outlined,
-                                        size: 48, color: AppTheme.textMuted),
+                                    Icon(Icons.cloud_outlined,
+                                        size: 48,
+                                        color: context.tavern.textMuted),
                                     const SizedBox(height: 16),
                                     Text(
                                       l10n.noCloudBackups,
-                                      style: const TextStyle(
-                                          color: AppTheme.textMuted),
+                                      style: TextStyle(
+                                          color: context.tavern.textMuted),
                                     ),
                                   ],
                                 ),
@@ -360,13 +361,14 @@ class CloudBackupScreen extends ConsumerWidget {
                               child: Center(
                                 child: Column(
                                   children: [
-                                    const Icon(Icons.cloud_outlined,
-                                        size: 48, color: AppTheme.textMuted),
+                                    Icon(Icons.cloud_outlined,
+                                        size: 48,
+                                        color: context.tavern.textMuted),
                                     const SizedBox(height: 16),
                                     Text(
                                       l10n.noCloudBackups,
-                                      style: const TextStyle(
-                                          color: AppTheme.textMuted),
+                                      style: TextStyle(
+                                          color: context.tavern.textMuted),
                                     ),
                                   ],
                                 ),
@@ -433,8 +435,8 @@ class CloudBackupScreen extends ConsumerWidget {
                   title: l10n.information,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.info_outline,
-                          color: AppTheme.accentColor),
+                      leading: Icon(Icons.info_outline,
+                          color: context.tavern.accent),
                       title: Text(l10n.aboutRestoreModes),
                       subtitle: Text(l10n.aboutRestoreModesDescription),
                     ),
@@ -502,7 +504,7 @@ class CloudBackupScreen extends ConsumerWidget {
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -510,10 +512,10 @@ class CloudBackupScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -880,7 +882,7 @@ class _CloudBackupTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${CloudBackupService.instance.formatFileSize(backup.size)} • ${_formatDate(backup.createdAt)}',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+        style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -939,7 +941,7 @@ class _GoogleDriveBackupTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${CloudBackupService.instance.formatFileSize(backup.size)} • ${_formatDate(backup.createdAt)}',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+        style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

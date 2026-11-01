@@ -140,7 +140,7 @@ class _MarkdownInputFieldState extends State<MarkdownInputField> {
                 InputDecoration(
                   hintText: widget.hintText,
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.tavern.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
                     borderSide: BorderSide.none,
@@ -172,9 +172,9 @@ class _MarkdownToolbar extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.tavern.card,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.darkDivider),
+        border: Border.all(color: context.tavern.divider),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -253,7 +253,7 @@ class _ToolbarButton extends StatelessWidget {
           child: Icon(
             format.icon,
             size: 18,
-            color: AppTheme.textSecondary,
+            color: context.tavern.textSecondary,
           ),
         ),
       ),
@@ -268,7 +268,7 @@ class _ToolbarDivider extends StatelessWidget {
       width: 1,
       height: 20,
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      color: AppTheme.darkDivider,
+      color: context.tavern.divider,
     );
   }
 }
@@ -316,16 +316,16 @@ class MarkdownToolbar extends StatelessWidget {
     if (compact) {
       return _buildCompactToolbar(context);
     }
-    return _buildFullToolbar();
+    return _buildFullToolbar(context);
   }
 
-  Widget _buildFullToolbar() {
+  Widget _buildFullToolbar(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.tavern.card,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.darkDivider),
+        border: Border.all(color: context.tavern.divider),
       ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -405,20 +405,20 @@ class MarkdownToolbar extends StatelessWidget {
           icon: Icon(
             Icons.more_horiz,
             size: 18,
-            color: AppTheme.textMuted,
+            color: context.tavern.textMuted,
           ),
           tooltip: l10n.moreFormatting,
           onSelected: _applyFormat,
           itemBuilder: (context) => [
-            _buildMenuItem(MarkdownFormat.underline, l10n),
-            _buildMenuItem(MarkdownFormat.strikethrough, l10n),
+            _buildMenuItem(context, MarkdownFormat.underline, l10n),
+            _buildMenuItem(context, MarkdownFormat.strikethrough, l10n),
             const PopupMenuDivider(),
-            _buildMenuItem(MarkdownFormat.codeBlock, l10n),
-            _buildMenuItem(MarkdownFormat.link, l10n),
-            _buildMenuItem(MarkdownFormat.quote, l10n),
+            _buildMenuItem(context, MarkdownFormat.codeBlock, l10n),
+            _buildMenuItem(context, MarkdownFormat.link, l10n),
+            _buildMenuItem(context, MarkdownFormat.quote, l10n),
             const PopupMenuDivider(),
-            _buildMenuItem(MarkdownFormat.bulletList, l10n),
-            _buildMenuItem(MarkdownFormat.numberedList, l10n),
+            _buildMenuItem(context, MarkdownFormat.bulletList, l10n),
+            _buildMenuItem(context, MarkdownFormat.numberedList, l10n),
           ],
         ),
       ],
@@ -426,6 +426,7 @@ class MarkdownToolbar extends StatelessWidget {
   }
 
   PopupMenuItem<MarkdownFormat> _buildMenuItem(
+    BuildContext context,
     MarkdownFormat format,
     AppLocalizations l10n,
   ) {
@@ -441,7 +442,7 @@ class MarkdownToolbar extends StatelessWidget {
             Text(
               format.shortcutHint!,
               style: TextStyle(
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
                 fontSize: 12,
               ),
             ),
@@ -496,7 +497,7 @@ class _CompactToolbarButton extends StatelessWidget {
           child: Icon(
             icon,
             size: 18,
-            color: AppTheme.textMuted,
+            color: context.tavern.textMuted,
           ),
         ),
       ),

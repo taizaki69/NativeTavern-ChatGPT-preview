@@ -140,7 +140,7 @@ class CFGScaleSettingsScreen extends ConsumerWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppTheme.accentColor,
+            color: context.tavern.accent,
             fontWeight: FontWeight.bold,
           ),
     );
@@ -347,7 +347,7 @@ class _CharacterCFGSection extends ConsumerWidget {
         Text(
           AppLocalizations.of(context).characterSettings,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
                 fontWeight: FontWeight.bold,
               ),
         ),
@@ -418,7 +418,7 @@ class _ChatCFGSection extends ConsumerWidget {
             Text(
               l10n.chatSettings,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppTheme.accentColor,
+                    color: context.tavern.accent,
                     fontWeight: FontWeight.bold,
                   ),
             ),

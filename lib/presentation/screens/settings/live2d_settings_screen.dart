@@ -629,7 +629,7 @@ class _Live2DSettingsEditorState extends ConsumerState<_Live2DSettingsEditor> {
                 height: math.min(MediaQuery.sizeOf(context).width, 420),
                 clipBehavior: Clip.antiAlias,
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.tavern.card,
                   border: Border.all(color: Theme.of(context).dividerColor),
                   borderRadius: BorderRadius.circular(8),
                 ),

@@ -11654,6 +11654,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Blocked; local AI endpoints remain available'**
   String get aiDataSharingLocalOnlyDescription;
+
+  /// Button that scrolls the chat to the newest message
+  ///
+  /// In en, this message translates to:
+  /// **'Jump to latest'**
+  String get jumpToLatest;
+
+  /// Settings toggle title for delete confirmations
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm before deleting'**
+  String get confirmBeforeDeleteTitle;
+
+  /// Settings toggle subtitle for delete confirmations
+  ///
+  /// In en, this message translates to:
+  /// **'Ask before deleting chats and messages'**
+  String get confirmBeforeDeleteSubtitle;
+
+  /// Settings section header for TTS, STT, images
+  ///
+  /// In en, this message translates to:
+  /// **'Multimedia'**
+  String get multimedia;
+
+  /// Section header for user-created themes
+  ///
+  /// In en, this message translates to:
+  /// **'Custom Themes'**
+  String get customThemes;
+
+  /// Section header for built-in dark themes
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Themes'**
+  String get darkThemes;
+
+  /// Section header for built-in light themes
+  ///
+  /// In en, this message translates to:
+  /// **'Light Themes'**
+  String get lightThemes;
+
+  /// Toggle to switch light/dark theme with the OS
+  ///
+  /// In en, this message translates to:
+  /// **'Follow system appearance'**
+  String get followSystemTheme;
+
+  /// Subtitle for follow system appearance toggle
+  ///
+  /// In en, this message translates to:
+  /// **'Pick one light and one dark theme; the app switches automatically'**
+  String get followSystemThemeSubtitle;
 }
 
 class _AppLocalizationsDelegate

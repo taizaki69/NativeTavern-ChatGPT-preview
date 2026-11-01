@@ -18,7 +18,7 @@ class GroupAvatar extends StatelessWidget {
   Widget build(BuildContext context) {
     final visibleCharacters = characters.take(4).toList(growable: false);
     if (visibleCharacters.isEmpty) {
-      return _emptyAvatar();
+      return _emptyAvatar(context);
     }
 
     return SizedBox.square(
@@ -26,7 +26,7 @@ class GroupAvatar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(size * 0.16),
         child: ColoredBox(
-          color: AppTheme.darkDivider,
+          color: context.tavern.divider,
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -35,7 +35,7 @@ class GroupAvatar extends StatelessWidget {
                   rect: _memberRect(index, visibleCharacters.length),
                   child: Padding(
                     padding: const EdgeInsets.all(1),
-                    child: _memberAvatar(visibleCharacters[index]),
+                    child: _memberAvatar(context, visibleCharacters[index]),
                   ),
                 ),
             ],
@@ -67,26 +67,26 @@ class GroupAvatar extends StatelessWidget {
     );
   }
 
-  Widget _memberAvatar(Character? character) {
+  Widget _memberAvatar(BuildContext context, Character? character) {
     final avatarPath = character?.assets?.avatarPath;
     if (avatarPath != null && avatarPath.isNotEmpty) {
       return CharacterAvatarImage(
         imagePath: avatarPath,
-        errorBuilder: (_, __, ___) => _fallbackMember(character),
+        errorBuilder: (_, __, ___) => _fallbackMember(context, character),
       );
     }
-    return _fallbackMember(character);
+    return _fallbackMember(context, character);
   }
 
-  Widget _fallbackMember(Character? character) {
+  Widget _fallbackMember(BuildContext context, Character? character) {
     final name = character?.name.trim() ?? '';
     return ColoredBox(
-      color: AppTheme.primaryColor.withValues(alpha: 0.24),
+      color: context.tavern.primary.withValues(alpha: 0.24),
       child: Center(
         child: Text(
           name.isEmpty ? '?' : name.characters.first.toUpperCase(),
           style: TextStyle(
-            color: AppTheme.textPrimary,
+            color: context.tavern.textPrimary,
             fontSize: size * 0.25,
             fontWeight: FontWeight.w600,
           ),
@@ -95,18 +95,18 @@ class GroupAvatar extends StatelessWidget {
     );
   }
 
-  Widget _emptyAvatar() {
+  Widget _emptyAvatar(BuildContext context) {
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppTheme.primaryColor.withValues(alpha: 0.2),
+        color: context.tavern.primary.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(size * 0.16),
       ),
       child: Icon(
         Icons.groups,
         size: size * 0.5,
-        color: AppTheme.primaryColor,
+        color: context.tavern.primary,
       ),
     );
   }

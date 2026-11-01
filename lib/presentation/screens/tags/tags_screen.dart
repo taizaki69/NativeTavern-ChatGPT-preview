@@ -83,21 +83,21 @@ class _TagsScreenState extends ConsumerState<TagsScreen> {
           Icon(
             Icons.label_outline,
             size: 64,
-            color: AppTheme.textMuted,
+            color: context.tavern.textMuted,
           ),
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.noTagsYet,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
-              color: AppTheme.textSecondary,
+              color: context.tavern.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             AppLocalizations.of(context)!.createTagsToOrganize,
-            style: const TextStyle(
-              color: AppTheme.textMuted,
+            style: TextStyle(
+              color: context.tavern.textMuted,
             ),
           ),
           const SizedBox(height: 24),
@@ -208,7 +208,7 @@ class _TagListItem extends StatelessWidget {
         subtitle: Text(
           AppLocalizations.of(context)!
               .characterCount(usageCount, usageCount == 1 ? '' : 's'),
-          style: const TextStyle(color: AppTheme.textMuted),
+          style: TextStyle(color: context.tavern.textMuted),
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -374,7 +374,7 @@ class _TagEditDialogState extends State<_TagEditDialog> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.darkCard,
+                color: context.tavern.card,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

@@ -108,15 +108,15 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
     final settings = ref.watch(imageGenSettingsProvider);
 
     return AlertDialog(
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       title: Row(
         children: [
-          const Icon(Icons.image, color: AppTheme.primaryColor),
+          Icon(Icons.image, color: context.tavern.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               l10n.generateImagesUsingAi,
-              style: const TextStyle(color: AppTheme.textPrimary),
+              style: TextStyle(color: context.tavern.textPrimary),
             ),
           ),
           if (!settings.enabled)
@@ -137,26 +137,26 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBackground,
+                  color: context.tavern.background,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.cloud, size: 16, color: AppTheme.textMuted),
+                    Icon(Icons.cloud, size: 16, color: context.tavern.textMuted),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         settings.provider.displayName,
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: context.tavern.textSecondary,
                           fontSize: 12,
                         ),
                       ),
                     ),
                     Text(
                       '${settings.defaultWidth}x${settings.defaultHeight}',
-                      style: const TextStyle(
-                        color: AppTheme.textMuted,
+                      style: TextStyle(
+                        color: context.tavern.textMuted,
                         fontSize: 12,
                       ),
                     ),
@@ -174,8 +174,8 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
                 children: [
                   Text(
                     l10n.prompt,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
+                    style: TextStyle(
+                      color: context.tavern.textSecondary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -200,12 +200,12 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
               TextField(
                 controller: _promptController,
                 maxLines: 4,
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: TextStyle(color: context.tavern.textPrimary),
                 decoration: InputDecoration(
                   hintText: l10n.enterPromptToGenerate,
-                  hintStyle: const TextStyle(color: AppTheme.textMuted),
+                  hintStyle: TextStyle(color: context.tavern.textMuted),
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.tavern.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -219,8 +219,8 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
               ExpansionTile(
                 title: Text(
                   l10n.negativePrompt,
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                  style: TextStyle(
+                    color: context.tavern.textSecondary,
                     fontSize: 14,
                   ),
                 ),
@@ -230,12 +230,12 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
                   TextField(
                     controller: _negativePromptController,
                     maxLines: 2,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12),
+                    style: TextStyle(color: context.tavern.textPrimary, fontSize: 12),
                     decoration: InputDecoration(
                       hintText: l10n.enterTermsToAvoid,
-                      hintStyle: const TextStyle(color: AppTheme.textMuted),
+                      hintStyle: TextStyle(color: context.tavern.textMuted),
                       filled: true,
-                      fillColor: AppTheme.darkBackground,
+                      fillColor: context.tavern.background,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
@@ -251,14 +251,14 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
                 const SizedBox(height: 16),
                 LinearProgressIndicator(
                   value: _progress,
-                  backgroundColor: AppTheme.darkBackground,
-                  valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primaryColor),
+                  backgroundColor: context.tavern.background,
+                  valueColor: AlwaysStoppedAnimation<Color>(context.tavern.primary),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '${(_progress * 100).toInt()}%',
-                  style: const TextStyle(
-                    color: AppTheme.textMuted,
+                  style: TextStyle(
+                    color: context.tavern.textMuted,
                     fontSize: 12,
                   ),
                   textAlign: TextAlign.center,
@@ -323,7 +323,7 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
             icon: const Icon(Icons.check),
             label: Text(l10n.save),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: context.tavern.primary,
             ),
           )
         else
@@ -341,7 +341,7 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
                 : const Icon(Icons.auto_awesome),
             label: Text(_isGenerating ? l10n.generating : l10n.generate),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryColor,
+              backgroundColor: context.tavern.primary,
             ),
           ),
       ],
@@ -466,12 +466,12 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
     
     return Row(
       children: [
-        const Icon(Icons.memory, size: 16, color: AppTheme.textMuted),
+        Icon(Icons.memory, size: 16, color: context.tavern.textMuted),
         const SizedBox(width: 8),
-        const Text(
+        Text(
           'Model:',
           style: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.tavern.textSecondary,
             fontSize: 12,
           ),
         ),
@@ -480,7 +480,7 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              color: AppTheme.darkBackground,
+              color: context.tavern.background,
               borderRadius: BorderRadius.circular(8),
             ),
             child: DropdownButtonHideUnderline(
@@ -488,15 +488,15 @@ class _ImageGenerationDialogState extends ConsumerState<ImageGenerationDialog> {
                 value: availableModels.contains(currentModel) ? currentModel : null,
                 isExpanded: true,
                 isDense: true,
-                dropdownColor: AppTheme.darkCard,
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                dropdownColor: context.tavern.card,
+                style: TextStyle(
+                  color: context.tavern.textPrimary,
                   fontSize: 12,
                 ),
                 hint: Text(
                   currentModel,
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                  style: TextStyle(
+                    color: context.tavern.textSecondary,
                     fontSize: 12,
                   ),
                 ),

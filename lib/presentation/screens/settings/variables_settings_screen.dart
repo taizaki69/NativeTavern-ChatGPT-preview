@@ -59,16 +59,16 @@ class VariablesSettingsScreen extends ConsumerWidget {
         children: [
           // Info section
           _buildSection(
+            context,
             title: l10n.aboutVariables,
             children: [
               ListTile(
-                leading:
-                    const Icon(Icons.info_outline, color: AppTheme.accentColor),
+                leading: Icon(Icons.info_outline, color: context.tavern.accent),
                 title: Text(l10n.variableSystem),
                 subtitle: Text(l10n.variableSystemDescription),
               ),
               ListTile(
-                leading: const Icon(Icons.code, color: AppTheme.textMuted),
+                leading: Icon(Icons.code, color: context.tavern.textMuted),
                 title: Text(l10n.macroUsage),
                 subtitle: Text(
                   l10n.macroUsageDescription(
@@ -84,6 +84,7 @@ class VariablesSettingsScreen extends ConsumerWidget {
 
           // Global variables
           _buildSection(
+            context,
             title: l10n.globalVariablesCount(globalVars.length),
             children: [
               if (globalVars.isEmpty)
@@ -92,12 +93,12 @@ class VariablesSettingsScreen extends ConsumerWidget {
                   child: Center(
                     child: Column(
                       children: [
-                        const Icon(Icons.data_object,
-                            size: 48, color: AppTheme.textMuted),
+                        Icon(Icons.data_object,
+                            size: 48, color: context.tavern.textMuted),
                         const SizedBox(height: 16),
                         Text(
                           l10n.noGlobalVariables,
-                          style: const TextStyle(color: AppTheme.textMuted),
+                          style: TextStyle(color: context.tavern.textMuted),
                         ),
                       ],
                     ),
@@ -127,6 +128,7 @@ class VariablesSettingsScreen extends ConsumerWidget {
 
             // Local variables
             _buildSection(
+              context,
               title: l10n.localVariablesCount(localVars.length),
               children: [
                 if (localVars.isEmpty)
@@ -135,12 +137,12 @@ class VariablesSettingsScreen extends ConsumerWidget {
                     child: Center(
                       child: Column(
                         children: [
-                          const Icon(Icons.data_object,
-                              size: 48, color: AppTheme.textMuted),
+                          Icon(Icons.data_object,
+                              size: 48, color: context.tavern.textMuted),
                           const SizedBox(height: 16),
                           Text(
                             l10n.noLocalVariables,
-                            style: const TextStyle(color: AppTheme.textMuted),
+                            style: TextStyle(color: context.tavern.textMuted),
                           ),
                         ],
                       ),
@@ -170,6 +172,7 @@ class VariablesSettingsScreen extends ConsumerWidget {
 
           // Test section
           _buildSection(
+            context,
             title: l10n.test,
             children: [
               _VariableTestWidget(chatId: chatId),
@@ -180,12 +183,13 @@ class VariablesSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSection({
+  Widget _buildSection(
+    BuildContext context, {
     required String title,
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -193,10 +197,10 @@ class VariablesSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -448,7 +452,7 @@ class _VariableTile extends StatelessWidget {
     return ListTile(
       leading: Icon(
         isGlobal ? Icons.public : Icons.chat_bubble_outline,
-        color: isGlobal ? AppTheme.accentColor : Colors.orange,
+        color: isGlobal ? context.tavern.accent : Colors.orange,
       ),
       title: Row(
         children: [
@@ -457,14 +461,14 @@ class _VariableTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.textMuted.withValues(alpha: 0.2),
+              color: context.tavern.textMuted.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               _valueType,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 10,
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
               ),
             ),
           ),
@@ -574,22 +578,21 @@ class _VariableTestWidgetState extends ConsumerState<_VariableTestWidget> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.accentColor.withValues(alpha: 0.1),
+                color: context.tavern.accent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.accentColor),
+                border: Border.all(color: context.tavern.accent),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.check,
-                          size: 16, color: AppTheme.accentColor),
+                      Icon(Icons.check, size: 16, color: context.tavern.accent),
                       const SizedBox(width: 8),
                       Text(
                         l10n.result,
-                        style: const TextStyle(
-                          color: AppTheme.accentColor,
+                        style: TextStyle(
+                          color: context.tavern.accent,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -599,7 +602,7 @@ class _VariableTestWidgetState extends ConsumerState<_VariableTestWidget> {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
+                      color: context.tavern.background,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: SelectableText(

@@ -11,7 +11,8 @@ import 'package:url_launcher/url_launcher.dart';
 class HtmlWebViewWidget extends StatefulWidget {
   final String htmlContent;
   final Color backgroundColor;
-  final Color textColor;
+  /// Text color for the rendered document; defaults to the theme's text.
+  final Color? textColor;
   final double? fontSize;
   final VoidCallback? onLongPress;
   /// Unique key to force rebuild when content changes significantly
@@ -21,7 +22,7 @@ class HtmlWebViewWidget extends StatefulWidget {
     super.key,
     required this.htmlContent,
     this.backgroundColor = Colors.transparent,
-    this.textColor = AppTheme.textPrimary,
+    this.textColor,
     this.fontSize,
     this.onLongPress,
     this.contentKey,
@@ -131,10 +132,12 @@ class _HtmlWebViewWidgetState extends State<HtmlWebViewWidget> {
     }
   }
 
+  Color get _textColor => widget.textColor ?? context.tavern.textPrimary;
+
   /// Build the complete HTML document
   String _buildHtml() {
     final effectiveFontSize = widget.fontSize ?? 14.0;
-    final textColorHex = _colorToHex(widget.textColor);
+    final textColorHex = _colorToHex(_textColor);
     final content = widget.htmlContent.replaceAllMapped(
       RegExp(r'<details\b', caseSensitive: false),
       (match) => '<details open',
@@ -530,12 +533,12 @@ $content
             const SizedBox(height: 8),
             Text(
               'Failed to render HTML content',
-              style: TextStyle(color: widget.textColor),
+              style: TextStyle(color: _textColor),
             ),
             if (_errorMessage != null)
               Text(
                 _errorMessage!,
-                style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                style: TextStyle(color: context.tavern.textMuted, fontSize: 12),
               ),
           ],
         ),
@@ -666,8 +669,8 @@ $content
             if (_isLoading)
               Positioned.fill(
                 child: Container(
-                  color: AppTheme.darkCard,
-                  child: const Center(
+                  color: context.tavern.card,
+                  child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -675,7 +678,7 @@ $content
                         SizedBox(height: 8),
                         Text(
                           'Loading content...',
-                          style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                          style: TextStyle(color: context.tavern.textMuted, fontSize: 12),
                         ),
                       ],
                     ),

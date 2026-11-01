@@ -89,23 +89,23 @@ class PersonasScreen extends ConsumerWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(
+          Icon(
             Icons.person_outline,
             size: 64,
-            color: AppTheme.textMuted,
+            color: context.tavern.textMuted,
           ),
           const SizedBox(height: 16),
           Text(
             AppLocalizations.of(context)!.noPersonasYet,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
-              color: AppTheme.textSecondary,
+              color: context.tavern.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             AppLocalizations.of(context)!.createPersonaDescription,
-            style: const TextStyle(color: AppTheme.textMuted),
+            style: TextStyle(color: context.tavern.textMuted),
           ),
           const SizedBox(height: 24),
           ElevatedButton.icon(
@@ -197,12 +197,12 @@ class _PersonaCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       color: isActive
-          ? AppTheme.primaryColor.withValues(alpha: 0.15)
-          : AppTheme.darkCard,
+          ? context.tavern.primary.withValues(alpha: 0.15)
+          : context.tavern.card,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isActive
-            ? const BorderSide(color: AppTheme.primaryColor, width: 2)
+            ? BorderSide(color: context.tavern.primary, width: 2)
             : BorderSide.none,
       ),
       child: InkWell(
@@ -213,7 +213,7 @@ class _PersonaCard extends StatelessWidget {
           child: Row(
             children: [
               // Avatar
-              _buildAvatar(),
+              _buildAvatar(context),
               const SizedBox(width: 16),
 
               // Info
@@ -240,14 +240,14 @@ class _PersonaCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color:
-                                  AppTheme.accentColor.withValues(alpha: 0.2),
+                                  context.tavern.accent.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               AppLocalizations.of(context).default_,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.accentColor,
+                                color: context.tavern.accent,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -260,14 +260,14 @@ class _PersonaCard extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color:
-                                  AppTheme.primaryColor.withValues(alpha: 0.2),
+                                  context.tavern.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               AppLocalizations.of(context).active,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 10,
-                                color: AppTheme.primaryColor,
+                                color: context.tavern.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -278,8 +278,8 @@ class _PersonaCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         persona.description,
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: context.tavern.textSecondary,
                           fontSize: 14,
                         ),
                         maxLines: 2,
@@ -292,7 +292,7 @@ class _PersonaCard extends StatelessWidget {
 
               // Actions
               AdaptivePopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, color: AppTheme.textMuted),
+                icon: Icon(Icons.more_vert, color: context.tavern.textMuted),
                 onSelected: (value) {
                   switch (value) {
                     case 'edit':
@@ -343,7 +343,7 @@ class _PersonaCard extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
     if (persona.avatarPath != null) {
       return CircleAvatar(
         radius: 28,
@@ -352,13 +352,13 @@ class _PersonaCard extends StatelessWidget {
     }
     return CircleAvatar(
       radius: 28,
-      backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+      backgroundColor: context.tavern.primary.withValues(alpha: 0.2),
       child: Text(
         persona.name.isNotEmpty ? persona.name[0].toUpperCase() : 'U',
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.bold,
-          color: AppTheme.primaryColor,
+          color: context.tavern.primary,
         ),
       ),
     );
@@ -446,9 +446,9 @@ class _PersonaDialogState extends State<_PersonaDialog> {
             const SizedBox(height: 8),
             Text(
               AppLocalizations.of(context)!.personaDescriptionHelp,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
               ),
             ),
           ],
@@ -481,14 +481,14 @@ class _PersonaDialogState extends State<_PersonaDialog> {
             onTap: _showAvatarOptions,
             child: CircleAvatar(
               radius: 50,
-              backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+              backgroundColor: context.tavern.primary.withValues(alpha: 0.2),
               backgroundImage:
                   _avatarPath != null ? FileImage(File(_avatarPath!)) : null,
               child: _avatarPath == null
-                  ? const Icon(
+                  ? Icon(
                       Icons.person,
                       size: 50,
-                      color: AppTheme.primaryColor,
+                      color: context.tavern.primary,
                     )
                   : null,
             ),
@@ -501,17 +501,17 @@ class _PersonaDialogState extends State<_PersonaDialog> {
               child: Container(
                 padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryColor,
+                  color: context.tavern.primary,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: AppTheme.darkCard,
+                    color: context.tavern.card,
                     width: 2,
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.camera_alt,
                   size: 18,
-                  color: Colors.white,
+                  color: context.tavern.onPrimary,
                 ),
               ),
             ),
@@ -531,7 +531,7 @@ class _PersonaDialogState extends State<_PersonaDialog> {
     // On mobile, show options sheet
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -544,14 +544,13 @@ class _PersonaDialogState extends State<_PersonaDialog> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading:
-                  const Icon(Icons.photo_library, color: AppTheme.primaryColor),
+              leading: Icon(Icons.photo_library, color: context.tavern.primary),
               title: Text(AppLocalizations.of(context)!.chooseFromGallery),
               onTap: () {
                 Navigator.pop(context);
@@ -559,8 +558,7 @@ class _PersonaDialogState extends State<_PersonaDialog> {
               },
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.camera_alt, color: AppTheme.accentColor),
+              leading: Icon(Icons.camera_alt, color: context.tavern.accent),
               title: Text(AppLocalizations.of(context)!.takePhoto),
               onTap: () {
                 Navigator.pop(context);

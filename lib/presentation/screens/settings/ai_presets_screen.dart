@@ -37,18 +37,18 @@ class AIPresetsScreen extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: AppTheme.primaryColor.withValues(alpha: 0.1),
+              color: context.tavern.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: AppTheme.primaryColor, size: 20),
+                Icon(Icons.info_outline, color: context.tavern.primary, size: 20),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     l10n.aiPresetsDescription,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: context.tavern.textSecondary,
                         ),
                   ),
                 ),
@@ -119,7 +119,7 @@ class AIPresetsScreen extends ConsumerWidget {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppTheme.accentColor,
+            color: context.tavern.accent,
             fontWeight: FontWeight.bold,
           ),
     );
@@ -409,11 +409,11 @@ class _PresetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      color: isActive ? AppTheme.primaryColor.withValues(alpha: 0.15) : null,
+      color: isActive ? context.tavern.primary.withValues(alpha: 0.15) : null,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isActive
-            ? const BorderSide(color: AppTheme.primaryColor, width: 2)
+            ? BorderSide(color: context.tavern.primary, width: 2)
             : BorderSide.none,
       ),
       child: InkWell(
@@ -429,13 +429,13 @@ class _PresetCard extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: isActive
-                      ? AppTheme.primaryColor
-                      : AppTheme.primaryColor.withValues(alpha: 0.2),
+                      ? context.tavern.primary
+                      : context.tavern.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   _getPresetIcon(preset),
-                  color: isActive ? Colors.white : AppTheme.primaryColor,
+                  color: isActive ? Colors.white : context.tavern.primary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -460,7 +460,7 @@ class _PresetCard extends StatelessWidget {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: AppTheme.primaryColor,
+                              color: context.tavern.primary,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Builder(
@@ -468,8 +468,8 @@ class _PresetCard extends StatelessWidget {
                                 final l10n = AppLocalizations.of(context);
                                 return Text(
                                   l10n.active,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: context.tavern.onPrimary,
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -485,7 +485,7 @@ class _PresetCard extends StatelessWidget {
                       Text(
                         preset.description!,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textSecondary,
+                              color: context.tavern.textSecondary,
                             ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -594,17 +594,17 @@ class _SettingChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.tavern.card,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppTheme.textMuted),
+          Icon(icon, size: 12, color: context.tavern.textMuted),
           const SizedBox(width: 4),
           Text(
             label,
-            style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 11, color: context.tavern.textSecondary),
           ),
         ],
       ),

@@ -6317,6 +6317,33 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aiDataSharingLocalOnlyDescription => '已阻止；本地 AI 端点仍可使用';
+
+  @override
+  String get jumpToLatest => '跳到最新消息';
+
+  @override
+  String get confirmBeforeDeleteTitle => '删除前确认';
+
+  @override
+  String get confirmBeforeDeleteSubtitle => '删除聊天和消息前先询问';
+
+  @override
+  String get multimedia => '多媒体';
+
+  @override
+  String get customThemes => '自定义主题';
+
+  @override
+  String get darkThemes => '深色主题';
+
+  @override
+  String get lightThemes => '浅色主题';
+
+  @override
+  String get followSystemTheme => '跟随系统外观';
+
+  @override
+  String get followSystemThemeSubtitle => '选择一个浅色和一个深色主题，应用将自动切换';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -12624,4 +12651,31 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aiDataSharingLocalOnlyDescription => '已封鎖；本機 AI 端點仍可使用';
+
+  @override
+  String get jumpToLatest => '跳到最新訊息';
+
+  @override
+  String get confirmBeforeDeleteTitle => '刪除前確認';
+
+  @override
+  String get confirmBeforeDeleteSubtitle => '刪除聊天和訊息前先詢問';
+
+  @override
+  String get multimedia => '多媒體';
+
+  @override
+  String get customThemes => '自訂主題';
+
+  @override
+  String get darkThemes => '深色主題';
+
+  @override
+  String get lightThemes => '淺色主題';
+
+  @override
+  String get followSystemTheme => '跟隨系統外觀';
+
+  @override
+  String get followSystemThemeSubtitle => '選擇一個淺色與一個深色主題，App 會自動切換';
 }

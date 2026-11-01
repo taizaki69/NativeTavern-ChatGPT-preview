@@ -282,7 +282,7 @@ class _VisualNovelMessageViewState
             radius: 18,
             errorBuilder: (_, __, ___) => CircleAvatar(
               radius: 18,
-              backgroundColor: AppTheme.accentColor.withValues(alpha: 0.3),
+              backgroundColor: context.tavern.accent.withValues(alpha: 0.3),
               child: const Icon(Icons.person, size: 18, color: Colors.white),
             ),
           )
@@ -290,8 +290,8 @@ class _VisualNovelMessageViewState
           CircleAvatar(
             radius: 18,
             backgroundColor: isUser
-                ? AppTheme.accentColor.withValues(alpha: 0.5)
-                : AppTheme.accentColor.withValues(alpha: 0.3),
+                ? context.tavern.accent.withValues(alpha: 0.5)
+                : context.tavern.accent.withValues(alpha: 0.3),
             child: Icon(
               isUser ? Icons.person : Icons.smart_toy,
               size: 18,
@@ -303,7 +303,7 @@ class _VisualNovelMessageViewState
         Text(
           isUser ? 'You' : (character?.name ?? 'AI'),
           style: TextStyle(
-            color: isUser ? AppTheme.accentColor : Colors.amber,
+            color: isUser ? context.tavern.accent : Colors.amber,
             fontSize: 15,
             fontWeight: FontWeight.bold,
           ),

@@ -50,7 +50,7 @@ class CharacterFilterBar extends ConsumerWidget {
                       borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: AppTheme.darkCard,
+                    fillColor: context.tavern.card,
                   ),
                   onChanged: (value) {
                     ref
@@ -92,8 +92,8 @@ class CharacterFilterBar extends ConsumerWidget {
                     child: Row(
                       children: [
                         if (isSelected)
-                          const Icon(Icons.check,
-                              size: 18, color: AppTheme.accentColor)
+                          Icon(Icons.check,
+                              size: 18, color: context.tavern.accent)
                         else
                           const SizedBox(width: 18),
                         const SizedBox(width: 8),
@@ -206,7 +206,7 @@ class CharacterFilterBar extends ConsumerWidget {
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -292,7 +292,7 @@ class _TagFilterSheet extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppTheme.textMuted,
+              color: context.tavern.textMuted,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -357,11 +357,11 @@ class _TagFilterSheet extends ConsumerWidget {
                         child: Column(
                           children: [
                             Icon(Icons.label_outline,
-                                size: 48, color: AppTheme.textMuted),
+                                size: 48, color: context.tavern.textMuted),
                             const SizedBox(height: 8),
                             Text(
                               AppLocalizations.of(context)!.noTagsCreatedYet,
-                              style: TextStyle(color: AppTheme.textMuted),
+                              style: TextStyle(color: context.tavern.textMuted),
                             ),
                             const SizedBox(height: 8),
                             TextButton.icon(
@@ -395,7 +395,7 @@ class _TagFilterSheet extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.textMuted,
+                                color: context.tavern.textMuted,
                               ),
                             ),
                           ),
@@ -462,7 +462,7 @@ class _TagFilterSheet extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.textMuted,
+                              color: context.tavern.textMuted,
                             ),
                           ),
                         ),
@@ -482,7 +482,7 @@ class _TagFilterSheet extends ConsumerWidget {
                             subtitle: Text(AppLocalizations.of(context)!
                                 .charactersCount(count)),
                             secondary: Icon(Icons.label_outline,
-                                color: AppTheme.textMuted),
+                                color: context.tavern.textMuted),
                             controlAffinity: ListTileControlAffinity.leading,
                           );
                         }),

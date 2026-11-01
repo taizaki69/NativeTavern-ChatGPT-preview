@@ -210,7 +210,7 @@ class TTSSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${settings.rate.toStringAsFixed(1)}x',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
 
@@ -233,7 +233,7 @@ class TTSSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${settings.pitch.toStringAsFixed(1)}x',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
 
@@ -256,7 +256,7 @@ class TTSSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${(settings.volume * 100).round()}%',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
             ],
@@ -272,7 +272,7 @@ class TTSSettingsScreen extends ConsumerWidget {
               ListTile(
                 leading: Icon(
                   isSpeaking ? Icons.stop : Icons.play_arrow,
-                  color: AppTheme.accentColor,
+                  color: context.tavern.accent,
                 ),
                 title: Text(isSpeaking
                     ? AppLocalizations.of(context).stopListening
@@ -299,21 +299,20 @@ class TTSSettingsScreen extends ConsumerWidget {
             title: AppLocalizations.of(context).information,
             children: [
               ListTile(
-                leading:
-                    const Icon(Icons.info_outline, color: AppTheme.accentColor),
+                leading: Icon(Icons.info_outline, color: context.tavern.accent),
                 title: Text(l10n.aboutTts),
                 subtitle: Text(l10n.aboutTtsDescription),
               ),
               if (settings.provider == TTSProvider.system)
                 ListTile(
-                  leading: const Icon(Icons.phone_android,
-                      color: AppTheme.textMuted),
+                  leading: Icon(Icons.phone_android,
+                      color: context.tavern.textMuted),
                   title: Text(l10n.systemTts),
                   subtitle: Text(l10n.systemTtsDetails),
                 ),
               if (settings.provider == TTSProvider.elevenlabs)
                 ListTile(
-                  leading: const Icon(Icons.cloud, color: AppTheme.textMuted),
+                  leading: Icon(Icons.cloud, color: context.tavern.textMuted),
                   title: const Text('ElevenLabs'),
                   subtitle: Text(l10n.elevenLabsDescription),
                 ),
@@ -330,7 +329,7 @@ class TTSSettingsScreen extends ConsumerWidget {
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -338,10 +337,10 @@ class TTSSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -506,7 +505,9 @@ class TTSControls extends ConsumerWidget {
         Icon(
           Icons.volume_up,
           size: 16,
-          color: settings.enabled ? AppTheme.accentColor : AppTheme.textMuted,
+          color: settings.enabled
+              ? context.tavern.accent
+              : context.tavern.textMuted,
         ),
       ],
     );

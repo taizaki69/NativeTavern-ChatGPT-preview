@@ -419,7 +419,7 @@ class _WorldInfoEntryEditorScreenState
             ),
             Text(
               _l10n.probabilityPercent(_probability),
-              style: const TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.tavern.textSecondary),
             ),
           ],
           const Divider(height: 32),
@@ -463,8 +463,8 @@ class _WorldInfoEntryEditorScreenState
               const SizedBox(height: 16),
               Text(
                 _l10n.characterIds,
-                style: const TextStyle(
-                    fontSize: 12, color: AppTheme.textSecondary),
+                style: TextStyle(
+                    fontSize: 12, color: context.tavern.textSecondary),
               ),
               const SizedBox(height: 8),
               TextField(

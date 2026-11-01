@@ -240,7 +240,7 @@ class _PersonaEditorScreenState extends ConsumerState<PersonaEditorScreen>
               Expanded(
                 child: Text(
                   _l10n.bindPersonaDescription,
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
               IconButton(
@@ -256,7 +256,7 @@ class _PersonaEditorScreenState extends ConsumerState<PersonaEditorScreen>
               ? Center(
                   child: Text(
                     _l10n.noConnections,
-                    style: const TextStyle(color: AppTheme.textMuted),
+                    style: TextStyle(color: context.tavern.textMuted),
                   ),
                 )
               : ListView.builder(
@@ -272,7 +272,7 @@ class _PersonaEditorScreenState extends ConsumerState<PersonaEditorScreen>
                               : connection.groupId != null
                                   ? Icons.group
                                   : Icons.chat,
-                          color: AppTheme.primaryColor,
+                          color: context.tavern.primary,
                         ),
                         title: Text(
                           connection.characterId != null
@@ -450,12 +450,11 @@ class _PersonaEditorScreenState extends ConsumerState<PersonaEditorScreen>
           onTap: _showAvatarOptions,
           child: CircleAvatar(
             radius: 60,
-            backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.2),
+            backgroundColor: context.tavern.primary.withValues(alpha: 0.2),
             backgroundImage:
                 _avatarPath != null ? FileImage(File(_avatarPath!)) : null,
             child: _avatarPath == null
-                ? const Icon(Icons.person,
-                    size: 60, color: AppTheme.primaryColor)
+                ? Icon(Icons.person, size: 60, color: context.tavern.primary)
                 : null,
           ),
         ),
@@ -467,12 +466,15 @@ class _PersonaEditorScreenState extends ConsumerState<PersonaEditorScreen>
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.primaryColor,
+                color: context.tavern.primary,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppTheme.darkCard, width: 2),
+                border: Border.all(color: context.tavern.card, width: 2),
               ),
-              child:
-                  const Icon(Icons.camera_alt, size: 20, color: Colors.white),
+              child: Icon(
+                Icons.camera_alt,
+                size: 20,
+                color: context.tavern.onPrimary,
+              ),
             ),
           ),
         ),
@@ -488,7 +490,7 @@ class _PersonaEditorScreenState extends ConsumerState<PersonaEditorScreen>
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,

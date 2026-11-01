@@ -75,7 +75,7 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.textMuted.withValues(alpha: 0.4),
+                  color: context.tavern.textMuted.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -119,7 +119,7 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
 
     return Material(
       color: isCurrent
-          ? AppTheme.accentColor.withValues(alpha: 0.12)
+          ? context.tavern.accent.withValues(alpha: 0.12)
           : theme.cardColor,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
@@ -134,8 +134,8 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isCurrent
-                  ? AppTheme.accentColor
-                  : AppTheme.textMuted.withValues(alpha: 0.2),
+                  ? context.tavern.accent
+                  : context.tavern.textMuted.withValues(alpha: 0.2),
               width: isCurrent ? 1.5 : 1,
             ),
           ),
@@ -149,14 +149,14 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
                         horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: isCurrent
-                          ? AppTheme.accentColor
-                          : AppTheme.textMuted.withValues(alpha: 0.15),
+                          ? context.tavern.accent
+                          : context.tavern.textMuted.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '${index + 1}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: isCurrent ? Colors.white : AppTheme.textMuted,
+                        color: isCurrent ? Colors.white : context.tavern.textMuted,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -164,20 +164,20 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
                   if (isCurrent) ...[
                     const SizedBox(width: 8),
                     Icon(Icons.check_circle,
-                        size: 16, color: AppTheme.accentColor),
+                        size: 16, color: context.tavern.accent),
                   ],
                   const Spacer(),
                   Text(
                     '${content.length} ${AppLocalizations.of(context).charsSuffix}',
                     style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                     ),
                   ),
                   const SizedBox(width: 4),
                   if (_swipes.length > 1)
                     IconButton(
                       icon: const Icon(Icons.delete_outline, size: 18),
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(
                           minWidth: 32, minHeight: 32),

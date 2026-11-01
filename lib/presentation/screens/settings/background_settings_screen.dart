@@ -182,7 +182,7 @@ class _BackgroundSettingsScreenState
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppTheme.accentColor,
+            color: context.tavern.accent,
             fontWeight: FontWeight.bold,
           ),
     );
@@ -205,7 +205,7 @@ class _BackgroundSettingsScreenState
           children: [
             Row(
               children: [
-                const Icon(Icons.wallpaper, color: AppTheme.accentColor),
+                Icon(Icons.wallpaper, color: context.tavern.accent),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -259,7 +259,7 @@ class _BackgroundSettingsScreenState
             Text(
               l10n.backgroundOpacityHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
             ),
 
@@ -282,7 +282,7 @@ class _BackgroundSettingsScreenState
             Text(
               l10n.backgroundPriorityHint,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                     fontStyle: FontStyle.italic,
                   ),
             ),
@@ -304,17 +304,17 @@ class _BackgroundSettingsScreenState
               _BackgroundPreviewFull(background: _currentBackground)
             else
               Container(
-                color: AppTheme.darkBackground,
+                color: context.tavern.background,
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.wallpaper,
-                          size: 48, color: AppTheme.textMuted),
+                      Icon(Icons.wallpaper,
+                          size: 48, color: context.tavern.textMuted),
                       const SizedBox(height: 8),
                       Text(
                         AppLocalizations.of(context).noBackgroundSelected,
-                        style: const TextStyle(color: AppTheme.textMuted),
+                        style: TextStyle(color: context.tavern.textMuted),
                       ),
                     ],
                   ),
@@ -332,13 +332,13 @@ class _BackgroundSettingsScreenState
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkCard
+                      color: context.tavern.card
                           .withValues(alpha: _currentBackground.bubbleOpacity),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       AppLocalizations.of(context).sampleMessage1,
-                      style: const TextStyle(color: AppTheme.textPrimary),
+                      style: TextStyle(color: context.tavern.textPrimary),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -348,7 +348,7 @@ class _BackgroundSettingsScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentColor.withValues(
+                        color: context.tavern.accent.withValues(
                             alpha: _currentBackground.bubbleOpacity),
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -437,7 +437,7 @@ class _BackgroundSettingsScreenState
                         .urlLabel(_currentBackground.imageUrl!)
                     : AppLocalizations.of(context).noImage,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -463,8 +463,8 @@ class _BackgroundSettingsScreenState
                 Tooltip(
                   message: AppLocalizations.of(context).bubbleOpacityHelp,
                   triggerMode: TooltipTriggerMode.tap,
-                  child: const Icon(Icons.info_outline,
-                      size: 16, color: AppTheme.textMuted),
+                  child: Icon(Icons.info_outline,
+                      size: 16, color: context.tavern.textMuted),
                 ),
                 const Spacer(),
                 Text('${(_currentBackground.bubbleOpacity * 100).round()}%'),
@@ -546,7 +546,7 @@ class _BackgroundSettingsScreenState
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   border: isActive
-                      ? Border.all(color: AppTheme.accentColor, width: 2)
+                      ? Border.all(color: context.tavern.accent, width: 2)
                       : null,
                 ),
                 child: ClipRRect(
@@ -556,9 +556,9 @@ class _BackgroundSettingsScreenState
                     fit: BoxFit.cover,
                     cacheWidth: 300,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.darkCard,
-                      child: const Icon(Icons.broken_image,
-                          color: AppTheme.textMuted),
+                      color: context.tavern.card,
+                      child: Icon(Icons.broken_image,
+                          color: context.tavern.textMuted),
                     ),
                   ),
                 ),
@@ -834,7 +834,7 @@ class _BackgroundPreviewFull extends StatelessWidget {
   Widget build(BuildContext context) {
     switch (background.type) {
       case BackgroundType.none:
-        return Container(color: AppTheme.darkBackground);
+        return Container(color: context.tavern.background);
 
       case BackgroundType.color:
         return Container(color: _parseColor(background.color));

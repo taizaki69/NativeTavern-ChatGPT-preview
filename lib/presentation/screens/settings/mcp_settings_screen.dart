@@ -185,7 +185,7 @@ class _ServerTile extends StatelessWidget {
       key: Key('mcp-server-${config.id}'),
       leading: Icon(
         _statusIcon(snapshot.status),
-        color: _statusColor(snapshot.status),
+        color: _statusColor(context, snapshot.status),
       ),
       title: Text(
         config.name,
@@ -461,7 +461,7 @@ class _ActivityList extends StatelessWidget {
           trailing: Text(
             _timeLabel(record.timestamp.toLocal()),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
           ),
         );
@@ -706,7 +706,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 44, color: AppTheme.textMuted),
+          Icon(icon, size: 44, color: context.tavern.textMuted),
           const SizedBox(height: 12),
           Text(title, style: Theme.of(context).textTheme.titleMedium),
         ],
@@ -724,13 +724,14 @@ IconData _statusIcon(McpConnectionStatus status) => switch (status) {
       McpConnectionStatus.error => Icons.error_outline,
     };
 
-Color _statusColor(McpConnectionStatus status) => switch (status) {
+Color _statusColor(BuildContext context, McpConnectionStatus status) =>
+    switch (status) {
       McpConnectionStatus.connected => Colors.green,
       McpConnectionStatus.error => Colors.red,
       McpConnectionStatus.connecting ||
       McpConnectionStatus.reconnecting =>
         Colors.orange,
-      _ => AppTheme.textMuted,
+      _ => context.tavern.textMuted,
     };
 
 String _statusLabel(AppLocalizations l10n, McpConnectionStatus status) =>

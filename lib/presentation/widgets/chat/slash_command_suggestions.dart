@@ -29,7 +29,7 @@ class SlashCommandSuggestions extends ConsumerWidget {
     return Container(
       constraints: const BoxConstraints(maxHeight: 250),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
+        color: context.tavern.card,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -48,16 +48,16 @@ class SlashCommandSuggestions extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(12, 8, 8, 4),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.terminal,
                   size: 16,
-                  color: AppTheme.accentColor,
+                  color: context.tavern.accent,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   AppLocalizations.of(context)!.commands,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                 ),
                 const Spacer(),
@@ -66,7 +66,7 @@ class SlashCommandSuggestions extends ConsumerWidget {
                   onPressed: onDismiss,
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
               ],
             ),
@@ -113,15 +113,15 @@ class _CommandSuggestionTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.accentColor.withValues(alpha: 0.2),
+                color: context.tavern.accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '/${command.name}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'monospace',
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.accentColor,
+                  color: context.tavern.accent,
                 ),
               ),
             ),
@@ -133,7 +133,7 @@ class _CommandSuggestionTile extends StatelessWidget {
                   Text(
                     command.description,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textPrimary,
+                      color: context.tavern.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -142,7 +142,7 @@ class _CommandSuggestionTile extends StatelessWidget {
                     Text(
                       AppLocalizations.of(context)!.aliasesLabel(command.aliases.map((a) => '/$a').join(', ')),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                         fontSize: 10,
                       ),
                     ),
@@ -167,7 +167,7 @@ class SlashCommandHelpDialog extends ConsumerWidget {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.terminal, color: AppTheme.accentColor),
+          Icon(Icons.terminal, color: context.tavern.accent),
           const SizedBox(width: 8),
           Text(AppLocalizations.of(context)!.slashCommands),
         ],
@@ -189,15 +189,15 @@ class SlashCommandHelpDialog extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentColor.withValues(alpha: 0.2),
+                          color: context.tavern.accent.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           '/${command.name}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'monospace',
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.accentColor,
+                            color: context.tavern.accent,
                           ),
                         ),
                       ),
@@ -206,7 +206,7 @@ class SlashCommandHelpDialog extends ConsumerWidget {
                         Text(
                           command.aliases.map((a) => '/$a').join(', '),
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textMuted,
+                            color: context.tavern.textMuted,
                           ),
                         ),
                       ],
@@ -222,7 +222,7 @@ class SlashCommandHelpDialog extends ConsumerWidget {
                     command.usage,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontFamily: 'monospace',
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                     ),
                   ),
                 ],

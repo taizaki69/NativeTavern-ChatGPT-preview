@@ -89,7 +89,7 @@ class _CreateBookmarkDialogState extends ConsumerState<CreateBookmarkDialog> {
           Text(
             AppLocalizations.of(context)!.createCheckpointAtMessage(widget.messageIndex + 1),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textMuted,
+              color: context.tavern.textMuted,
             ),
           ),
         ],
@@ -127,14 +127,14 @@ class BookmarksListDialog extends ConsumerWidget {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.bookmark, color: AppTheme.accentColor),
+          Icon(Icons.bookmark, color: context.tavern.accent),
           const SizedBox(width: 8),
           Text(AppLocalizations.of(context)!.bookmarks),
           const Spacer(),
           Text(
             '${bookmarkState.bookmarks.length}',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.textMuted,
+              color: context.tavern.textMuted,
             ),
           ),
         ],
@@ -152,18 +152,18 @@ class BookmarksListDialog extends ConsumerWidget {
                         Icon(
                           Icons.bookmark_border,
                           size: 64,
-                          color: AppTheme.textMuted,
+                          color: context.tavern.textMuted,
                         ),
                         const SizedBox(height: 16),
                         Text(
                           AppLocalizations.of(context)!.noBookmarksYet,
-                          style: const TextStyle(color: AppTheme.textMuted),
+                          style: TextStyle(color: context.tavern.textMuted),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           AppLocalizations.of(context)!.longPressMessageToBookmark,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: AppTheme.textMuted,
+                            color: context.tavern.textMuted,
                           ),
                         ),
                       ],
@@ -263,7 +263,7 @@ class _BookmarkTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: ListTile(
-        leading: const Icon(Icons.bookmark, color: AppTheme.accentColor),
+        leading: Icon(Icons.bookmark, color: context.tavern.accent),
         title: Text(bookmark.name),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,7 +277,7 @@ class _BookmarkTile extends StatelessWidget {
             Text(
               AppLocalizations.of(context)!.messageIndexAndDate(bookmark.messageIndex + 1, _formatDate(bookmark.createdAt)),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
               ),
             ),
           ],
@@ -286,7 +286,7 @@ class _BookmarkTile extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.call_split, color: AppTheme.primaryColor),
+              icon: Icon(Icons.call_split, color: context.tavern.primary),
               tooltip: AppLocalizations.of(context)!.branchFromHere,
               onPressed: onTap,
             ),
@@ -332,7 +332,7 @@ class BookmarkPreviewDialog extends ConsumerWidget {
     return AlertDialog(
       title: Row(
         children: [
-          const Icon(Icons.preview, color: AppTheme.primaryColor),
+          Icon(Icons.preview, color: context.tavern.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -349,7 +349,7 @@ class BookmarkPreviewDialog extends ConsumerWidget {
             ? Center(
                 child: Text(
                   AppLocalizations.of(context)!.messageNotFoundInChat,
-                  style: TextStyle(color: AppTheme.textMuted),
+                  style: TextStyle(color: context.tavern.textMuted),
                 ),
               )
             : ListView.builder(
@@ -363,8 +363,8 @@ class BookmarkPreviewDialog extends ConsumerWidget {
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: isUser 
-                          ? AppTheme.accentColor.withValues(alpha: 0.2)
-                          : AppTheme.darkCard,
+                          ? context.tavern.accent.withValues(alpha: 0.2)
+                          : context.tavern.card,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -376,7 +376,7 @@ class BookmarkPreviewDialog extends ConsumerWidget {
                               : (message.characterName ?? chatState.character?.name ?? AppLocalizations.of(context)!.assistant),
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
-                            color: isUser ? AppTheme.accentColor : AppTheme.primaryColor,
+                            color: isUser ? context.tavern.accent : context.tavern.primary,
                             fontSize: 12,
                           ),
                         ),

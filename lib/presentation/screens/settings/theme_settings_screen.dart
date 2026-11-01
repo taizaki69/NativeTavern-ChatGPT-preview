@@ -13,59 +13,122 @@ class ThemeSettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final allThemes = ref.watch(allThemesProvider);
+    final followSystem = ref.watch(themeFollowSystemProvider);
     final activeThemeId = ref.watch(activeThemeIdProvider);
-    // ignore: unused_local_variable
-    final customThemes = ref.watch(customThemesProvider);
+    final lightThemeId = ref.watch(lightThemeIdProvider);
+    final darkThemeId = ref.watch(darkThemeIdProvider);
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final displayed = displayedThemeConfig(ref, platformBrightness);
 
-    // Separate built-in and custom themes
-    final builtInThemes = allThemes.where((t) => t.isBuiltIn).toList();
+    bool isSelected(AppThemeConfig theme) {
+      if (!followSystem) return theme.id == activeThemeId;
+      return theme.id == (theme.isDark ? darkThemeId : lightThemeId);
+    }
+
+    final builtInDark =
+        allThemes.where((t) => t.isBuiltIn && t.isDark).toList();
+    final builtInLight =
+        allThemes.where((t) => t.isBuiltIn && !t.isDark).toList();
     final userThemes = allThemes.where((t) => !t.isBuiltIn).toList();
+
+    Widget grid(List<AppThemeConfig> themes, {bool isCustom = false}) {
+      return _buildThemeGrid(
+        context,
+        ref,
+        themes,
+        isSelected: isSelected,
+        followSystem: followSystem,
+        isCustom: isCustom,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.of(context)!.themes),
+        title: Text(l10n.themes),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            tooltip: AppLocalizations.of(context)!.createCustomTheme,
-            onPressed: () => _showCreateThemeDialog(context, ref),
+            tooltip: l10n.createCustomTheme,
+            onPressed: () => _showCreateThemeDialog(context, ref, displayed),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          // Built-in themes
-          _buildSectionHeader(
-              context, AppLocalizations.of(context)!.builtInThemes),
+          Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: SwitchListTile(
+              key: const Key('theme-follow-system-switch'),
+              secondary: const Icon(Icons.brightness_auto_outlined),
+              title: Text(l10n.followSystemTheme),
+              subtitle: Text(l10n.followSystemThemeSubtitle),
+              value: followSystem,
+              onChanged: (value) =>
+                  _setFollowSystem(ref, value, displayed, platformBrightness),
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildSectionHeader(context, l10n.darkThemes),
           const SizedBox(height: 12),
-          _buildThemeGrid(context, ref, builtInThemes, activeThemeId),
-
+          grid(builtInDark),
+          const SizedBox(height: 24),
+          _buildSectionHeader(context, l10n.lightThemes),
+          const SizedBox(height: 12),
+          grid(builtInLight),
           if (userThemes.isNotEmpty) ...[
             const SizedBox(height: 24),
-            _buildSectionHeader(context, 'Custom Themes'),
+            _buildSectionHeader(context, l10n.customThemes),
             const SizedBox(height: 12),
-            _buildThemeGrid(context, ref, userThemes, activeThemeId,
-                isCustom: true),
+            grid(userThemes, isCustom: true),
           ],
-
           const SizedBox(height: 32),
-
-          // Theme preview
-          _buildSectionHeader(context, 'Preview'),
+          _buildSectionHeader(context, l10n.preview),
           const SizedBox(height: 12),
-          _buildThemePreview(context, ref),
+          _buildThemePreview(context, displayed),
         ],
       ),
     );
+  }
+
+  Future<void> _setFollowSystem(
+    WidgetRef ref,
+    bool value,
+    AppThemeConfig displayed,
+    Brightness platformBrightness,
+  ) async {
+    if (value) {
+      // Seed the matching slot with the current theme so nothing changes
+      // visually until the system appearance flips.
+      final slot =
+          displayed.isDark ? darkThemeIdProvider : lightThemeIdProvider;
+      await ref.read(slot.notifier).setActiveTheme(displayed.id);
+    } else {
+      // Keep whatever is on screen right now as the single active theme.
+      await ref
+          .read(activeThemeIdProvider.notifier)
+          .setActiveTheme(displayed.id);
+    }
+    await ref.read(themeFollowSystemProvider.notifier).setFollowSystem(value);
+  }
+
+  void _selectTheme(WidgetRef ref, AppThemeConfig theme, bool followSystem) {
+    if (followSystem) {
+      final slot = theme.isDark ? darkThemeIdProvider : lightThemeIdProvider;
+      ref.read(slot.notifier).setActiveTheme(theme.id);
+    } else {
+      ref.read(activeThemeIdProvider.notifier).setActiveTheme(theme.id);
+    }
   }
 
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppTheme.accentColor,
+            color: context.tavern.accent,
             fontWeight: FontWeight.bold,
           ),
     );
@@ -74,15 +137,17 @@ class ThemeSettingsScreen extends ConsumerWidget {
   Widget _buildThemeGrid(
     BuildContext context,
     WidgetRef ref,
-    List<AppThemeConfig> themes,
-    String activeThemeId, {
+    List<AppThemeConfig> themes, {
+    required bool Function(AppThemeConfig) isSelected,
+    required bool followSystem,
     bool isCustom = false,
   }) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
+      // Size cards by width so tablets get more columns instead of huge tiles.
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 140,
         childAspectRatio: 0.85,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
@@ -90,15 +155,13 @@ class ThemeSettingsScreen extends ConsumerWidget {
       itemCount: themes.length,
       itemBuilder: (context, index) {
         final theme = themes[index];
-        final isActive = theme.id == activeThemeId;
 
         return _ThemeCard(
           theme: theme,
-          isActive: isActive,
+          isActive: isSelected(theme),
+          showSlotIcon: followSystem,
           isCustom: isCustom,
-          onTap: () {
-            ref.read(activeThemeIdProvider.notifier).setActiveTheme(theme.id);
-          },
+          onTap: () => _selectTheme(ref, theme, followSystem),
           onEdit:
               isCustom ? () => _showEditThemeDialog(context, ref, theme) : null,
           onDelete: isCustom
@@ -109,16 +172,18 @@ class ThemeSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildThemePreview(BuildContext context, WidgetRef ref) {
-    final activeTheme = ref.watch(activeThemeConfigProvider);
+  Widget _buildThemePreview(BuildContext context, AppThemeConfig activeTheme) {
     final l10n = AppLocalizations.of(context);
+    final onAccent = TavernTheme.foregroundFor(activeTheme.accent);
+    final onPrimary = TavernTheme.foregroundFor(activeTheme.primary);
 
     return Card(
+      margin: EdgeInsets.zero,
       clipBehavior: Clip.antiAlias,
       child: Container(
-        height: 200,
         color: activeTheme.background,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // App bar preview
             Container(
@@ -143,54 +208,62 @@ class ThemeSettingsScreen extends ConsumerWidget {
               ),
             ),
             // Chat preview
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Assistant message
-                    Container(
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Assistant message
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: activeTheme.card,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(4),
+                        topRight: Radius.circular(14),
+                        bottomLeft: Radius.circular(14),
+                        bottomRight: Radius.circular(14),
+                      ),
+                      border: Border.all(
+                        color: activeTheme.divider.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Text(
+                      l10n.sampleMessage1,
+                      style: TextStyle(
+                          color: activeTheme.textPrimary, fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // User message
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                       decoration: BoxDecoration(
-                        color: activeTheme.card,
-                        borderRadius: BorderRadius.circular(12),
+                        color: activeTheme.accent,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(14),
+                          topRight: Radius.circular(4),
+                          bottomLeft: Radius.circular(14),
+                          bottomRight: Radius.circular(14),
+                        ),
                       ),
                       child: Text(
-                        l10n.sampleMessage1,
-                        style: TextStyle(
-                            color: activeTheme.textPrimary, fontSize: 13),
+                        l10n.sampleMessage2,
+                        style: TextStyle(color: onAccent, fontSize: 13),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    // User message
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: activeTheme.accent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          l10n.sampleMessage2,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
             // Input preview
             Container(
               padding: const EdgeInsets.all(12),
-              color: activeTheme.card,
+              color: activeTheme.surface,
               child: Row(
                 children: [
                   Expanded(
@@ -200,6 +273,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
                       decoration: BoxDecoration(
                         color: activeTheme.background,
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: activeTheme.divider),
                       ),
                       child: Text(
                         l10n.typeMessage,
@@ -215,8 +289,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
                       color: activeTheme.primary,
                       shape: BoxShape.circle,
                     ),
-                    child:
-                        const Icon(Icons.send, color: Colors.white, size: 16),
+                    child: Icon(Icons.send, color: onPrimary, size: 16),
                   ),
                 ],
               ),
@@ -227,13 +300,19 @@ class ThemeSettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showCreateThemeDialog(BuildContext context, WidgetRef ref) {
+  void _showCreateThemeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppThemeConfig baseTheme,
+  ) {
     showDialog<void>(
       context: context,
       builder: (context) => _ThemeEditorDialog(
+        // Start from the theme on screen rather than always Default Dark.
+        baseTheme: baseTheme,
         onSave: (AppThemeConfig theme) {
           ref.read(customThemesProvider.notifier).addTheme(theme);
-          ref.read(activeThemeIdProvider.notifier).setActiveTheme(theme.id);
+          _selectTheme(ref, theme, ref.read(themeFollowSystemProvider));
         },
       ),
     );
@@ -267,15 +346,25 @@ class ThemeSettingsScreen extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () {
-              final activeId = ref.read(activeThemeIdProvider);
-              if (activeId == theme.id) {
-                ref
-                    .read(activeThemeIdProvider.notifier)
-                    .setActiveTheme(BuiltInThemes.defaultDark.id);
-              }
+              // Move any slot that pointed at this theme back to a default.
+              final slots =
+                  <StateNotifierProvider<ActiveThemeIdNotifier, String>,
+                      String>{
+                activeThemeIdProvider: BuiltInThemes.defaultDark.id,
+                darkThemeIdProvider: BuiltInThemes.defaultDark.id,
+                lightThemeIdProvider: BuiltInThemes.defaultLight.id,
+              };
+              slots.forEach((slot, fallbackId) {
+                if (ref.read(slot) == theme.id) {
+                  ref.read(slot.notifier).setActiveTheme(fallbackId);
+                }
+              });
               ref.read(customThemesProvider.notifier).deleteTheme(theme.id);
               Navigator.pop(context);
             },
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
             child: Text(l10n.delete),
           ),
         ],
@@ -287,6 +376,7 @@ class ThemeSettingsScreen extends ConsumerWidget {
 class _ThemeCard extends StatelessWidget {
   final AppThemeConfig theme;
   final bool isActive;
+  final bool showSlotIcon;
   final bool isCustom;
   final VoidCallback onTap;
   final VoidCallback? onEdit;
@@ -297,6 +387,7 @@ class _ThemeCard extends StatelessWidget {
     required this.isActive,
     required this.isCustom,
     required this.onTap,
+    this.showSlotIcon = false,
     this.onEdit,
     this.onDelete,
   });
@@ -304,16 +395,22 @@ class _ThemeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          border: isActive
-              ? Border.all(color: AppTheme.accentColor, width: 3)
-              : Border.all(color: Colors.grey.withValues(alpha: 0.3)),
-        ),
-        clipBehavior: Clip.antiAlias,
+    final colors = context.tavern;
+    final selectedIcon = showSlotIcon
+        ? (theme.isDark ? Icons.dark_mode : Icons.light_mode)
+        : Icons.check_circle;
+
+    return Material(
+      color: colors.card,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: isActive
+            ? BorderSide(color: colors.accent, width: 2.5)
+            : BorderSide(color: colors.divider),
+      ),
+      child: InkWell(
+        onTap: onTap,
         child: Column(
           children: [
             // Color preview
@@ -382,36 +479,45 @@ class _ThemeCard extends StatelessWidget {
               ),
             ),
             // Name
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              color: AppTheme.darkCard,
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(8, 6, 4, 6),
               child: Row(
                 children: [
+                  if (isActive) ...[
+                    Icon(selectedIcon, size: 14, color: colors.accent),
+                    const SizedBox(width: 4),
+                  ],
                   Expanded(
                     child: Text(
                       theme.name,
-                      style: const TextStyle(fontSize: 11),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight:
+                            isActive ? FontWeight.w700 : FontWeight.w500,
+                      ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  if (isActive)
-                    const Icon(Icons.check_circle,
-                        size: 14, color: AppTheme.accentColor),
-                  if (isCustom && !isActive)
-                    AdaptivePopupMenuButton<String>(
-                      padding: EdgeInsets.zero,
-                      iconSize: 14,
-                      icon: const Icon(Icons.more_vert, size: 14),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
-                        PopupMenuItem(
-                            value: 'delete', child: Text(l10n.delete)),
-                      ],
-                      onSelected: (value) {
-                        if (value == 'edit') onEdit?.call();
-                        if (value == 'delete') onDelete?.call();
-                      },
+                  // Custom themes stay editable even while in use.
+                  if (isCustom)
+                    SizedBox(
+                      width: 24,
+                      height: 20,
+                      child: AdaptivePopupMenuButton<String>(
+                        padding: EdgeInsets.zero,
+                        iconSize: 14,
+                        icon: const Icon(Icons.more_vert, size: 14),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(value: 'edit', child: Text(l10n.edit)),
+                          PopupMenuItem(
+                              value: 'delete', child: Text(l10n.delete)),
+                        ],
+                        onSelected: (value) {
+                          if (value == 'edit') onEdit?.call();
+                          if (value == 'delete') onDelete?.call();
+                        },
+                      ),
                     ),
                 ],
               ),
@@ -424,11 +530,16 @@ class _ThemeCard extends StatelessWidget {
 }
 
 class _ThemeEditorDialog extends StatefulWidget {
+  /// Theme being edited; `null` when creating a new one.
   final AppThemeConfig? theme;
+
+  /// Colors to start from when creating a new theme.
+  final AppThemeConfig? baseTheme;
   final void Function(AppThemeConfig) onSave;
 
   const _ThemeEditorDialog({
     this.theme,
+    this.baseTheme,
     required this.onSave,
   });
 
@@ -449,7 +560,7 @@ class _ThemeEditorDialogState extends State<_ThemeEditorDialog> {
   @override
   void initState() {
     super.initState();
-    final theme = widget.theme ?? BuiltInThemes.defaultDark;
+    final theme = widget.theme ?? widget.baseTheme ?? BuiltInThemes.defaultDark;
     _nameController = TextEditingController(text: widget.theme?.name ?? '');
     _isDark = theme.isDark;
     _primaryColor = theme.primaryColor;
@@ -535,18 +646,29 @@ class _ThemeEditorDialogState extends State<_ThemeEditorDialog> {
         ),
         FilledButton(
           onPressed: () {
+            // Keep the source theme's text/divider colors when the brightness
+            // is unchanged; otherwise use readable defaults for the new mode.
+            final source = widget.theme ?? widget.baseTheme;
+            final keepText = source != null && source.isDark == _isDark;
+            final name = _nameController.text.trim();
             final theme = AppThemeConfig(
               id: widget.theme?.id ?? const Uuid().v4(),
-              name: _nameController.text.trim(),
+              name: name.isEmpty ? l10n.myTheme : name,
               isDark: _isDark,
               primaryColor: _primaryColor,
               accentColor: _accentColor,
               backgroundColor: _backgroundColor,
               surfaceColor: _surfaceColor,
               cardColor: _cardColor,
-              textPrimaryColor: _isDark ? '#FFFFFF' : '#171717',
-              textSecondaryColor: _isDark ? '#A3A3A3' : '#737373',
-              dividerColor: _isDark ? '#404040' : '#E5E5E5',
+              textPrimaryColor: keepText
+                  ? source.textPrimaryColor
+                  : (_isDark ? '#FFFFFF' : '#171717'),
+              textSecondaryColor: keepText
+                  ? source.textSecondaryColor
+                  : (_isDark ? '#A3A3A3' : '#737373'),
+              dividerColor: keepText
+                  ? source.dividerColor
+                  : (_isDark ? '#404040' : '#E5E5E5'),
               isBuiltIn: false,
             );
             widget.onSave(theme);
@@ -595,75 +717,118 @@ class _ColorPickerTile extends StatelessWidget {
     );
   }
 
-  void _showColorPicker(BuildContext context) {
-    final controller = TextEditingController(text: color);
-    final l10n = AppLocalizations.of(context);
-
-    showDialog<void>(
+  Future<void> _showColorPicker(BuildContext context) async {
+    final picked = await showDialog<String>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.selectThemeColor(label)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                labelText: l10n.hexColor,
-                hintText: '#RRGGBB',
-                border: const OutlineInputBorder(),
+      builder: (context) => _HexColorDialog(label: label, initial: color),
+    );
+    if (picked != null) onChanged(picked);
+  }
+}
+
+/// Hex color entry with swatches; Apply is only enabled for valid colors.
+class _HexColorDialog extends StatefulWidget {
+  const _HexColorDialog({required this.label, required this.initial});
+
+  final String label;
+  final String initial;
+
+  @override
+  State<_HexColorDialog> createState() => _HexColorDialogState();
+}
+
+class _HexColorDialogState extends State<_HexColorDialog> {
+  static const _swatches = [
+    '#6366F1',
+    '#8B5CF6',
+    '#EC4899',
+    '#EF4444',
+    '#F97316',
+    '#EAB308',
+    '#22C55E',
+    '#06B6D4',
+    '#3B82F6',
+    '#000000',
+    '#1A1A1A',
+    '#FFFFFF',
+  ];
+
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.initial);
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Color? get _parsed => AppThemeConfig.tryParseHex(_controller.text);
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final parsed = _parsed;
+
+    return AlertDialog(
+      title: Text(l10n.selectThemeColor(widget.label)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _controller,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              labelText: l10n.hexColor,
+              hintText: '#RRGGBB',
+              errorText: parsed == null ? '#RRGGBB' : null,
+              border: const OutlineInputBorder(),
+              suffixIcon: Padding(
+                padding: const EdgeInsets.all(10),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: parsed ?? Colors.transparent,
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.grey),
+                  ),
+                  child: const SizedBox.square(dimension: 24),
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                '#6366F1',
-                '#8B5CF6',
-                '#EC4899',
-                '#EF4444',
-                '#F97316',
-                '#EAB308',
-                '#22C55E',
-                '#06B6D4',
-                '#3B82F6',
-                '#000000',
-                '#1A1A1A',
-                '#FFFFFF',
-              ]
-                  .map((c) => GestureDetector(
-                        onTap: () {
-                          controller.text = c;
-                        },
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: AppThemeConfig.hexToColor(c),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                        ),
-                      ))
-                  .toList(),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
           ),
-          FilledButton(
-            onPressed: () {
-              onChanged(controller.text);
-              Navigator.pop(context);
-            },
-            child: Text(l10n.apply),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final swatch in _swatches)
+                GestureDetector(
+                  onTap: () => setState(() => _controller.text = swatch),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: AppThemeConfig.hexToColor(swatch),
+                      borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: parsed == null
+              ? null
+              : () => Navigator.pop(context, AppThemeConfig.colorToHex(parsed)),
+          child: Text(l10n.apply),
+        ),
+      ],
     );
   }
 }

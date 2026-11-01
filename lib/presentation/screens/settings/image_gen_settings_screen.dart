@@ -172,7 +172,7 @@ class ImageGenSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${settings.defaultSteps}',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
 
@@ -195,7 +195,7 @@ class ImageGenSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   settings.defaultCfgScale.toStringAsFixed(1),
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
 
@@ -400,14 +400,13 @@ class ImageGenSettingsScreen extends ConsumerWidget {
             title: AppLocalizations.of(context)!.information,
             children: [
               ListTile(
-                leading:
-                    const Icon(Icons.info_outline, color: AppTheme.accentColor),
+                leading: Icon(Icons.info_outline, color: context.tavern.accent),
                 title: Text(AppLocalizations.of(context)!.aboutImageGeneration),
                 subtitle: Text(AppLocalizations.of(context)!
                     .aboutImageGenerationDescription),
               ),
               ListTile(
-                leading: const Icon(Icons.terminal, color: AppTheme.textMuted),
+                leading: Icon(Icons.terminal, color: context.tavern.textMuted),
                 title: Text(AppLocalizations.of(context)!.imagineCommand),
                 subtitle:
                     Text(AppLocalizations.of(context)!.imagineCommandUsage),
@@ -415,14 +414,14 @@ class ImageGenSettingsScreen extends ConsumerWidget {
               if (settings.provider == ImageGenProvider.automatic1111)
                 ListTile(
                   leading:
-                      const Icon(Icons.computer, color: AppTheme.textMuted),
+                      Icon(Icons.computer, color: context.tavern.textMuted),
                   title: Text(AppLocalizations.of(context)!.stableDiffusion),
                   subtitle: Text(
                       AppLocalizations.of(context)!.stableDiffusionDescription),
                 ),
               if (settings.provider == ImageGenProvider.openai)
                 ListTile(
-                  leading: const Icon(Icons.cloud, color: AppTheme.textMuted),
+                  leading: Icon(Icons.cloud, color: context.tavern.textMuted),
                   title: const Text('GPT-Image'),
                   subtitle: Text(
                     AppLocalizations.of(context).gptImageApiDescription,
@@ -430,7 +429,7 @@ class ImageGenSettingsScreen extends ConsumerWidget {
                 ),
               if (settings.provider == ImageGenProvider.openaiChat)
                 ListTile(
-                  leading: const Icon(Icons.chat, color: AppTheme.textMuted),
+                  leading: Icon(Icons.chat, color: context.tavern.textMuted),
                   title: Text(AppLocalizations.of(context).oaiCompatibleChat),
                   subtitle: Text(
                     AppLocalizations.of(context).oaiCompatibleChatDescription,
@@ -449,7 +448,7 @@ class ImageGenSettingsScreen extends ConsumerWidget {
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -457,10 +456,10 @@ class ImageGenSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -709,7 +708,7 @@ class _ImageGenTestWidgetState extends ConsumerState<_ImageGenTestWidget> {
             Text(
               '${(genState.progress * 100).round()}%',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textMuted),
+              style: TextStyle(color: context.tavern.textMuted),
             ),
           ],
 
@@ -719,23 +718,22 @@ class _ImageGenTestWidgetState extends ConsumerState<_ImageGenTestWidget> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.tavern.background,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppTheme.accentColor),
+                border: Border.all(color: context.tavern.accent),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.check,
-                          size: 16, color: AppTheme.accentColor),
+                      Icon(Icons.check, size: 16, color: context.tavern.accent),
                       const SizedBox(width: 8),
                       Text(
                         AppLocalizations.of(context)!.generationComplete,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.accentColor,
+                          color: context.tavern.accent,
                         ),
                       ),
                     ],
@@ -746,9 +744,9 @@ class _ImageGenTestWidgetState extends ConsumerState<_ImageGenTestWidget> {
                   Text(
                     AppLocalizations.of(context)
                         .generatedSeed(genState.result!.seed.toString()),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                     ),
                   ),
                   if (genState.result!.images.isNotEmpty) ...[
@@ -756,9 +754,9 @@ class _ImageGenTestWidgetState extends ConsumerState<_ImageGenTestWidget> {
                     Text(
                       AppLocalizations.of(context)
                           .imagesGenerated(genState.result!.images.length),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -784,10 +782,10 @@ class _ImageGenTestWidgetState extends ConsumerState<_ImageGenTestWidget> {
                                     return Container(
                                       width: 200,
                                       height: 200,
-                                      color: AppTheme.darkCard,
-                                      child: const Center(
+                                      color: context.tavern.card,
+                                      child: Center(
                                         child: Icon(Icons.broken_image,
-                                            color: AppTheme.textMuted),
+                                            color: context.tavern.textMuted),
                                       ),
                                     );
                                   },

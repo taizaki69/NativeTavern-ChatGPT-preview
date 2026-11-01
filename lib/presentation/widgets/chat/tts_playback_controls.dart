@@ -68,7 +68,7 @@ class ChatTTSMessageButton extends ConsumerWidget {
       visualDensity: VisualDensity.compact,
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
-      color: ownsPlayback ? AppTheme.accentColor : AppTheme.textMuted,
+      color: ownsPlayback ? context.tavern.accent : context.tavern.textMuted,
     );
   }
 }

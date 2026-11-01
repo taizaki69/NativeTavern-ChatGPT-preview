@@ -59,7 +59,7 @@ class ExtractedImagesWidget extends StatelessWidget {
         child: Container(
           constraints: BoxConstraints(maxHeight: maxHeight),
           decoration: BoxDecoration(
-            color: AppTheme.darkBackground,
+            color: context.tavern.background,
             borderRadius: BorderRadius.circular(12),
           ),
           child: CachedNetworkImage(
@@ -67,7 +67,7 @@ class ExtractedImagesWidget extends StatelessWidget {
             fit: BoxFit.contain,
             placeholder: (context, url) => Container(
               height: 200,
-              color: AppTheme.darkBackground,
+              color: context.tavern.background,
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -76,8 +76,8 @@ class ExtractedImagesWidget extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       AppLocalizations.of(context).loadingImage,
-                      style: const TextStyle(
-                        color: AppTheme.textMuted,
+                      style: TextStyle(
+                        color: context.tavern.textMuted,
                         fontSize: 12,
                       ),
                     ),
@@ -87,15 +87,16 @@ class ExtractedImagesWidget extends StatelessWidget {
             ),
             errorWidget: (context, url, error) => Container(
               height: 100,
-              color: AppTheme.darkBackground,
+              color: context.tavern.background,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.broken_image, color: AppTheme.textMuted),
+                  Icon(Icons.broken_image, color: context.tavern.textMuted),
                   const SizedBox(height: 8),
                   Text(
                     AppLocalizations.of(context).imageLoadFailed,
-                    style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                    style: TextStyle(
+                        color: context.tavern.textMuted, fontSize: 12),
                   ),
                   TextButton(
                     onPressed: () async {

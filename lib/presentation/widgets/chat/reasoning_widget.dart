@@ -102,7 +102,7 @@ class _ReasoningWidgetState extends State<ReasoningWidget>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground.withValues(alpha: 0.5),
+        color: context.tavern.background.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _getAccentColor().withValues(alpha: 0.3),
@@ -141,7 +141,7 @@ class _ReasoningWidgetState extends State<ReasoningWidget>
                   Text(
                     AppLocalizations.of(context)!.charsCount(widget.reasoning.length),
                     style: TextStyle(
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                       fontSize: 11,
                     ),
                   ),
@@ -151,7 +151,7 @@ class _ReasoningWidgetState extends State<ReasoningWidget>
                     icon: Icon(
                       Icons.copy,
                       size: 16,
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                     ),
                     onPressed: _copyReasoning,
                     padding: EdgeInsets.zero,
@@ -187,7 +187,7 @@ class _ReasoningWidgetState extends State<ReasoningWidget>
                   padding: const EdgeInsets.all(12),
                   child: MessageContentWidget(
                     content: widget.reasoning,
-                    textColor: widget.textColor ?? AppTheme.textSecondary,
+                    textColor: widget.textColor ?? context.tavern.textSecondary,
                     fontSize: 13,
                     selectable: true,
                   ),
@@ -296,7 +296,7 @@ class _StreamingReasoningWidgetState extends State<StreamingReasoningWidget>
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground.withValues(alpha: 0.5),
+        color: context.tavern.background.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: _getAccentColor().withValues(alpha: 0.3),
@@ -364,7 +364,7 @@ class _StreamingReasoningWidgetState extends State<StreamingReasoningWidget>
                 Text(
                   AppLocalizations.of(context)!.charsCount(widget.reasoning.length),
                   style: TextStyle(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                     fontSize: 11,
                   ),
                 ),
@@ -381,7 +381,7 @@ class _StreamingReasoningWidgetState extends State<StreamingReasoningWidget>
               padding: const EdgeInsets.all(12),
               child: MessageContentWidget(
                 content: widget.reasoning,
-                textColor: AppTheme.textSecondary,
+                textColor: context.tavern.textSecondary,
                 fontSize: 13,
                 selectable: true,
               ),
@@ -396,7 +396,7 @@ class _StreamingReasoningWidgetState extends State<StreamingReasoningWidget>
               child: Text(
                 AppLocalizations.of(context)!.thinking,
                 style: TextStyle(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                   fontStyle: FontStyle.italic,
                   fontSize: 13,
                 ),

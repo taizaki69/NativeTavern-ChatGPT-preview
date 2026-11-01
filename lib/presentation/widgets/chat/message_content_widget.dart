@@ -434,23 +434,23 @@ class _MessageContentWidgetState extends State<MessageContentWidget> {
                 fit: BoxFit.contain,
                 placeholder: (context, url) => Container(
                   height: 200,
-                  color: AppTheme.darkBackground,
+                  color: context.tavern.background,
                   child: const Center(
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                 ),
                 errorWidget: (context, url, error) => Container(
                   height: 150,
-                  color: AppTheme.darkBackground,
+                  color: context.tavern.background,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.broken_image, color: AppTheme.textMuted),
+                      Icon(Icons.broken_image, color: context.tavern.textMuted),
                       const SizedBox(height: 4),
                       Text(
                         'Image failed to load',
                         style: TextStyle(
-                          color: AppTheme.textMuted,
+                          color: context.tavern.textMuted,
                           fontSize: 12,
                         ),
                       ),
@@ -480,23 +480,23 @@ class _MessageContentWidgetState extends State<MessageContentWidget> {
           ),
           code: TextStyle(
             color: widget.textColor,
-            backgroundColor: AppTheme.darkBackground.withValues(alpha: 0.5),
+            backgroundColor: context.tavern.background.withValues(alpha: 0.5),
             fontFamily: 'monospace',
             fontSize: effectiveFontSize * 0.9,
           ),
           codeblockDecoration: BoxDecoration(
-            color: AppTheme.darkBackground.withValues(alpha: 0.5),
+            color: context.tavern.background.withValues(alpha: 0.5),
             borderRadius: BorderRadius.circular(8),
           ),
           codeblockPadding: const EdgeInsets.all(12),
           blockquote: TextStyle(
-            color: AppTheme.textSecondary,
+            color: context.tavern.textSecondary,
             fontStyle: FontStyle.italic,
           ),
           blockquoteDecoration: BoxDecoration(
             border: Border(
               left: BorderSide(
-                color: AppTheme.primaryColor,
+                color: context.tavern.primary,
                 width: 3,
               ),
             ),
@@ -533,7 +533,7 @@ class _MessageContentWidgetState extends State<MessageContentWidget> {
             fontWeight: FontWeight.bold,
           ),
           a: TextStyle(
-            color: AppTheme.primaryColor,
+            color: context.tavern.primary,
             decoration: TextDecoration.underline,
           ),
           listBullet: TextStyle(
@@ -542,7 +542,7 @@ class _MessageContentWidgetState extends State<MessageContentWidget> {
           horizontalRuleDecoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: AppTheme.darkDivider,
+                color: context.tavern.divider,
                 width: 1,
               ),
             ),

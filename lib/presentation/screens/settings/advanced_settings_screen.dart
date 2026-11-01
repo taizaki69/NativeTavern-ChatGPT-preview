@@ -264,7 +264,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: AppTheme.accentColor,
+              color: context.tavern.accent,
               fontWeight: FontWeight.bold,
             ),
       ),
@@ -276,7 +276,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
       child: Text(
         text,
-        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+        style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
       ),
     );
   }
@@ -326,7 +326,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
           Text(
             value.toStringAsFixed(2),
             style: TextStyle(
-              color: AppTheme.accentColor,
+              color: context.tavern.accent,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -369,7 +369,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
           Text(
             value.toString(),
             style: TextStyle(
-              color: AppTheme.accentColor,
+              color: context.tavern.accent,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -448,7 +448,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
         child: Text(
           value.toString(),
           style: TextStyle(
-            color: AppTheme.accentColor,
+            color: context.tavern.accent,
             fontWeight: FontWeight.bold,
           ),
           textAlign: TextAlign.end,
@@ -540,7 +540,7 @@ class AdvancedSettingsScreen extends ConsumerWidget {
           children: [
             Text(
               l10n.stopSequencesDescription,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+              style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
             ),
             const SizedBox(height: 16),
             TextField(

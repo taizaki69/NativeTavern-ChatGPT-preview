@@ -296,7 +296,7 @@ class _StatisticsCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: AppTheme.accentColor, size: 20),
+                Icon(icon, color: context.tavern.accent, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -334,7 +334,7 @@ class _StatRow extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
           ),
           Text(

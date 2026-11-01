@@ -38,6 +38,7 @@ import 'package:native_tavern/presentation/providers/tts_providers.dart';
 import 'package:native_tavern/presentation/providers/world_info_providers.dart';
 import 'package:native_tavern/presentation/router/app_router.dart';
 import 'package:native_tavern/presentation/theme/app_theme.dart';
+import 'package:native_tavern/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:native_tavern/presentation/widgets/chat/author_note_dialog.dart';
 import 'package:native_tavern/presentation/widgets/chat/bookmark_dialog.dart';
 import 'package:native_tavern/presentation/widgets/chat/data_bank_citation_preview.dart';
@@ -107,6 +108,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       Live2DCharacterController();
   late final TTSStopAction _stopTts;
   final Map<String, GlobalKey<_MessageBubbleState>> _messageKeys = {};
+  final ValueNotifier<bool> _showJumpToLatest = ValueNotifier(false);
   bool _initialMessageJumpScheduled = false;
   String? _highlightedMessageId;
 
@@ -131,6 +133,25 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // Listen for text changes to show/hide slash command suggestions
     _messageController.addListener(_onTextChanged);
+    _scrollController.addListener(_onMessagesScrolled);
+  }
+
+  /// Show the "jump to latest" button once the user scrolls away from the
+  /// newest messages (offset 0 is the bottom of the reversed list).
+  void _onMessagesScrolled() {
+    final show = _scrollController.hasClients && _scrollController.offset > 600;
+    if (_showJumpToLatest.value != show) _showJumpToLatest.value = show;
+  }
+
+  void _jumpToLatest() {
+    if (!_scrollController.hasClients) return;
+    // Skip most of a very long distance instantly, then glide the rest.
+    if (_scrollController.offset > 3000) _scrollController.jumpTo(1200);
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _onTextChanged() {
@@ -224,7 +245,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     unawaited(_stopTts(ownerId: widget.chatId));
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
+    _scrollController.removeListener(_onMessagesScrolled);
     _scrollController.dispose();
+    _showJumpToLatest.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -290,7 +313,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.settings, color: AppTheme.primaryColor),
+            Icon(Icons.settings, color: context.tavern.primary),
             const SizedBox(width: 8),
             Text(l10n.apiNotConfigured),
           ],
@@ -1167,12 +1190,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final issue = isPlan ? ref.watch(chatGptConnectionIssueProvider) : null;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: AppTheme.primaryColor.withValues(alpha: 0.15),
+      color: context.tavern.primary.withValues(alpha: 0.15),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.info_outline,
-            color: AppTheme.primaryColor,
+            color: context.tavern.primary,
             size: 20,
           ),
           const SizedBox(width: 12),
@@ -1182,16 +1205,16 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               children: [
                 Text(
                   isPlan ? 'ChatGPT setup required' : l10n.apiNotConfigured,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.textPrimary,
+                    color: context.tavern.textPrimary,
                   ),
                 ),
                 Text(
                   issue ?? l10n.configureApiProvider,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textSecondary,
+                    color: context.tavern.textSecondary,
                   ),
                 ),
               ],
@@ -1226,6 +1249,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Text(
             chatState.group?.name ?? chatState.character?.name ?? l10n.chat,
             style: const TextStyle(fontSize: 16),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
           // Model selector - tap to change model
           GestureDetector(
@@ -1233,13 +1258,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  llmConfig.model.isEmpty ? l10n.selectModel : llmConfig.model,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: chatState.isGenerating
-                        ? AppTheme.textMuted
-                        : AppTheme.accentColor,
+                // Long model IDs ellipsize instead of overflowing the bar.
+                Flexible(
+                  child: Text(
+                    llmConfig.model.isEmpty
+                        ? l10n.selectModel
+                        : llmConfig.model,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: chatState.isGenerating
+                          ? context.tavern.textMuted
+                          : context.tavern.accent,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 4),
@@ -1247,8 +1279,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   Icons.expand_more,
                   size: 14,
                   color: chatState.isGenerating
-                      ? AppTheme.textMuted
-                      : AppTheme.accentColor,
+                      ? context.tavern.textMuted
+                      : context.tavern.accent,
                 ),
               ],
             ),
@@ -1264,7 +1296,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               rpgState.enabled
                   ? Icons.sports_esports
                   : Icons.sports_esports_outlined,
-              color: rpgState.enabled ? AppTheme.accentColor : null,
+              color: rpgState.enabled ? context.tavern.accent : null,
             ),
             tooltip:
                 rpgState.enabled ? l10n.rpgDisableMode : l10n.rpgEnableMode,
@@ -1274,7 +1306,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         IconButton(
           icon: Icon(
             Icons.note_alt_outlined,
-            color: hasAuthorNote ? AppTheme.accentColor : null,
+            color: hasAuthorNote ? context.tavern.accent : null,
           ),
           tooltip: l10n.authorsNote,
           onPressed: () => showAuthorNoteDialog(context, widget.chatId),
@@ -1345,15 +1377,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: ListTile(
                 leading: Icon(
                   Icons.note_alt,
-                  color: hasAuthorNote ? AppTheme.accentColor : null,
+                  color: hasAuthorNote ? context.tavern.accent : null,
                 ),
                 title: Text(l10n.authorsNote),
                 subtitle: Text(
                   hasAuthorNote ? l10n.enabled : l10n.disabled,
                   style: TextStyle(
                     color: hasAuthorNote
-                        ? AppTheme.accentColor
-                        : AppTheme.textMuted,
+                        ? context.tavern.accent
+                        : context.tavern.textMuted,
                     fontSize: 12,
                   ),
                 ),
@@ -1371,7 +1403,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ?.startReplyWith
                               .isNotEmpty ??
                           false)
-                      ? AppTheme.accentColor
+                      ? context.tavern.accent
                       : null,
                 ),
                 title: Text(l10n.startReplyWith),
@@ -1397,7 +1429,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 leading: Icon(
                   Icons.dynamic_feed_outlined,
                   color: chatState.chat?.momentsInChat == true
-                      ? AppTheme.accentColor
+                      ? context.tavern.accent
                       : null,
                 ),
                 title: Text(l10n.momentsInChat),
@@ -1407,8 +1439,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       : l10n.disabled,
                   style: TextStyle(
                     color: chatState.chat?.momentsInChat == true
-                        ? AppTheme.accentColor
-                        : AppTheme.textMuted,
+                        ? context.tavern.accent
+                        : context.tavern.textMuted,
                     fontSize: 12,
                   ),
                 ),
@@ -1426,7 +1458,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                               ?.linkedWorldInfoIds
                               .isNotEmpty ??
                           false)
-                      ? AppTheme.accentColor
+                      ? context.tavern.accent
                       : null,
                 ),
                 title: Text(l10n.chatLorebooks),
@@ -1436,9 +1468,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             PopupMenuItem(
               value: 'bookmarks',
               child: ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.bookmark,
-                  color: AppTheme.accentColor,
+                  color: context.tavern.accent,
                 ),
                 title: Text(l10n.bookmarks),
                 contentPadding: EdgeInsets.zero,
@@ -1609,7 +1641,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             l10n.startConversation,
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppTheme.textMuted),
+            ).textTheme.bodyMedium?.copyWith(color: context.tavern.textMuted),
           ),
         ],
       ),
@@ -1850,7 +1882,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -1950,7 +1982,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final hasBackground = background.type != BackgroundType.none ||
         chatState.character?.assets?.live2d?.enabled == true;
 
-    return NotificationListener<ScrollNotification>(
+    final messageList = NotificationListener<ScrollNotification>(
       onNotification: (notification) {
         if (notification.depth != 0 ||
             notification.metrics.axis != Axis.vertical ||
@@ -2065,6 +2097,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           );
         },
       ),
+    );
+
+    return Stack(
+      children: [
+        messageList,
+        PositionedDirectional(
+          end: 16,
+          bottom: 12,
+          child: ValueListenableBuilder<bool>(
+            valueListenable: _showJumpToLatest,
+            builder: (context, visible, child) => IgnorePointer(
+              ignoring: !visible,
+              child: AnimatedSlide(
+                offset: visible ? Offset.zero : const Offset(0, 0.5),
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOut,
+                child: AnimatedOpacity(
+                  opacity: visible ? 1 : 0,
+                  duration: const Duration(milliseconds: 200),
+                  child: child,
+                ),
+              ),
+            ),
+            child: FloatingActionButton.small(
+              key: const Key('chat-jump-to-latest'),
+              heroTag: null,
+              tooltip: AppLocalizations.of(context).jumpToLatest,
+              onPressed: _jumpToLatest,
+              child: const Icon(Icons.keyboard_double_arrow_down),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -2227,56 +2292,31 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
-  void _showDeleteConfirmation(String messageId) {
+  Future<void> _showDeleteConfirmation(String messageId) async {
     final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteMessage),
-        content: Text(l10n.deleteMessageConfirmation),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref.read(activeChatProvider.notifier).deleteMessage(messageId);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(l10n.delete),
-          ),
-        ],
-      ),
+    final confirmed = await confirmDeletion(
+      context,
+      ref,
+      title: l10n.deleteMessage,
+      message: l10n.deleteMessageConfirmation,
     );
+    if (!confirmed || !mounted) return;
+    await ref.read(activeChatProvider.notifier).deleteMessage(messageId);
   }
 
-  void _showDeleteAndAfterConfirmation(String messageId) {
+  Future<void> _showDeleteAndAfterConfirmation(String messageId) async {
     final l10n = AppLocalizations.of(context);
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.deleteMessages),
-        content: Text(l10n.deleteMessagesConfirmation),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(l10n.cancel),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ref
-                  .read(activeChatProvider.notifier)
-                  .deleteMessageAndAfter(messageId);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: Text(l10n.deleteAll),
-          ),
-        ],
-      ),
+    final confirmed = await confirmDeletion(
+      context,
+      ref,
+      title: l10n.deleteMessages,
+      message: l10n.deleteMessagesConfirmation,
+      confirmLabel: l10n.deleteAll,
     );
+    if (!confirmed || !mounted) return;
+    await ref
+        .read(activeChatProvider.notifier)
+        .deleteMessageAndAfter(messageId);
   }
 
   Widget _buildQuickReplyBar(ActiveChatState chatState) {
@@ -2322,8 +2362,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkCard,
-        border: Border(top: BorderSide(color: AppTheme.darkDivider)),
+        color: context.tavern.card,
+        border: Border(top: BorderSide(color: context.tavern.divider)),
       ),
       child: SafeArea(
         child: Column(
@@ -2343,8 +2383,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       _showInputMenu ? Icons.close : Icons.menu,
                       size: 24,
                       color: _showInputMenu
-                          ? AppTheme.primaryColor
-                          : AppTheme.textMuted,
+                          ? context.tavern.primary
+                          : context.tavern.textMuted,
                     ),
                     onPressed: () => _setInputMenuVisible(!_showInputMenu),
                     padding: EdgeInsets.zero,
@@ -2372,7 +2412,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       decoration: InputDecoration(
                         hintText: AppLocalizations.of(context).typeMessage,
                         filled: true,
-                        fillColor: AppTheme.darkBackground,
+                        fillColor: context.tavern.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
@@ -2452,9 +2492,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppTheme.darkBackground,
+        color: context.tavern.background,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.darkDivider),
+        border: Border.all(color: context.tavern.divider),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2500,7 +2540,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     vertical: 8,
                   ),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkCard,
+                    color: context.tavern.card,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -2508,7 +2548,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       Icon(
                         Icons.analytics_outlined,
                         size: 18,
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                       ),
                       const SizedBox(width: 8),
                       const Expanded(child: ContextUsageIndicator()),
@@ -2549,13 +2589,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkCard,
+                  color: context.tavern.card,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppTheme.darkDivider),
+                  border: Border.all(color: context.tavern.divider),
                 ),
                 child: Text(
                   reply.label,
-                  style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  style: TextStyle(
+                      fontSize: 13, color: context.tavern.textSecondary),
                 ),
               ),
             ),
@@ -2644,7 +2685,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const Spacer(),
             Text(
               shortcut,
-              style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+              style: TextStyle(color: context.tavern.textMuted, fontSize: 12),
             ),
           ],
         ],
@@ -2694,10 +2735,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 80,
                       height: 80,
-                      color: AppTheme.darkCard,
-                      child: const Icon(
+                      color: context.tavern.card,
+                      child: Icon(
                         Icons.broken_image,
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                       ),
                     ),
                   ),
@@ -2748,7 +2789,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     // On mobile, show options sheet
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -2761,15 +2802,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 16),
             ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.photo_library,
-                color: AppTheme.primaryColor,
+                color: context.tavern.primary,
               ),
               title: Text(l10n.chooseFromGallery),
               onTap: () {
@@ -2778,9 +2819,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               },
             ),
             ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.camera_alt,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
               title: Text(l10n.takePhoto),
               onTap: () {
@@ -2980,7 +3021,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.upload, color: AppTheme.primaryColor),
+            Icon(Icons.upload, color: context.tavern.primary),
             const SizedBox(width: 8),
             Text(l10n.exportChat),
           ],
@@ -2996,7 +3037,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(height: 8),
             Text(
               l10n.messagesCount(chatState.messages.length),
-              style: TextStyle(color: AppTheme.textSecondary),
+              style: TextStyle(color: context.tavern.textSecondary),
             ),
             const SizedBox(height: 16),
             Text(l10n.chooseExportFormat),
@@ -3057,7 +3098,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       builder: (dialogContext) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.download, color: AppTheme.primaryColor),
+            Icon(Icons.download, color: context.tavern.primary),
             const SizedBox(width: 8),
             Text(l10n.importChat),
           ],
@@ -3078,7 +3119,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(height: 16),
             Text(
               l10n.importNote,
-              style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+              style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
             ),
           ],
         ),
@@ -3328,9 +3369,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                               else
                                 MessageContentWidget(
                                   content: widget.message.content,
-                                  textColor: isUser
-                                      ? Colors.white
-                                      : AppTheme.textPrimary,
+                                  textColor: _bubbleTextColor(isUser),
                                   selectable: true,
                                   onLongPress: () =>
                                       _showMessageOptions(context),
@@ -3377,7 +3416,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
                               style: Theme.of(context)
                                   .textTheme
                                   .bodySmall
-                                  ?.copyWith(color: AppTheme.textMuted),
+                                  ?.copyWith(color: context.tavern.textMuted),
                             ),
                           ),
                         ),
@@ -3433,21 +3472,45 @@ class _MessageBubbleState extends State<_MessageBubble> {
     );
   }
 
-  BoxDecoration _buildMessageDecoration(bool isUser) {
-    final isTransparent = widget.layoutMode == 'transparent';
+  bool get _isGlassBubble =>
+      widget.layoutMode == 'transparent' && widget.hasBackground;
 
-    if (isTransparent && widget.hasBackground) {
+  /// Text drawn on a bubble must stay readable on every theme: glass bubbles
+  /// sit on a darkened image, user bubbles on the accent color.
+  Color _bubbleTextColor(bool isUser) {
+    if (_isGlassBubble) return Colors.white;
+    return isUser ? context.tavern.onAccent : context.tavern.textPrimary;
+  }
+
+  /// Rounded bubble with a tighter "tail" corner pointing at the speaker.
+  BorderRadius _bubbleRadius(bool isUser) {
+    const round = Radius.circular(18);
+    const tail = Radius.circular(6);
+    return BorderRadius.only(
+      topLeft: isUser ? round : tail,
+      topRight: isUser ? tail : round,
+      bottomLeft: round,
+      bottomRight: round,
+    );
+  }
+
+  BoxDecoration _buildMessageDecoration(bool isUser) {
+    final colors = context.tavern;
+    final highlightColor = Theme.of(context).colorScheme.tertiary;
+    final radius = _bubbleRadius(isUser);
+
+    if (_isGlassBubble) {
       // Transparent mode: very light background with blur effect
       return BoxDecoration(
         color: isUser
-            ? AppTheme.accentColor.withValues(alpha: 0.35)
+            ? colors.accent.withValues(alpha: 0.35)
             : Colors.black.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: radius,
         border: Border.all(
           color: widget.highlighted
-              ? Theme.of(context).colorScheme.tertiary
+              ? highlightColor
               : isUser
-                  ? AppTheme.accentColor.withValues(alpha: 0.5)
+                  ? colors.accent.withValues(alpha: 0.5)
                   : Colors.white.withValues(alpha: 0.3),
           width: widget.highlighted ? 3 : 1,
         ),
@@ -3460,25 +3523,21 @@ class _MessageBubbleState extends State<_MessageBubble> {
           ),
         ],
       );
-    } else {
-      // Classic bubble mode
-      return BoxDecoration(
-        color: isUser
-            ? (widget.hasBackground
-                ? AppTheme.accentColor.withValues(alpha: widget.bubbleOpacity)
-                : AppTheme.accentColor)
-            : (widget.hasBackground
-                ? AppTheme.darkCard.withValues(alpha: widget.bubbleOpacity)
-                : AppTheme.darkCard),
-        borderRadius: BorderRadius.circular(16),
-        border: widget.highlighted
-            ? Border.all(
-                color: Theme.of(context).colorScheme.tertiary,
-                width: 3,
-              )
-            : null,
-      );
     }
+
+    // Classic bubble mode
+    final fill = isUser ? colors.accent : colors.card;
+    return BoxDecoration(
+      color: widget.hasBackground
+          ? fill.withValues(alpha: widget.bubbleOpacity)
+          : fill,
+      borderRadius: radius,
+      border: widget.highlighted
+          ? Border.all(color: highlightColor, width: 3)
+          : (!isUser && !widget.hasBackground)
+              ? Border.all(color: colors.divider.withValues(alpha: 0.5))
+              : null,
+    );
   }
 
   Widget _buildAvatar() {
@@ -3539,10 +3598,10 @@ class _MessageBubbleState extends State<_MessageBubble> {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 150,
                   height: 100,
-                  color: AppTheme.darkBackground,
-                  child: const Icon(
+                  color: context.tavern.background,
+                  child: Icon(
                     Icons.broken_image,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                 ),
               ),
@@ -3571,11 +3630,11 @@ class _MessageBubbleState extends State<_MessageBubble> {
                 errorBuilder: (context, error, stackTrace) => Container(
                   width: 80,
                   height: 80,
-                  color: AppTheme.darkBackground,
-                  child: const Icon(
+                  color: context.tavern.background,
+                  child: Icon(
                     Icons.broken_image,
                     size: 20,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                 ),
               ),
@@ -3604,11 +3663,11 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     errorBuilder: (context, error, stackTrace) => Container(
                       width: 200,
                       height: 200,
-                      color: AppTheme.darkCard,
-                      child: const Icon(
+                      color: context.tavern.card,
+                      child: Icon(
                         Icons.broken_image,
                         size: 48,
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                       ),
                     ),
                   ),
@@ -3668,7 +3727,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -3682,7 +3741,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -3690,7 +3749,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
 
             // Copy
             ListTile(
-              leading: const Icon(Icons.copy, color: AppTheme.textSecondary),
+              leading: Icon(Icons.copy, color: context.tavern.textSecondary),
               title: Text(l10n.copy),
               onTap: () {
                 Navigator.pop(context);
@@ -3706,7 +3765,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
 
             // Edit
             ListTile(
-              leading: const Icon(Icons.edit, color: AppTheme.textSecondary),
+              leading: Icon(Icons.edit, color: context.tavern.textSecondary),
               title: Text(l10n.edit),
               onTap: () {
                 Navigator.pop(context);
@@ -3718,9 +3777,9 @@ class _MessageBubbleState extends State<_MessageBubble> {
             // Regenerate (only for assistant messages)
             if (isAssistant && widget.onRegenerate != null)
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.refresh,
-                  color: AppTheme.primaryColor,
+                  color: context.tavern.primary,
                 ),
                 title: Text(l10n.regenerate),
                 subtitle: Text(l10n.generateNewResponse),
@@ -3732,9 +3791,9 @@ class _MessageBubbleState extends State<_MessageBubble> {
 
             // Continue from here
             ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.play_arrow,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
               title: Text(l10n.continueFromHere),
               subtitle: Text(
@@ -3750,9 +3809,9 @@ class _MessageBubbleState extends State<_MessageBubble> {
 
             // Create bookmark
             ListTile(
-              leading: const Icon(
+              leading: Icon(
                 Icons.bookmark_add,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
               title: Text(l10n.createBookmark),
               subtitle: Text(l10n.saveAsCheckpoint),
@@ -3765,9 +3824,9 @@ class _MessageBubbleState extends State<_MessageBubble> {
             // Generate image (if enabled)
             if (widget.onGenerateImage != null)
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.auto_awesome,
-                  color: AppTheme.primaryColor,
+                  color: context.tavern.primary,
                 ),
                 title: Text(l10n.generateImagesUsingAi),
                 onTap: () {
@@ -3854,7 +3913,7 @@ class _TypingIndicatorState extends State<_TypingIndicator>
                 width: size,
                 height: size,
                 decoration: BoxDecoration(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -3920,7 +3979,7 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Dialog(
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -3939,7 +3998,7 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.smart_toy, color: AppTheme.primaryColor),
+                      Icon(Icons.smart_toy, color: context.tavern.primary),
                       const SizedBox(width: 8),
                       Text(
                         l10n.selectModel,
@@ -3951,7 +4010,7 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                   Text(
                     '${l10n.provider}: ${widget.providerName}',
                     style: TextStyle(
-                      color: AppTheme.textSecondary,
+                      color: context.tavern.textSecondary,
                       fontSize: 12,
                     ),
                   ),
@@ -3969,7 +4028,7 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                   prefixIcon: const Icon(Icons.search, size: 20),
                   isDense: true,
                   filled: true,
-                  fillColor: AppTheme.darkBackground,
+                  fillColor: context.tavern.background,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -3992,7 +4051,7 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                         padding: const EdgeInsets.all(32),
                         child: Text(
                           l10n.noModelsMatchSearch,
-                          style: TextStyle(color: AppTheme.textMuted),
+                          style: TextStyle(color: context.tavern.textMuted),
                         ),
                       ),
                     )
@@ -4009,8 +4068,8 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                                 ? Icons.check_circle
                                 : Icons.circle_outlined,
                             color: isSelected
-                                ? AppTheme.accentColor
-                                : AppTheme.textMuted,
+                                ? context.tavern.accent
+                                : context.tavern.textMuted,
                             size: 20,
                           ),
                           title: Text(
@@ -4020,12 +4079,12 @@ class _ModelSelectorDialogState extends State<_ModelSelectorDialog> {
                                   ? FontWeight.bold
                                   : FontWeight.normal,
                               color: isSelected
-                                  ? AppTheme.accentColor
-                                  : AppTheme.textPrimary,
+                                  ? context.tavern.accent
+                                  : context.tavern.textPrimary,
                             ),
                           ),
                           selected: isSelected,
-                          selectedTileColor: AppTheme.accentColor.withValues(
+                          selectedTileColor: context.tavern.accent.withValues(
                             alpha: 0.1,
                           ),
                           shape: RoundedRectangleBorder(
@@ -4078,17 +4137,18 @@ class _InputMenuButton extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: AppTheme.darkCard,
+          color: context.tavern.card,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 18, color: AppTheme.primaryColor),
+            Icon(icon, size: 18, color: context.tavern.primary),
             const SizedBox(width: 6),
             Text(
               label,
-              style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+              style:
+                  TextStyle(fontSize: 13, color: context.tavern.textSecondary),
             ),
           ],
         ),

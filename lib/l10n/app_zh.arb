@@ -1920,5 +1920,14 @@
   "aiDataSharingAllowedDescription": "已允许向你配置的服务商和端点发送数据",
   "aiDataSharingLocalOnlyDescription": "已阻止；本地 AI 端点仍可使用",
   "imagine": "生图",
-  "fillImagePromptWithAi": "AI 填写提示词"
+  "fillImagePromptWithAi": "AI 填写提示词",
+  "jumpToLatest": "跳到最新消息",
+  "confirmBeforeDeleteTitle": "删除前确认",
+  "confirmBeforeDeleteSubtitle": "删除聊天和消息前先询问",
+  "multimedia": "多媒体",
+  "customThemes": "自定义主题",
+  "darkThemes": "深色主题",
+  "lightThemes": "浅色主题",
+  "followSystemTheme": "跟随系统外观",
+  "followSystemThemeSubtitle": "选择一个浅色和一个深色主题，应用将自动切换"
 }

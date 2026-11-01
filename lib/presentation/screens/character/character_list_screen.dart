@@ -255,20 +255,20 @@ class _EmptyState extends StatelessWidget {
           Icon(
             Icons.people_outline,
             size: 80,
-            color: AppTheme.textMuted,
+            color: context.tavern.textMuted,
           ),
           const SizedBox(height: 16),
           Text(
             l10n.noCharactersYet,
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: AppTheme.textSecondary,
+                  color: context.tavern.textSecondary,
                 ),
           ),
           const SizedBox(height: 8),
           Text(
             l10n.importCharacter,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
           ),
           const SizedBox(height: 24),
@@ -310,7 +310,7 @@ class _CharacterGridCard extends ConsumerWidget {
           children: [
             Expanded(
               flex: 3,
-              child: _buildAvatar(),
+              child: _buildAvatar(context),
             ),
             Expanded(
               flex: 1,
@@ -330,7 +330,7 @@ class _CharacterGridCard extends ConsumerWidget {
                       Text(
                         'by ${character.creator}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textMuted,
+                              color: context.tavern.textMuted,
                             ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -345,20 +345,20 @@ class _CharacterGridCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildAvatar() {
+  Widget _buildAvatar(BuildContext context) {
     if (character.assets?.avatarPath != null) {
       return CharacterAvatarImage(
         imagePath: character.assets!.avatarPath!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _defaultAvatar(),
+        errorBuilder: (_, __, ___) => _defaultAvatar(context),
       );
     }
-    return _defaultAvatar();
+    return _defaultAvatar(context);
   }
 
-  Widget _defaultAvatar() {
+  Widget _defaultAvatar(BuildContext context) {
     final icon = _getCharacterIcon(character);
-    final color = _getCharacterColor(character);
+    final color = _getCharacterColor(context, character);
 
     return Container(
       decoration: BoxDecoration(
@@ -395,7 +395,7 @@ class _CharacterGridCard extends ConsumerWidget {
     }
   }
 
-  Color _getCharacterColor(Character character) {
+  Color _getCharacterColor(BuildContext context, Character character) {
     // Check if it's a built-in character by ID
     switch (character.id) {
       case 'builtin_coding_assistant':
@@ -405,7 +405,7 @@ class _CharacterGridCard extends ConsumerWidget {
       case 'builtin_xiaohongshu_copywriter':
         return const Color(0xFFFF5722); // Orange/Red for social media
       default:
-        return AppTheme.darkDivider;
+        return context.tavern.divider;
     }
   }
 }
@@ -426,7 +426,7 @@ class _CharacterCompactGridCard extends ConsumerWidget {
           children: [
             Expanded(
               flex: 4,
-              child: _buildCompactAvatar(),
+              child: _buildCompactAvatar(context),
             ),
             Expanded(
               flex: 1,
@@ -453,20 +453,20 @@ class _CharacterCompactGridCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildCompactAvatar() {
+  Widget _buildCompactAvatar(BuildContext context) {
     if (character.assets?.avatarPath != null) {
       return CharacterAvatarImage(
         imagePath: character.assets!.avatarPath!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _defaultCompactAvatar(),
+        errorBuilder: (_, __, ___) => _defaultCompactAvatar(context),
       );
     }
-    return _defaultCompactAvatar();
+    return _defaultCompactAvatar(context);
   }
 
-  Widget _defaultCompactAvatar() {
+  Widget _defaultCompactAvatar(BuildContext context) {
     final icon = _getCharacterIcon(character);
-    final color = _getCharacterColor(character);
+    final color = _getCharacterColor(context, character);
 
     return Container(
       decoration: BoxDecoration(
@@ -502,7 +502,7 @@ class _CharacterCompactGridCard extends ConsumerWidget {
     }
   }
 
-  Color _getCharacterColor(Character character) {
+  Color _getCharacterColor(BuildContext context, Character character) {
     switch (character.id) {
       case 'builtin_coding_assistant':
         return const Color(0xFF2196F3);
@@ -511,7 +511,7 @@ class _CharacterCompactGridCard extends ConsumerWidget {
       case 'builtin_xiaohongshu_copywriter':
         return const Color(0xFFFF5722);
       default:
-        return AppTheme.darkDivider;
+        return context.tavern.divider;
     }
   }
 }
@@ -528,7 +528,7 @@ class _CharacterListTile extends ConsumerWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
-        leading: _buildListAvatar(),
+        leading: _buildListAvatar(context),
         title: Text(character.name),
         subtitle: Text(
           character.description.isNotEmpty
@@ -647,7 +647,7 @@ class _CharacterListTile extends ConsumerWidget {
     );
   }
 
-  Widget _buildListAvatar() {
+  Widget _buildListAvatar(BuildContext context) {
     if (character.assets?.avatarPath != null) {
       return CharacterAvatarCircle(
         imagePath: character.assets!.avatarPath!,
@@ -656,7 +656,7 @@ class _CharacterListTile extends ConsumerWidget {
     }
 
     final icon = _getCharacterIcon(character);
-    final color = _getCharacterColor(character);
+    final color = _getCharacterColor(context, character);
 
     return CircleAvatar(
       radius: 28,
@@ -682,7 +682,7 @@ class _CharacterListTile extends ConsumerWidget {
     }
   }
 
-  Color _getCharacterColor(Character character) {
+  Color _getCharacterColor(BuildContext context, Character character) {
     switch (character.id) {
       case 'builtin_coding_assistant':
         return const Color(0xFF2196F3);
@@ -691,7 +691,7 @@ class _CharacterListTile extends ConsumerWidget {
       case 'builtin_xiaohongshu_copywriter':
         return const Color(0xFFFF5722);
       default:
-        return AppTheme.primaryColor;
+        return context.tavern.primary;
     }
   }
 }

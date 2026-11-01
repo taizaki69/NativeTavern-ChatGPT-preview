@@ -32,17 +32,33 @@ class AppThemeConfig {
   });
 
   /// Convert hex string to Color
+  ///
+  /// Accepts `#RGB`, `#RRGGBB` and `#AARRGGBB` (with or without `#`). Invalid
+  /// input falls back to mid-gray instead of throwing, so a malformed custom
+  /// theme can never break app startup.
   static Color hexToColor(String hex) {
-    hex = hex.replaceAll('#', '');
-    if (hex.length == 6) {
-      hex = 'FF$hex';
+    final normalized = tryParseHex(hex);
+    return normalized ?? const Color(0xFF808080);
+  }
+
+  /// Parse a hex color, returning `null` when [hex] is not a valid color.
+  static Color? tryParseHex(String hex) {
+    var value = hex.trim().replaceAll('#', '');
+    if (value.length == 3) {
+      value = value.split('').map((c) => '$c$c').join();
     }
-    return Color(int.parse(hex, radix: 16));
+    if (value.length == 6) {
+      value = 'FF$value';
+    }
+    if (value.length != 8) return null;
+    final parsed = int.tryParse(value, radix: 16);
+    return parsed == null ? null : Color(parsed);
   }
 
   /// Convert Color to hex string
   static String colorToHex(Color color) {
-    return '#${color.toARGB32().toRadixString(16).substring(2).toUpperCase()}';
+    final rgb = color.toARGB32() & 0xFFFFFF;
+    return '#${rgb.toRadixString(16).padLeft(6, '0').toUpperCase()}';
   }
 
   /// Get Flutter Color objects
@@ -54,55 +70,6 @@ class AppThemeConfig {
   Color get textPrimary => hexToColor(textPrimaryColor);
   Color get textSecondary => hexToColor(textSecondaryColor);
   Color get divider => hexToColor(dividerColor);
-
-  /// Generate a ThemeData from this config
-  ThemeData toThemeData() {
-    final colorScheme = ColorScheme(
-      brightness: isDark ? Brightness.dark : Brightness.light,
-      primary: primary,
-      onPrimary: isDark ? Colors.white : Colors.black,
-      secondary: accent,
-      onSecondary: isDark ? Colors.white : Colors.black,
-      error: Colors.red,
-      onError: Colors.white,
-      surface: surface,
-      onSurface: textPrimary,
-    );
-
-    return ThemeData(
-      useMaterial3: true,
-      brightness: isDark ? Brightness.dark : Brightness.light,
-      colorScheme: colorScheme,
-      scaffoldBackgroundColor: background,
-      cardColor: card,
-      dividerColor: divider,
-      appBarTheme: AppBarTheme(
-        backgroundColor: surface,
-        foregroundColor: textPrimary,
-        elevation: 0,
-      ),
-      cardTheme: CardThemeData(
-        color: card,
-        elevation: 0,
-      ),
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: surface,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-      ),
-      textTheme: TextTheme(
-        bodyLarge: TextStyle(color: textPrimary),
-        bodyMedium: TextStyle(color: textPrimary),
-        bodySmall: TextStyle(color: textSecondary),
-        titleLarge: TextStyle(color: textPrimary),
-        titleMedium: TextStyle(color: textPrimary),
-        titleSmall: TextStyle(color: textSecondary),
-      ),
-    );
-  }
 
   AppThemeConfig copyWith({
     String? id,

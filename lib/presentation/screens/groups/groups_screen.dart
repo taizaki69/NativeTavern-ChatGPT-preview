@@ -41,20 +41,20 @@ class GroupsScreen extends ConsumerWidget {
                   Icon(
                     Icons.groups,
                     size: 80,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.noGroupChatsYet,
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppTheme.textSecondary,
+                          color: context.tavern.textSecondary,
                         ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     AppLocalizations.of(context)!.createGroupDescription,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.textMuted,
+                          color: context.tavern.textMuted,
                         ),
                   ),
                   const SizedBox(height: 24),
@@ -145,7 +145,7 @@ class _GroupCard extends ConsumerWidget {
                             group.description!,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.textMuted,
+                                      color: context.tavern.textMuted,
                                     ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -157,7 +157,7 @@ class _GroupCard extends ConsumerWidget {
                               group.settings.effectiveResponseMode.name),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.textMuted,
+                                    color: context.tavern.textMuted,
                                   ),
                         ),
                       ],
@@ -260,7 +260,7 @@ class _GroupCard extends ConsumerWidget {
                               radius: 20,
                               errorBuilder: (_, __, ___) => CircleAvatar(
                                 radius: 20,
-                                backgroundColor: AppTheme.darkDivider,
+                                backgroundColor: context.tavern.divider,
                                 child: Text(
                                   character.name.substring(0, 1).toUpperCase(),
                                   style: const TextStyle(fontSize: 16),
@@ -269,7 +269,7 @@ class _GroupCard extends ConsumerWidget {
                             )
                           : CircleAvatar(
                               radius: 20,
-                              backgroundColor: AppTheme.darkDivider,
+                              backgroundColor: context.tavern.divider,
                               child: Text(
                                 character?.name.substring(0, 1).toUpperCase() ??
                                     '?',
@@ -418,7 +418,7 @@ class _CreateGroupDialogState extends ConsumerState<_CreateGroupDialog> {
             Text(
               AppLocalizations.of(context)!.selectAtLeast2Characters,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
             ),
             const SizedBox(height: 8),
@@ -481,7 +481,7 @@ class _CreateGroupDialogState extends ConsumerState<_CreateGroupDialog> {
                   AppLocalizations.of(context)!
                       .charactersSelected(_selectedCharacterIds.length),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.accentColor,
+                        color: context.tavern.accent,
                       ),
                 ),
               ),

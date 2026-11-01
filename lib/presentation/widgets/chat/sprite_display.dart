@@ -126,13 +126,13 @@ class _SpriteImageState extends State<_SpriteImage>
           width: widget.settings.size,
           height: widget.settings.size,
           decoration: BoxDecoration(
-            color: AppTheme.darkCard,
+            color: context.tavern.card,
             borderRadius: BorderRadius.circular(8),
           ),
-          child: const Center(
+          child: Center(
             child: Icon(
               Icons.broken_image,
-              color: AppTheme.textMuted,
+              color: context.tavern.textMuted,
             ),
           ),
         );
@@ -174,14 +174,14 @@ class _SpriteImageState extends State<_SpriteImage>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.darkCard.withValues(alpha: 0.8),
+            color: context.tavern.card.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
             _getEmotionDisplayName(widget.sprite.emotion),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 10,
-              color: AppTheme.textMuted,
+              color: context.tavern.textMuted,
             ),
           ),
         ),
@@ -330,7 +330,7 @@ class SpritePreview extends StatelessWidget {
         width: size,
         decoration: BoxDecoration(
           border: isSelected
-              ? Border.all(color: AppTheme.accentColor, width: 2)
+              ? Border.all(color: context.tavern.accent, width: 2)
               : null,
           borderRadius: BorderRadius.circular(8),
         ),
@@ -350,10 +350,10 @@ class SpritePreview extends StatelessWidget {
                       return Container(
                         width: size,
                         height: size,
-                        color: AppTheme.darkCard,
-                        child: const Icon(
+                        color: context.tavern.card,
+                        child: Icon(
                           Icons.broken_image,
-                          color: AppTheme.textMuted,
+                          color: context.tavern.textMuted,
                         ),
                       );
                     },
@@ -385,9 +385,9 @@ class SpritePreview extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 _getEmotionDisplayName(sprite.emotion),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
-                  color: AppTheme.textSecondary,
+                  color: context.tavern.textSecondary,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 1,
@@ -432,15 +432,15 @@ class SpriteGrid extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(
+                Icon(
                   Icons.image_not_supported,
                   size: 48,
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   AppLocalizations.of(context)!.noSpritesAddedYet,
-                  style: const TextStyle(color: AppTheme.textMuted),
+                  style: TextStyle(color: context.tavern.textMuted),
                 ),
               ],
             ),

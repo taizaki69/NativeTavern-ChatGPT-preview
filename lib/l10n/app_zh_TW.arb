@@ -1917,5 +1917,14 @@
   "aiDataSharingAllowedDescription": "已允許向你設定的服務商和端點傳送資料",
   "aiDataSharingLocalOnlyDescription": "已封鎖；本機 AI 端點仍可使用",
   "imagine": "生圖",
-  "fillImagePromptWithAi": "AI 填寫提示詞"
+  "fillImagePromptWithAi": "AI 填寫提示詞",
+  "jumpToLatest": "跳到最新訊息",
+  "confirmBeforeDeleteTitle": "刪除前確認",
+  "confirmBeforeDeleteSubtitle": "刪除聊天和訊息前先詢問",
+  "multimedia": "多媒體",
+  "customThemes": "自訂主題",
+  "darkThemes": "深色主題",
+  "lightThemes": "淺色主題",
+  "followSystemTheme": "跟隨系統外觀",
+  "followSystemThemeSubtitle": "選擇一個淺色與一個深色主題，App 會自動切換"
 }

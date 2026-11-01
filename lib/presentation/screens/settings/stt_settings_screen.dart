@@ -187,7 +187,7 @@ class STTSettingsScreen extends ConsumerWidget {
               ListTile(
                 leading: Icon(
                   session.isActive ? Icons.stop_circle : Icons.mic_none,
-                  color: session.isActive ? Colors.red : AppTheme.accentColor,
+                  color: session.isActive ? Colors.red : context.tavern.accent,
                 ),
                 title: Text(
                   session.isActive ? l10n.stopListening : l10n.testVoiceInput,
@@ -205,9 +205,9 @@ class STTSettingsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: AppTheme.darkBackground,
+                      color: context.tavern.background,
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: AppTheme.darkDivider),
+                      border: Border.all(color: context.tavern.divider),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
@@ -231,18 +231,18 @@ class STTSettingsScreen extends ConsumerWidget {
             title: l10n.information,
             children: [
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.info_outline,
-                  color: AppTheme.accentColor,
+                  color: context.tavern.accent,
                 ),
                 title: Text(l10n.aboutStt),
                 subtitle: Text(l10n.aboutSttDescription),
               ),
               if (settings.provider == STTProvider.system)
                 ListTile(
-                  leading: const Icon(
+                  leading: Icon(
                     Icons.offline_bolt_outlined,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                   title: Text(l10n.systemStt),
                   subtitle: Text(
@@ -360,7 +360,7 @@ class _Section extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -368,10 +368,10 @@ class _Section extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),

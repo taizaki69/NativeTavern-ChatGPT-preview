@@ -49,13 +49,13 @@ class AIConfigScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    AppTheme.primaryColor.withValues(alpha: 0.2),
-                    AppTheme.accentColor.withValues(alpha: 0.1),
+                    context.tavern.primary.withValues(alpha: 0.2),
+                    context.tavern.accent.withValues(alpha: 0.1),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                  color: context.tavern.primary.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
@@ -64,12 +64,12 @@ class AIConfigScreen extends ConsumerWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor,
+                      color: context.tavern.primary,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.auto_awesome,
-                      color: Colors.white,
+                      color: context.tavern.onPrimary,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -79,9 +79,9 @@ class AIConfigScreen extends ConsumerWidget {
                       children: [
                         Text(
                           AppLocalizations.of(context)!.activePreset,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textMuted,
+                            color: context.tavern.textMuted,
                           ),
                         ),
                         Text(
@@ -175,7 +175,7 @@ class AIConfigScreen extends ConsumerWidget {
       child: Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: AppTheme.accentColor,
+              color: context.tavern.accent,
               fontWeight: FontWeight.bold,
             ),
       ),
@@ -231,9 +231,9 @@ class _InstructTemplateTile extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   AppLocalizations.of(context)!.instructTemplateDescription,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                 ),
               ),
@@ -250,8 +250,8 @@ class _InstructTemplateTile extends ConsumerWidget {
                       leading: Icon(
                         isSelected ? Icons.check_circle : Icons.circle_outlined,
                         color: isSelected
-                            ? AppTheme.primaryColor
-                            : AppTheme.textMuted,
+                            ? context.tavern.primary
+                            : context.tavern.textMuted,
                       ),
                       title: Text(
                         template.name,
@@ -841,7 +841,7 @@ class _LLMModelTileState extends ConsumerState<LLMModelTile> {
             Text(
               AppLocalizations.of(context)!.fetchModelsDescription,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
               textAlign: TextAlign.center,
             ),
@@ -1010,7 +1010,7 @@ class _ConnectionTestTile extends ConsumerWidget {
     return ListTile(
       leading: Icon(
         _getStatusIcon(testState.status),
-        color: _getStatusColor(testState.status),
+        color: _getStatusColor(context, testState.status),
       ),
       title: Text(AppLocalizations.of(context)!.testConnection),
       subtitle: Text(_getStatusText(context, testState)),
@@ -1041,12 +1041,12 @@ class _ConnectionTestTile extends ConsumerWidget {
     }
   }
 
-  Color _getStatusColor(ConnectionStatus status) {
+  Color _getStatusColor(BuildContext context, ConnectionStatus status) {
     switch (status) {
       case ConnectionStatus.idle:
-        return AppTheme.textMuted;
+        return context.tavern.textMuted;
       case ConnectionStatus.testing:
-        return AppTheme.accentColor;
+        return context.tavern.accent;
       case ConnectionStatus.success:
         return Colors.green;
       case ConnectionStatus.error:
@@ -1124,7 +1124,7 @@ class _ContextLengthTile extends ConsumerWidget {
             Text(
               AppLocalizations.of(context)!.contextLengthDescription,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
             ),
           ],
@@ -1207,7 +1207,7 @@ class _MaxTokensTile extends ConsumerWidget {
             Text(
               AppLocalizations.of(context)!.maxTokensDescription,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
             ),
           ],
@@ -1670,7 +1670,7 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                   child: Text(
                     '${_filteredModels.length} of ${widget.models.length} models',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.textMuted,
+                          color: context.tavern.textMuted,
                         ),
                   ),
                 ),
@@ -1682,8 +1682,8 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.search_off,
-                              size: 48, color: AppTheme.textMuted),
+                          Icon(Icons.search_off,
+                              size: 48, color: context.tavern.textMuted),
                           const SizedBox(height: 16),
                           Text(
                             AppLocalizations.of(context)!.noModelsFound,
@@ -1691,7 +1691,7 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                                 .textTheme
                                 .titleMedium
                                 ?.copyWith(
-                                  color: AppTheme.textMuted,
+                                  color: context.tavern.textMuted,
                                 ),
                           ),
                           const SizedBox(height: 8),
@@ -1700,7 +1700,7 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                                 .tryDifferentSearchTerm,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.textMuted,
+                                      color: context.tavern.textMuted,
                                     ),
                           ),
                         ],
@@ -1719,15 +1719,14 @@ class _ModelSelectionSheetState extends State<_ModelSelectionSheet> {
                               fontWeight: isSelected
                                   ? FontWeight.bold
                                   : FontWeight.normal,
-                              color: isSelected ? AppTheme.accentColor : null,
+                              color: isSelected ? context.tavern.accent : null,
                             ),
                           ),
                           subtitle: widget.modelNames.containsKey(model)
                               ? Text(model)
                               : null,
                           trailing: isSelected
-                              ? const Icon(Icons.check,
-                                  color: AppTheme.accentColor)
+                              ? Icon(Icons.check, color: context.tavern.accent)
                               : null,
                           onTap: () => widget.onModelSelected(model),
                         );

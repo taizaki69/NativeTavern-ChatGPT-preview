@@ -164,18 +164,18 @@ class RegexSettingsScreen extends ConsumerWidget {
                   child: Center(
                     child: Column(
                       children: [
-                        const Icon(Icons.find_replace,
-                            size: 48, color: AppTheme.textMuted),
+                        Icon(Icons.find_replace,
+                            size: 48, color: context.tavern.textMuted),
                         const SizedBox(height: 16),
                         Text(
                           AppLocalizations.of(context)!.noRegexScripts,
-                          style: const TextStyle(color: AppTheme.textMuted),
+                          style: TextStyle(color: context.tavern.textMuted),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           AppLocalizations.of(context)!.tapToAddOrUseMenu,
-                          style: const TextStyle(
-                              color: AppTheme.textMuted, fontSize: 12),
+                          style: TextStyle(
+                              color: context.tavern.textMuted, fontSize: 12),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -230,15 +230,14 @@ class RegexSettingsScreen extends ConsumerWidget {
             title: AppLocalizations.of(context).information,
             children: [
               ListTile(
-                leading:
-                    const Icon(Icons.info_outline, color: AppTheme.accentColor),
+                leading: Icon(Icons.info_outline, color: context.tavern.accent),
                 title: Text(AppLocalizations.of(context).aboutRegexScripts),
                 subtitle: Text(
                   AppLocalizations.of(context).aboutRegexScriptsDescription,
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.code, color: AppTheme.textMuted),
+                leading: Icon(Icons.code, color: context.tavern.textMuted),
                 title: Text(AppLocalizations.of(context).patternFormat),
                 subtitle: Text(
                   AppLocalizations.of(context).patternFormatDescription,
@@ -257,7 +256,7 @@ class RegexSettingsScreen extends ConsumerWidget {
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -265,10 +264,10 @@ class RegexSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -304,7 +303,7 @@ class RegexSettingsScreen extends ConsumerWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       builder: (context) => _RegexScriptEditor(
         script: script,
         onSave: (newScript) {
@@ -420,7 +419,7 @@ class RegexSettingsScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppTheme.darkBackground,
+                color: context.tavern.background,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: SelectableText(
@@ -474,21 +473,22 @@ class _RegexScriptTile extends StatelessWidget {
     return ListTile(
       leading: Icon(
         Icons.find_replace,
-        color: script.disabled ? AppTheme.textMuted : AppTheme.accentColor,
+        color:
+            script.disabled ? context.tavern.textMuted : context.tavern.accent,
       ),
       title: Text(
         script.scriptName,
         style: TextStyle(
-          color: script.disabled ? AppTheme.textMuted : null,
+          color: script.disabled ? context.tavern.textMuted : null,
           decoration: script.disabled ? TextDecoration.lineThrough : null,
         ),
       ),
       subtitle: Text(
         script.findRegex,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontFamily: 'monospace',
-          color: AppTheme.textMuted,
+          color: context.tavern.textMuted,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
@@ -499,8 +499,9 @@ class _RegexScriptTile extends StatelessWidget {
           IconButton(
             icon: Icon(
               script.disabled ? Icons.toggle_off : Icons.toggle_on,
-              color:
-                  script.disabled ? AppTheme.textMuted : AppTheme.accentColor,
+              color: script.disabled
+                  ? context.tavern.textMuted
+                  : context.tavern.accent,
             ),
             onPressed: onToggle,
           ),
@@ -508,7 +509,7 @@ class _RegexScriptTile extends StatelessWidget {
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: onDelete,
           ),
-          const Icon(Icons.drag_handle, color: AppTheme.textMuted),
+          Icon(Icons.drag_handle, color: context.tavern.textMuted),
         ],
       ),
       onTap: onTap,
@@ -589,7 +590,7 @@ class _RegexScriptEditorState extends State<_RegexScriptEditor> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -852,11 +853,11 @@ class _RegexTestWidgetState extends ConsumerState<_RegexTestWidget> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: _result!.success
-                    ? AppTheme.accentColor.withValues(alpha: 0.1)
+                    ? context.tavern.accent.withValues(alpha: 0.1)
                     : Colors.red.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: _result!.success ? AppTheme.accentColor : Colors.red,
+                  color: _result!.success ? context.tavern.accent : Colors.red,
                 ),
               ),
               child: Column(
@@ -868,7 +869,7 @@ class _RegexTestWidgetState extends ConsumerState<_RegexTestWidget> {
                         _result!.success ? Icons.check : Icons.error,
                         size: 16,
                         color: _result!.success
-                            ? AppTheme.accentColor
+                            ? context.tavern.accent
                             : Colors.red,
                       ),
                       const SizedBox(width: 8),
@@ -878,7 +879,7 @@ class _RegexTestWidgetState extends ConsumerState<_RegexTestWidget> {
                             : 'Error',
                         style: TextStyle(
                           color: _result!.success
-                              ? AppTheme.accentColor
+                              ? context.tavern.accent
                               : Colors.red,
                           fontWeight: FontWeight.bold,
                         ),
@@ -902,7 +903,7 @@ class _RegexTestWidgetState extends ConsumerState<_RegexTestWidget> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkBackground,
+                        color: context.tavern.background,
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: SelectableText(

@@ -33,9 +33,9 @@ class RpgGamePanel extends ConsumerWidget {
       child: Container(
         key: const Key('rpg-game-panel'),
         height: panelHeight,
-        decoration: const BoxDecoration(
-          color: AppTheme.darkCard,
-          border: Border(top: BorderSide(color: AppTheme.darkDivider)),
+        decoration: BoxDecoration(
+          color: context.tavern.card,
+          border: Border(top: BorderSide(color: context.tavern.divider)),
         ),
         child: Material(
           color: Colors.transparent,
@@ -65,7 +65,7 @@ class RpgGamePanel extends ConsumerWidget {
                         overflow: TextOverflow.ellipsis,
                         textAlign: TextAlign.end,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textMuted,
+                              color: context.tavern.textMuted,
                             ),
                       ),
                     ),
@@ -589,7 +589,7 @@ class _SectionLine extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: AppTheme.textMuted),
+          Icon(icon, size: 18, color: context.tavern.textMuted),
           const SizedBox(width: 8),
           Expanded(
               child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis)),
@@ -620,9 +620,9 @@ class _EmptyView extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: AppTheme.textMuted),
+          Icon(icon, color: context.tavern.textMuted),
           const SizedBox(width: 8),
-          Text(label, style: const TextStyle(color: AppTheme.textMuted)),
+          Text(label, style: TextStyle(color: context.tavern.textMuted)),
         ],
       ),
     );

@@ -268,7 +268,7 @@ class _CharacterDetailContentState
                       children: character.tags
                           .map((tag) => Chip(
                                 label: Text(tag),
-                                backgroundColor: AppTheme.primaryColor
+                                backgroundColor: context.tavern.primary
                                     .withValues(alpha: 0.2),
                               ))
                           .toList(),
@@ -279,27 +279,27 @@ class _CharacterDetailContentState
                   Row(
                     children: [
                       if (character.creator.isNotEmpty) ...[
-                        const Icon(Icons.person_outline,
-                            size: 16, color: AppTheme.textMuted),
+                        Icon(Icons.person_outline,
+                            size: 16, color: context.tavern.textMuted),
                         const SizedBox(width: 4),
                         Text(
                           l10n.byCreator(character.creator),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.textMuted,
+                                    color: context.tavern.textMuted,
                                   ),
                         ),
                         const SizedBox(width: 16),
                       ],
                       if (character.version.isNotEmpty) ...[
-                        const Icon(Icons.update,
-                            size: 16, color: AppTheme.textMuted),
+                        Icon(Icons.update,
+                            size: 16, color: context.tavern.textMuted),
                         const SizedBox(width: 4),
                         Text(
                           l10n.versionLabel(character.version),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: AppTheme.textMuted,
+                                    color: context.tavern.textMuted,
                                   ),
                         ),
                       ],
@@ -465,12 +465,12 @@ class _CharacterDetailContentState
 
   Widget _defaultBackground() {
     return Container(
-      color: AppTheme.darkCard,
-      child: const Center(
+      color: context.tavern.card,
+      child: Center(
         child: Icon(
           Icons.person,
           size: 120,
-          color: AppTheme.textMuted,
+          color: context.tavern.textMuted,
         ),
       ),
     );
@@ -528,13 +528,13 @@ class _SectionCardState extends State<_SectionCard> {
             children: [
               Row(
                 children: [
-                  Icon(widget.icon, size: 20, color: AppTheme.primaryColor),
+                  Icon(widget.icon, size: 20, color: context.tavern.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       widget.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppTheme.primaryColor,
+                            color: context.tavern.primary,
                           ),
                     ),
                   ),
@@ -610,14 +610,14 @@ class _AlternateGreetingsCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.waving_hand,
-                    size: 20, color: AppTheme.primaryColor),
+                Icon(Icons.waving_hand,
+                    size: 20, color: context.tavern.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     l10n.alternateGreetingsCount(greetings.length),
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: AppTheme.primaryColor,
+                          color: context.tavern.primary,
                         ),
                   ),
                 ),
@@ -637,9 +637,9 @@ class _AlternateGreetingsCard extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkSurface,
+                        color: context.tavern.surface,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppTheme.darkDivider),
+                        border: Border.all(color: context.tavern.divider),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -653,7 +653,7 @@ class _AlternateGreetingsCard extends StatelessWidget {
                                       .textTheme
                                       .labelSmall
                                       ?.copyWith(
-                                        color: AppTheme.textMuted,
+                                        color: context.tavern.textMuted,
                                       ),
                                 ),
                               ),
@@ -718,8 +718,8 @@ class _CharacterBookCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.auto_stories,
-                    size: 20, color: AppTheme.primaryColor),
+                Icon(Icons.auto_stories,
+                    size: 20, color: context.tavern.primary),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -729,14 +729,14 @@ class _CharacterBookCard extends StatelessWidget {
                         characterBook.name ?? l10n.embeddedLorebook,
                         style:
                             Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  color: AppTheme.primaryColor,
+                                  color: context.tavern.primary,
                                 ),
                       ),
                       Text(
                         l10n.entriesEnabled(
                             enabledEntries, characterBook.entries.length),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.textMuted,
+                              color: context.tavern.textMuted,
                             ),
                       ),
                     ],
@@ -750,7 +750,7 @@ class _CharacterBookCard extends StatelessWidget {
               Text(
                 characterBook.description!,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.textMuted,
+                      color: context.tavern.textMuted,
                     ),
               ),
             ],
@@ -765,13 +765,13 @@ class _CharacterBookCard extends StatelessWidget {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         color: entry.enabled
-                            ? AppTheme.darkSurface
+                            ? context.tavern.surface
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: entry.enabled
-                              ? AppTheme.primaryColor.withValues(alpha: 0.3)
-                              : AppTheme.darkDivider,
+                              ? context.tavern.primary.withValues(alpha: 0.3)
+                              : context.tavern.divider,
                         ),
                       ),
                       child: Column(
@@ -786,7 +786,7 @@ class _CharacterBookCard extends StatelessWidget {
                                 size: 14,
                                 color: entry.enabled
                                     ? Colors.green
-                                    : AppTheme.textMuted,
+                                    : context.tavern.textMuted,
                               ),
                               const SizedBox(width: 6),
                               Expanded(
@@ -801,7 +801,7 @@ class _CharacterBookCard extends StatelessWidget {
                                         fontWeight: FontWeight.bold,
                                         color: entry.enabled
                                             ? null
-                                            : AppTheme.textMuted,
+                                            : context.tavern.textMuted,
                                       ),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
@@ -827,7 +827,7 @@ class _CharacterBookCard extends StatelessWidget {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: AppTheme.primaryColor
+                                          color: context.tavern.primary
                                               .withValues(alpha: 0.2),
                                           borderRadius:
                                               BorderRadius.circular(4),
@@ -849,7 +849,7 @@ class _CharacterBookCard extends StatelessWidget {
                                 : entry.content,
                             style:
                                 Theme.of(context).textTheme.bodySmall?.copyWith(
-                                      color: AppTheme.textMuted,
+                                      color: context.tavern.textMuted,
                                     ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -865,7 +865,7 @@ class _CharacterBookCard extends StatelessWidget {
                 child: Text(
                   l10n.andMoreEntries(characterBook.entries.length - 5),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                         fontStyle: FontStyle.italic,
                       ),
                 ),
@@ -899,13 +899,13 @@ class _CharacterFriendsList extends ConsumerWidget {
                   padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                   child: Row(
                     children: [
-                      const Icon(Icons.people_outline,
-                          size: 20, color: AppTheme.primaryColor),
+                      Icon(Icons.people_outline,
+                          size: 20, color: context.tavern.primary),
                       const SizedBox(width: 8),
                       Text(
                         l10n.momentsFriends,
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: AppTheme.primaryColor,
+                              color: context.tavern.primary,
                             ),
                       ),
                     ],
@@ -922,7 +922,7 @@ class _CharacterFriendsList extends ConsumerWidget {
                     child: Text(
                       l10n.momentsNoFriends,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textMuted,
+                            color: context.tavern.textMuted,
                           ),
                     ),
                   )
@@ -966,14 +966,14 @@ class _CharacterChatList extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
               child: Row(
                 children: [
-                  const Icon(Icons.forum_outlined,
-                      size: 20, color: AppTheme.primaryColor),
+                  Icon(Icons.forum_outlined,
+                      size: 20, color: context.tavern.primary),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       l10n.chats,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppTheme.primaryColor,
+                            color: context.tavern.primary,
                           ),
                     ),
                   ),
@@ -1001,7 +1001,7 @@ class _CharacterChatList extends ConsumerWidget {
                     child: Text(
                       l10n.noChatsYet,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.textMuted,
+                            color: context.tavern.textMuted,
                           ),
                     ),
                   );

@@ -6332,5 +6332,41 @@
   "useLocalAiOnly": "Use local AI only",
   "aiDataSharingSettingsTitle": "Remote AI data sharing",
   "aiDataSharingAllowedDescription": "Allowed for providers and endpoints you configure",
-  "aiDataSharingLocalOnlyDescription": "Blocked; local AI endpoints remain available"
+  "aiDataSharingLocalOnlyDescription": "Blocked; local AI endpoints remain available",
+  "jumpToLatest": "Jump to latest",
+  "@jumpToLatest": {
+    "description": "Button that scrolls the chat to the newest message"
+  },
+  "confirmBeforeDeleteTitle": "Confirm before deleting",
+  "@confirmBeforeDeleteTitle": {
+    "description": "Settings toggle title for delete confirmations"
+  },
+  "confirmBeforeDeleteSubtitle": "Ask before deleting chats and messages",
+  "@confirmBeforeDeleteSubtitle": {
+    "description": "Settings toggle subtitle for delete confirmations"
+  },
+  "multimedia": "Multimedia",
+  "@multimedia": {
+    "description": "Settings section header for TTS, STT, images"
+  },
+  "customThemes": "Custom Themes",
+  "@customThemes": {
+    "description": "Section header for user-created themes"
+  },
+  "darkThemes": "Dark Themes",
+  "@darkThemes": {
+    "description": "Section header for built-in dark themes"
+  },
+  "lightThemes": "Light Themes",
+  "@lightThemes": {
+    "description": "Section header for built-in light themes"
+  },
+  "followSystemTheme": "Follow system appearance",
+  "@followSystemTheme": {
+    "description": "Toggle to switch light/dark theme with the OS"
+  },
+  "followSystemThemeSubtitle": "Pick one light and one dark theme; the app switches automatically",
+  "@followSystemThemeSubtitle": {
+    "description": "Subtitle for follow system appearance toggle"
+  }
 }

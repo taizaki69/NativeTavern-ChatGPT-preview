@@ -135,16 +135,16 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                       width: 200,
                       child: LinearProgressIndicator(
                         value: cloudOperationState.progress,
-                        backgroundColor: AppTheme.darkCard,
-                        valueColor: const AlwaysStoppedAnimation<Color>(
-                            AppTheme.accentColor),
+                        backgroundColor: context.tavern.card,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                            context.tavern.accent),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       '${(cloudOperationState.progress! * 100).toInt()}%',
-                      style: const TextStyle(
-                          color: AppTheme.textMuted, fontSize: 12),
+                      style: TextStyle(
+                          color: context.tavern.textMuted, fontSize: 12),
                     ),
                   ],
                 ],
@@ -213,8 +213,8 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                     ),
                     if (localSettings.lastAutoBackup != null)
                       ListTile(
-                        leading: const Icon(Icons.access_time,
-                            color: AppTheme.textMuted),
+                        leading: Icon(Icons.access_time,
+                            color: context.tavern.textMuted),
                         title: Text(l10n.lastAutoBackup),
                         subtitle: Text(_formatDateTime(
                             context, localSettings.lastAutoBackup!)),
@@ -306,8 +306,8 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                               child: Center(
                                 child: Text(
                                   l10n.noCloudBackups,
-                                  style: const TextStyle(
-                                      color: AppTheme.textMuted),
+                                  style: TextStyle(
+                                      color: context.tavern.textMuted),
                                 ),
                               ),
                             );
@@ -357,8 +357,8 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                         data: (available) {
                           if (!available) {
                             return ListTile(
-                              leading: const Icon(Icons.cloud_off,
-                                  color: AppTheme.textMuted),
+                              leading: Icon(Icons.cloud_off,
+                                  color: context.tavern.textMuted),
                               title: Text(l10n.iCloudNotAvailable),
                               subtitle:
                                   Text(l10n.iCloudNotAvailableDescription),
@@ -417,8 +417,8 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                                       child: Center(
                                         child: Text(
                                           l10n.noCloudBackups,
-                                          style: const TextStyle(
-                                              color: AppTheme.textMuted),
+                                          style: TextStyle(
+                                              color: context.tavern.textMuted),
                                         ),
                                       ),
                                     );
@@ -455,8 +455,8 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                   title: l10n.storage,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.storage,
-                          color: AppTheme.accentColor),
+                      leading:
+                          Icon(Icons.storage, color: context.tavern.accent),
                       title: Text(l10n.totalBackupSize),
                       subtitle: totalSizeAsync.when(
                         loading: () => Text(l10n.calculating),
@@ -578,13 +578,14 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                             child: Center(
                               child: Column(
                                 children: [
-                                  const Icon(Icons.backup,
-                                      size: 48, color: AppTheme.textMuted),
+                                  Icon(Icons.backup,
+                                      size: 48,
+                                      color: context.tavern.textMuted),
                                   const SizedBox(height: 16),
                                   Text(
                                     l10n.noChatBackups,
-                                    style: const TextStyle(
-                                        color: AppTheme.textMuted),
+                                    style: TextStyle(
+                                        color: context.tavern.textMuted),
                                   ),
                                 ],
                               ),
@@ -642,13 +643,14 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                             child: Center(
                               child: Column(
                                 children: [
-                                  const Icon(Icons.backup,
-                                      size: 48, color: AppTheme.textMuted),
+                                  Icon(Icons.backup,
+                                      size: 48,
+                                      color: context.tavern.textMuted),
                                   const SizedBox(height: 16),
                                   Text(
                                     l10n.noFullBackups,
-                                    style: const TextStyle(
-                                        color: AppTheme.textMuted),
+                                    style: TextStyle(
+                                        color: context.tavern.textMuted),
                                   ),
                                 ],
                               ),
@@ -712,14 +714,14 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                   title: l10n.information,
                   children: [
                     ListTile(
-                      leading: const Icon(Icons.info_outline,
-                          color: AppTheme.accentColor),
+                      leading: Icon(Icons.info_outline,
+                          color: context.tavern.accent),
                       title: Text(l10n.aboutBackups),
                       subtitle: Text(l10n.aboutBackupsDescription),
                     ),
                     ListTile(
                       leading:
-                          const Icon(Icons.folder, color: AppTheme.textMuted),
+                          Icon(Icons.folder, color: context.tavern.textMuted),
                       title: Text(l10n.backupLocation),
                       subtitle: const Text('Documents/NativeTavern/backups/'),
                     ),
@@ -774,7 +776,7 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -782,10 +784,10 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -920,7 +922,7 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true,
-        backgroundColor: AppTheme.darkCard,
+        backgroundColor: context.tavern.card,
         builder: (context) => DraggableScrollableSheet(
           initialChildSize: 0.7,
           minChildSize: 0.5,
@@ -933,7 +935,7 @@ class _BackupSettingsScreenState extends ConsumerState<BackupSettingsScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.textMuted,
+                  color: context.tavern.textMuted,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -1233,7 +1235,7 @@ class _BackupTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${backup.formattedSize} • ${backup.formattedDate}',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+        style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1285,7 +1287,7 @@ class _CloudBackupTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${CloudBackupService.instance.formatFileSize(backup.size)} • ${_formatDate(backup.createdAt)}',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+        style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -1344,7 +1346,7 @@ class _GoogleDriveBackupTile extends StatelessWidget {
       ),
       subtitle: Text(
         '${CloudBackupService.instance.formatFileSize(backup.size)} • ${_formatDate(backup.createdAt)}',
-        style: const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+        style: TextStyle(fontSize: 12, color: context.tavern.textMuted),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,

@@ -38,6 +38,7 @@ class SpriteSettingsScreen extends ConsumerWidget {
         children: [
           // Enable/Disable toggle
           _buildSection(
+            context,
             title: l10n.general,
             children: [
               SwitchListTile(
@@ -55,6 +56,7 @@ class SpriteSettingsScreen extends ConsumerWidget {
 
           // Display settings
           _buildSection(
+            context,
             title: l10n.display,
             children: [
               // Size slider
@@ -76,7 +78,7 @@ class SpriteSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${settings.size.round()}px',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
 
@@ -123,7 +125,7 @@ class SpriteSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${(settings.opacity * 100).round()}%',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
             ],
@@ -133,6 +135,7 @@ class SpriteSettingsScreen extends ConsumerWidget {
 
           // Animation settings
           _buildSection(
+            context,
             title: l10n.animation,
             children: [
               SwitchListTile(
@@ -165,7 +168,7 @@ class SpriteSettingsScreen extends ConsumerWidget {
                 ),
                 trailing: Text(
                   '${settings.transitionDurationMs}ms',
-                  style: const TextStyle(color: AppTheme.textSecondary),
+                  style: TextStyle(color: context.tavern.textSecondary),
                 ),
               ),
               SwitchListTile(
@@ -187,11 +190,11 @@ class SpriteSettingsScreen extends ConsumerWidget {
 
           // Emotion detection info
           _buildSection(
+            context,
             title: l10n.emotionDetection,
             children: [
               ListTile(
-                leading:
-                    const Icon(Icons.info_outline, color: AppTheme.accentColor),
+                leading: Icon(Icons.info_outline, color: context.tavern.accent),
                 title: Text(l10n.howItWorks),
                 subtitle: Text(
                   l10n.spriteEmotionDetectionDescription,
@@ -207,9 +210,9 @@ class SpriteSettingsScreen extends ConsumerWidget {
                     subtitle: Text(
                       emotion.keywords.take(5).join(', ') +
                           (emotion.keywords.length > 5 ? '...' : ''),
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 12,
-                        color: AppTheme.textMuted,
+                        color: context.tavern.textMuted,
                       ),
                     ),
                   );
@@ -222,12 +225,13 @@ class SpriteSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSection({
+  Widget _buildSection(
+    BuildContext context, {
     required String title,
     required List<Widget> children,
   }) {
     return Card(
-      color: AppTheme.darkCard,
+      color: context.tavern.card,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -235,10 +239,10 @@ class SpriteSettingsScreen extends ConsumerWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
             child: Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.accentColor,
+                color: context.tavern.accent,
               ),
             ),
           ),
@@ -347,12 +351,12 @@ class _CharacterSpritesScreenState
       children: [
         // Stats card
         Card(
-          color: AppTheme.darkCard,
+          color: context.tavern.card,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                const Icon(Icons.image, color: AppTheme.accentColor),
+                Icon(Icons.image, color: context.tavern.accent),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -368,9 +372,9 @@ class _CharacterSpritesScreenState
                       if (pack.defaultEmotion != null)
                         Text(
                           l10n.defaultEmotion(pack.defaultEmotion!),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.textMuted,
+                            color: context.tavern.textMuted,
                           ),
                         ),
                     ],
@@ -387,10 +391,10 @@ class _CharacterSpritesScreenState
         if (pack.hasSprites) ...[
           Text(
             l10n.sprites,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppTheme.textSecondary,
+              color: context.tavern.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -411,22 +415,22 @@ class _CharacterSpritesScreenState
                 Icon(
                   Icons.add_photo_alternate,
                   size: 64,
-                  color: AppTheme.textMuted.withValues(alpha: 0.5),
+                  color: context.tavern.textMuted.withValues(alpha: 0.5),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   l10n.noSpritesYet,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   l10n.addExpressionImages,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: AppTheme.textMuted,
+                    color: context.tavern.textMuted,
                   ),
                 ),
               ],
@@ -480,7 +484,7 @@ class _CharacterSpritesScreenState
                 subtitle: Text(
                   emotion.keywords.take(3).join(', '),
                   style:
-                      const TextStyle(fontSize: 12, color: AppTheme.textMuted),
+                      TextStyle(fontSize: 12, color: context.tavern.textMuted),
                 ),
                 onTap: () => Navigator.pop(context, emotion.id),
               );
@@ -501,7 +505,7 @@ class _CharacterSpritesScreenState
     final l10n = AppLocalizations.of(context);
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkCard,
+      backgroundColor: context.tavern.card,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -514,7 +518,7 @@ class _CharacterSpritesScreenState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.textMuted,
+                color: context.tavern.textMuted,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -531,7 +535,7 @@ class _CharacterSpritesScreenState
             const Divider(),
 
             ListTile(
-              leading: const Icon(Icons.star, color: AppTheme.accentColor),
+              leading: Icon(Icons.star, color: context.tavern.accent),
               title: Text(l10n.setAsDefault),
               onTap: () {
                 Navigator.pop(context);
@@ -655,7 +659,7 @@ class _CharacterSpritesScreenState
             const SizedBox(height: 12),
             Text(
               l10n.supportedFormatsSprites,
-              style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+              style: TextStyle(color: context.tavern.textMuted, fontSize: 12),
             ),
           ],
         ),

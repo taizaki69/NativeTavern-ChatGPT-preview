@@ -93,7 +93,7 @@ class CopyableListTile extends StatelessWidget {
           ? Text(
               subtitle!,
               style: TextStyle(
-                color: AppTheme.textSecondary,
+                color: context.tavern.textSecondary,
               ),
             )
           : null,

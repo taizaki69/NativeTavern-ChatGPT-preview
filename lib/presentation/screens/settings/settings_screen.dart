@@ -31,6 +31,7 @@ class SettingsScreen extends ConsumerWidget {
         title: Text(l10n.settings),
       ),
       body: ListView(
+        padding: const EdgeInsets.only(bottom: 32),
         children: [
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -60,220 +61,266 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const Divider(height: 16),
-          _buildSectionHeader(context, l10n.user),
-          _PersonaTile(),
-          ListTile(
-            leading: const Icon(Icons.backup),
-            title: Text(l10n.cloudBackup),
-            subtitle: Text(l10n.cloudBackupSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.cloudBackupSettings),
-          ),
-          const Divider(height: 32),
-          _buildSectionHeader(context, l10n.chats),
-          ListTile(
-            leading: const Icon(Icons.quickreply),
-            title: Text(l10n.quickReplies),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.quickReplies),
-          ),
-          ListTile(
-            leading: const Icon(Icons.wallpaper),
-            title: Text(l10n.backgrounds),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.backgroundSettings),
-          ),
-          ListTile(
-            key: const Key('memory-inbox-settings-tile'),
-            leading: const Icon(Icons.memory),
-            title: Text(l10n.memoryInbox),
-            subtitle: Text(l10n.memoryInboxSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.memoryInbox),
-          ),
-          const Divider(height: 32),
-          _buildSectionHeader(context, l10n.playHub),
-          const _MomentsEnabledTile(),
-          const _StoryEnabledTile(),
-          if (kRpgProductUiEnabled)
-            ListTile(
-              key: const Key('rpg-scenario-editor-settings-tile'),
-              leading: const Icon(Icons.casino_outlined),
-              title: Text(l10n.rpgScenarioEditor),
-              subtitle: Text(l10n.rpgScenarioEditorSubtitle),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.rpgScenarioEditor),
-            ),
-          const Divider(height: 32),
-          _buildSectionHeader(context, 'Multimedia'),
-          ListTile(
-            leading: const Icon(Icons.record_voice_over),
-            title: Text(l10n.tts),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.ttsSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.mic),
-            title: Text(l10n.stt),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.sttSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.translate),
-            title: Text(l10n.translation),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.translationSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.image),
-            title: Text(l10n.imageGeneration),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.imageGenSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.emoji_emotions),
-            title: Text(l10n.sprites),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.spriteSettings),
-          ),
-          const Divider(height: 32),
-          _buildSectionHeader(context, l10n.advanced),
-          ListTile(
-            key: const Key('capability-diagnostics-settings-tile'),
-            leading: const Icon(Icons.health_and_safety_outlined),
-            title: Text(l10n.capabilityCheck),
-            subtitle: Text(l10n.capabilityCheckSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.capabilityDiagnostics),
-          ),
-          ListTile(
-            key: const Key('mcp-settings-tile'),
-            leading: const Icon(Icons.extension_outlined),
-            title: Text(l10n.mcpServers),
-            subtitle: Text(l10n.mcpServersSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.mcpSettings),
-          ),
-          ListTile(
-            key: const Key('tool-calling-settings-tile'),
-            leading: const Icon(Icons.build_outlined),
-            title: Text(l10n.toolCalling),
-            subtitle: Text(l10n.toolCallingSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.toolCallingSettings),
-          ),
-          ListTile(
-            key: const Key('storage-management-settings-tile'),
-            leading: const Icon(Icons.storage_outlined),
-            title: Text(l10n.storageManagement),
-            subtitle: Text(l10n.storageManagementSubtitle),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.storageManagement),
-          ),
-          ListTile(
-            leading: const Icon(Icons.find_replace),
-            title: Text(l10n.regex),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.regexSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.data_object),
-            title: Text(l10n.variables),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.variablesSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.tune),
-            title: Text(l10n.logitBias),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.logitBiasSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.linear_scale),
-            title: Text(l10n.cfgScale),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.cfgScaleSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.token),
-            title: Text(l10n.tokenizer),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.tokenizerSettings),
-          ),
-          ListTile(
-            leading: const Icon(Icons.storage),
-            title: Text(l10n.vectorStorage),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.vectorStorageSettings),
-          ),
-          const Divider(height: 32),
-          _buildSectionHeader(context, l10n.settings),
-          const _LanguageTile(),
-          ListTile(
-            leading: const Icon(Icons.palette),
-            title: Text(l10n.theme),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.themeSettings),
-          ),
-          const _ConfirmDeleteTile(),
-          const _AutoSaveTile(),
-          const AiDataSharingSettingsTile(),
-          const _DebugLogTile(),
-          ListTile(
-            leading: const Icon(Icons.analytics),
-            title: Text(l10n.statistics),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.statistics),
-          ),
-          const Divider(height: 32),
-          _buildSectionHeader(context, l10n.about),
-          ListTile(
-            leading: const Icon(Icons.info_outline),
-            title: Text(l10n.version),
-            subtitle: Text(
-              packageInfo.when(
-                data: (info) => '${info.version}+${info.buildNumber}',
-                loading: () => l10n.loading,
-                error: (_, __) => l10n.error,
+          _SettingsSection(
+            title: l10n.user,
+            children: [
+              _PersonaTile(),
+              ListTile(
+                leading: const Icon(Icons.backup),
+                title: Text(l10n.cloudBackup),
+                subtitle: Text(l10n.cloudBackupSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.cloudBackupSettings),
               ),
-            ),
-            onLongPress: () {
-              final info = packageInfo.valueOrNull;
-              if (info == null) return;
-              final version = '${info.version}+${info.buildNumber}';
-              Clipboard.setData(ClipboardData(text: version));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('${l10n.copiedToClipboard}: $version'),
-                  duration: const Duration(seconds: 2),
+            ],
+          ),
+          _SettingsSection(
+            title: l10n.chats,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.quickreply),
+                title: Text(l10n.quickReplies),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.quickReplies),
+              ),
+              ListTile(
+                leading: const Icon(Icons.wallpaper),
+                title: Text(l10n.backgrounds),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.backgroundSettings),
+              ),
+              ListTile(
+                key: const Key('memory-inbox-settings-tile'),
+                leading: const Icon(Icons.memory),
+                title: Text(l10n.memoryInbox),
+                subtitle: Text(l10n.memoryInboxSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.memoryInbox),
+              ),
+            ],
+          ),
+          _SettingsSection(
+            title: l10n.playHub,
+            children: [
+              const _MomentsEnabledTile(),
+              const _StoryEnabledTile(),
+              if (kRpgProductUiEnabled)
+                ListTile(
+                  key: const Key('rpg-scenario-editor-settings-tile'),
+                  leading: const Icon(Icons.casino_outlined),
+                  title: Text(l10n.rpgScenarioEditor),
+                  subtitle: Text(l10n.rpgScenarioEditorSubtitle),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.rpgScenarioEditor),
                 ),
-              );
-            },
+            ],
           ),
-          ListTile(
-            leading: const Icon(Icons.description),
-            title: Text(l10n.licenses),
-            onTap: () {
-              showLicensePage(context: context);
-            },
+          _SettingsSection(
+            title: l10n.multimedia,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.record_voice_over),
+                title: Text(l10n.tts),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.ttsSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.mic),
+                title: Text(l10n.stt),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.sttSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.translate),
+                title: Text(l10n.translation),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.translationSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.image),
+                title: Text(l10n.imageGeneration),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.imageGenSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.emoji_emotions),
+                title: Text(l10n.sprites),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.spriteSettings),
+              ),
+            ],
           ),
-          const PrivacyPolicyTile(),
-          const SizedBox(height: 32),
+          _SettingsSection(
+            title: l10n.advanced,
+            children: [
+              ListTile(
+                key: const Key('capability-diagnostics-settings-tile'),
+                leading: const Icon(Icons.health_and_safety_outlined),
+                title: Text(l10n.capabilityCheck),
+                subtitle: Text(l10n.capabilityCheckSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.capabilityDiagnostics),
+              ),
+              ListTile(
+                key: const Key('mcp-settings-tile'),
+                leading: const Icon(Icons.extension_outlined),
+                title: Text(l10n.mcpServers),
+                subtitle: Text(l10n.mcpServersSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.mcpSettings),
+              ),
+              ListTile(
+                key: const Key('tool-calling-settings-tile'),
+                leading: const Icon(Icons.build_outlined),
+                title: Text(l10n.toolCalling),
+                subtitle: Text(l10n.toolCallingSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.toolCallingSettings),
+              ),
+              ListTile(
+                key: const Key('storage-management-settings-tile'),
+                leading: const Icon(Icons.storage_outlined),
+                title: Text(l10n.storageManagement),
+                subtitle: Text(l10n.storageManagementSubtitle),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.storageManagement),
+              ),
+              ListTile(
+                leading: const Icon(Icons.find_replace),
+                title: Text(l10n.regex),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.regexSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.data_object),
+                title: Text(l10n.variables),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.variablesSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.tune),
+                title: Text(l10n.logitBias),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.logitBiasSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.linear_scale),
+                title: Text(l10n.cfgScale),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.cfgScaleSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.token),
+                title: Text(l10n.tokenizer),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.tokenizerSettings),
+              ),
+              ListTile(
+                leading: const Icon(Icons.storage),
+                title: Text(l10n.vectorStorage),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.vectorStorageSettings),
+              ),
+            ],
+          ),
+          _SettingsSection(
+            title: l10n.settings,
+            children: [
+              const _LanguageTile(),
+              ListTile(
+                leading: const Icon(Icons.palette),
+                title: Text(l10n.theme),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.themeSettings),
+              ),
+              const _ConfirmDeleteTile(),
+              const AiDataSharingSettingsTile(),
+              const _DebugLogTile(),
+              ListTile(
+                leading: const Icon(Icons.analytics),
+                title: Text(l10n.statistics),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.statistics),
+              ),
+            ],
+          ),
+          _SettingsSection(
+            title: l10n.about,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: Text(l10n.version),
+                subtitle: Text(
+                  packageInfo.when(
+                    data: (info) => '${info.version}+${info.buildNumber}',
+                    loading: () => l10n.loading,
+                    error: (_, __) => l10n.error,
+                  ),
+                ),
+                onLongPress: () {
+                  final info = packageInfo.valueOrNull;
+                  if (info == null) return;
+                  final version = '${info.version}+${info.buildNumber}';
+                  Clipboard.setData(ClipboardData(text: version));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${l10n.copiedToClipboard}: $version'),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.description),
+                title: Text(l10n.licenses),
+                onTap: () {
+                  showLicensePage(context: context);
+                },
+              ),
+              const PrivacyPolicyTile(),
+            ],
+          ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
+/// A titled group of settings rendered as a rounded card.
+class _SettingsSection extends StatelessWidget {
+  const _SettingsSection({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: AppTheme.accentColor,
-              fontWeight: FontWeight.bold,
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: Text(
+              title,
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: context.tavern.accent,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+              ),
             ),
+          ),
+          Card(
+            margin: EdgeInsets.zero,
+            clipBehavior: Clip.antiAlias,
+            child: ListTileTheme.merge(
+              shape: const RoundedRectangleBorder(),
+              child: Column(children: children),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -319,8 +366,9 @@ class _ConfirmDeleteTile extends ConsumerWidget {
     final settings = ref.watch(appSettingsProvider);
 
     return SwitchListTile(
-      secondary: const Icon(Icons.delete_forever),
-      title: Text(l10n.delete),
+      secondary: const Icon(Icons.delete_sweep_outlined),
+      title: Text(l10n.confirmBeforeDeleteTitle),
+      subtitle: Text(l10n.confirmBeforeDeleteSubtitle),
       value: settings.confirmBeforeDelete,
       onChanged: (value) {
         ref.read(appSettingsProvider.notifier).updateConfirmBeforeDelete(value);
@@ -364,25 +412,6 @@ class _StoryEnabledTile extends ConsumerWidget {
       value: settings.storyEnabled,
       onChanged: (value) {
         ref.read(appSettingsProvider.notifier).updateStoryEnabled(value);
-      },
-    );
-  }
-}
-
-class _AutoSaveTile extends ConsumerWidget {
-  const _AutoSaveTile();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final settings = ref.watch(appSettingsProvider);
-
-    return SwitchListTile(
-      secondary: const Icon(Icons.save),
-      title: Text(l10n.save),
-      value: settings.autoSaveChats,
-      onChanged: (value) {
-        ref.read(appSettingsProvider.notifier).updateAutoSaveChats(value);
       },
     );
   }

@@ -6545,4 +6545,33 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aiDataSharingLocalOnlyDescription => '차단됨. 로컬 AI는 계속 사용할 수 있습니다';
+
+  @override
+  String get jumpToLatest => 'Jump to latest';
+
+  @override
+  String get confirmBeforeDeleteTitle => 'Confirm before deleting';
+
+  @override
+  String get confirmBeforeDeleteSubtitle =>
+      'Ask before deleting chats and messages';
+
+  @override
+  String get multimedia => 'Multimedia';
+
+  @override
+  String get customThemes => 'Custom Themes';
+
+  @override
+  String get darkThemes => 'Dark Themes';
+
+  @override
+  String get lightThemes => 'Light Themes';
+
+  @override
+  String get followSystemTheme => 'Follow system appearance';
+
+  @override
+  String get followSystemThemeSubtitle =>
+      'Pick one light and one dark theme; the app switches automatically';
 }
