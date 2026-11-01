@@ -427,8 +427,7 @@ class _WorldInfoCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      AppLocalizations.of(context)!
-                          .entriesCount(entryCount),
+                      AppLocalizations.of(context)!.entriesCount(entryCount),
                       style: TextStyle(
                         color: context.tavern.textSecondary,
                         fontSize: 14,
@@ -853,29 +852,31 @@ class _WorldInfoEntriesScreenState
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _worldInfo.entries.isEmpty
-          ? _buildEmptyState(context)
-          : ReorderableListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _worldInfo.entries.length,
-              onReorder: (oldIndex, newIndex) {
-                // TODO: Implement reordering
-              },
-              itemBuilder: (context, index) {
-                final entry = _worldInfo.entries[index];
-                return _WorldInfoEntryCard(
-                  key: ValueKey(entry.id),
-                  entry: entry,
-                  onTap: () => _showEntryDialog(context, ref, entry),
-                  onDelete: () =>
-                      _showDeleteEntryConfirmation(context, ref, entry),
-                  onToggle: (enabled) {
-                    ref.read(worldInfoNotifierProvider.notifier).updateEntry(
-                          entry.copyWith(enabled: enabled),
-                        );
+              ? _buildEmptyState(context)
+              : ReorderableListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _worldInfo.entries.length,
+                  onReorder: (oldIndex, newIndex) {
+                    // TODO: Implement reordering
                   },
-                );
-              },
-            ),
+                  itemBuilder: (context, index) {
+                    final entry = _worldInfo.entries[index];
+                    return _WorldInfoEntryCard(
+                      key: ValueKey(entry.id),
+                      entry: entry,
+                      onTap: () => _showEntryDialog(context, ref, entry),
+                      onDelete: () =>
+                          _showDeleteEntryConfirmation(context, ref, entry),
+                      onToggle: (enabled) {
+                        ref
+                            .read(worldInfoNotifierProvider.notifier)
+                            .updateEntry(
+                              entry.copyWith(enabled: enabled),
+                            );
+                      },
+                    );
+                  },
+                ),
     );
   }
 

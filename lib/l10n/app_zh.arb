@@ -1929,5 +1929,8 @@
   "darkThemes": "深色主题",
   "lightThemes": "浅色主题",
   "followSystemTheme": "跟随系统外观",
-  "followSystemThemeSubtitle": "选择一个浅色和一个深色主题，应用将自动切换"
+  "followSystemThemeSubtitle": "选择一个浅色和一个深色主题，应用将自动切换",
+  "draft": "草稿",
+  "hapticFeedback": "触感反馈",
+  "hapticFeedbackSubtitle": "发送、切换回复和长按时轻微振动"
 }

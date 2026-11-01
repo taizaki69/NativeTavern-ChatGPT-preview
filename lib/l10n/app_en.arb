@@ -6368,5 +6368,17 @@
   "followSystemThemeSubtitle": "Pick one light and one dark theme; the app switches automatically",
   "@followSystemThemeSubtitle": {
     "description": "Subtitle for follow system appearance toggle"
+  },
+  "draft": "Draft",
+  "@draft": {
+    "description": "Label before an unsent message preview in the chat list"
+  },
+  "hapticFeedback": "Haptic feedback",
+  "@hapticFeedback": {
+    "description": "Settings toggle title for vibration feedback"
+  },
+  "hapticFeedbackSubtitle": "Light vibration when sending, swiping and long-pressing",
+  "@hapticFeedbackSubtitle": {
+    "description": "Settings toggle subtitle for vibration feedback"
   }
 }

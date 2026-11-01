@@ -6344,6 +6344,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get followSystemThemeSubtitle => '选择一个浅色和一个深色主题，应用将自动切换';
+
+  @override
+  String get draft => '草稿';
+
+  @override
+  String get hapticFeedback => '触感反馈';
+
+  @override
+  String get hapticFeedbackSubtitle => '发送、切换回复和长按时轻微振动';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -12678,4 +12687,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get followSystemThemeSubtitle => '選擇一個淺色與一個深色主題，App 會自動切換';
+
+  @override
+  String get draft => '草稿';
+
+  @override
+  String get hapticFeedback => '觸覺回饋';
+
+  @override
+  String get hapticFeedbackSubtitle => '傳送、切換回覆和長按時輕微震動';
 }

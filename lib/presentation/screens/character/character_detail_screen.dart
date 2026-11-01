@@ -10,6 +10,7 @@ import 'package:native_tavern/presentation/providers/chat_providers.dart';
 import 'package:native_tavern/presentation/providers/moment_providers.dart';
 import 'package:native_tavern/presentation/theme/app_theme.dart';
 import 'package:native_tavern/presentation/widgets/common/character_avatar_image.dart';
+import 'package:native_tavern/presentation/widgets/common/character_placeholder_avatar.dart';
 import 'package:native_tavern/presentation/widgets/common/adaptive_popup_menu.dart';
 
 /// Character detail screen
@@ -209,10 +210,22 @@ class _CharacterDetailContentState
           SliverAppBar(
             expandedHeight: 300,
             pinned: true,
+            // The header always sits on a photo or a dark identity gradient,
+            // so keep its title and icons white on every theme.
+            foregroundColor: Colors.white,
+            backgroundColor: Color.lerp(
+              CharacterPlaceholderStyle.of(
+                id: character.id,
+                name: character.name,
+              ).color,
+              Colors.black,
+              0.55,
+            ),
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 character.name,
                 style: const TextStyle(
+                  color: Colors.white,
                   shadows: [Shadow(color: Colors.black, blurRadius: 4)],
                 ),
               ),
@@ -442,7 +455,7 @@ class _CharacterDetailContentState
           CharacterAvatarImage(
             imagePath: character.assets!.avatarPath!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _defaultBackground(),
+            errorBuilder: (_, __, ___) => _defaultBackground(character),
           ),
           // Gradient overlay for better text readability
           Container(
@@ -460,18 +473,42 @@ class _CharacterDetailContentState
         ],
       );
     }
-    return _defaultBackground();
+    return _defaultBackground(character);
   }
 
-  Widget _defaultBackground() {
-    return Container(
-      color: context.tavern.card,
-      child: Center(
-        child: Icon(
-          Icons.person,
-          size: 120,
-          color: context.tavern.textMuted,
+  /// Identity-colored header for characters without an avatar image.
+  Widget _defaultBackground(Character character) {
+    final style = CharacterPlaceholderStyle.of(
+      id: character.id,
+      name: character.name,
+    );
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(style.color, Colors.white, 0.1)!,
+            Color.lerp(style.color, Colors.black, 0.45)!,
+          ],
         ),
+      ),
+      child: Center(
+        child: style.icon != null
+            ? Icon(
+                style.icon,
+                size: 120,
+                color: Colors.white.withValues(alpha: 0.3),
+              )
+            : Text(
+                style.initial,
+                style: TextStyle(
+                  fontSize: 140,
+                  fontWeight: FontWeight.w800,
+                  height: 1,
+                  color: Colors.white.withValues(alpha: 0.22),
+                ),
+              ),
       ),
     );
   }
@@ -904,9 +941,10 @@ class _CharacterFriendsList extends ConsumerWidget {
                       const SizedBox(width: 8),
                       Text(
                         l10n.momentsFriends,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: context.tavern.primary,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  color: context.tavern.primary,
+                                ),
                       ),
                     ],
                   ),

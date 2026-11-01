@@ -6596,4 +6596,14 @@ class AppLocalizationsFr extends AppLocalizations {
   @override
   String get followSystemThemeSubtitle =>
       'Pick one light and one dark theme; the app switches automatically';
+
+  @override
+  String get draft => 'Draft';
+
+  @override
+  String get hapticFeedback => 'Haptic feedback';
+
+  @override
+  String get hapticFeedbackSubtitle =>
+      'Light vibration when sending, swiping and long-pressing';
 }

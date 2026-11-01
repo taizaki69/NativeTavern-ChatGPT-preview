@@ -2,7 +2,7 @@
 
 Prepared 2026-10-09. Upstream base: `miaoxworld/NativeTavern` commit
 `6dbd1ee042e994966db85693594ab61e4f4ec441`, version `0.1.17+41`.
-This personal source modification uses version `0.1.17+46`.
+This personal source modification uses version `0.1.17+47`.
 It is not an upstream, OpenAI, App Store, or TestFlight release.
 
 ## What this adds
@@ -33,7 +33,18 @@ Sources:
 - [Preview limits](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations)
 - [Errors and recovery](https://developers.openai.com/siwc/token-sharing-open-source/errors-and-recovery)
 
-## Provider caching in build 46
+## Interface refresh in build 47
+
+Build 47 keeps the ChatGPT provider, transport and provider caching from
+build 46 and refreshes the interface. All screens follow the selected theme,
+including light themes; **Settings → Theme → Follow system appearance** pairs
+one light and one dark theme with iOS dark mode. Unsent text is kept per chat
+and shown as **Draft** in the chat list, long chats get a **jump to latest**
+button, chats can be swiped left to delete, and **Haptic feedback** can be
+turned off in Settings. **Confirm before deleting** now controls chat and
+message deletion. Back up data before installing, as with every build.
+
+## Provider caching (since build 46)
 
 Build 46 expands caching across all 14 provider choices, using only supported
 model/protocol controls. Keep your current connection and model. AI Configuration
@@ -47,6 +58,11 @@ Completed replies show reported numeric cache reads/writes when supplied.
 See [the provider guide](provider-prompt-caching.md) for support, costs,
 retention, limitations and opt-outs. No paid cache resource or warm-up request
 is created. Live hits and savings remain unverified.
+
+## Download build 47
+
+**Build 47 is being compiled. Until its unsigned IPA has been downloaded and
+verified, use build 46 below.**
 
 ## Download build 46
 
@@ -187,8 +203,8 @@ the entire iOS project with `flutter create` over this checkout.
 Expected output **only if the build actually succeeds**:
 
 ~~~
-release/NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa
-release/NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa.sha256
+release/NativeTavern_ChatGPT_v0.1.17+47_unsigned.ipa
+release/NativeTavern_ChatGPT_v0.1.17+47_unsigned.ipa.sha256
 ~~~
 
 An unsigned IPA contains a real device application, but must be locally

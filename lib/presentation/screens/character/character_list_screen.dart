@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +9,7 @@ import 'package:native_tavern/presentation/providers/chat_providers.dart';
 import 'package:native_tavern/presentation/router/app_router.dart';
 import 'package:native_tavern/presentation/theme/app_theme.dart';
 import 'package:native_tavern/presentation/widgets/common/character_avatar_image.dart';
+import 'package:native_tavern/presentation/widgets/common/character_placeholder_avatar.dart';
 import 'package:native_tavern/presentation/widgets/common/adaptive_popup_menu.dart';
 import 'character_view_mode.dart';
 
@@ -86,51 +86,51 @@ class _CharacterListScreenState extends ConsumerState<CharacterListScreen> {
                 return false;
               },
               child: charactersAsync.when(
-              data: (characters) {
-                final filtered = _searchQuery.isEmpty
-                    ? characters
-                    : characters
-                        .where((c) =>
-                            c.name
-                                .toLowerCase()
-                                .contains(_searchQuery.toLowerCase()) ||
-                            c.description
-                                .toLowerCase()
-                                .contains(_searchQuery.toLowerCase()))
-                        .toList();
+                data: (characters) {
+                  final filtered = _searchQuery.isEmpty
+                      ? characters
+                      : characters
+                          .where((c) =>
+                              c.name
+                                  .toLowerCase()
+                                  .contains(_searchQuery.toLowerCase()) ||
+                              c.description
+                                  .toLowerCase()
+                                  .contains(_searchQuery.toLowerCase()))
+                          .toList();
 
-                if (filtered.isEmpty) {
-                  return const _EmptyState();
-                }
+                  if (filtered.isEmpty) {
+                    return const _EmptyState();
+                  }
 
-                switch (_viewMode) {
-                  case CharacterViewMode.list:
-                    return _CharacterListView(characters: filtered);
-                  case CharacterViewMode.grid:
-                    return _CharacterGridView(characters: filtered);
-                  case CharacterViewMode.compactGrid:
-                    return _CharacterCompactGridView(characters: filtered);
-                }
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.error_outline,
-                        size: 48, color: Colors.red),
-                    const SizedBox(height: 16),
-                    Text('${l10n.error}: $error'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () =>
-                          ref.read(characterListProvider.notifier).refresh(),
-                      child: Text(l10n.retry),
-                    ),
-                  ],
+                  switch (_viewMode) {
+                    case CharacterViewMode.list:
+                      return _CharacterListView(characters: filtered);
+                    case CharacterViewMode.grid:
+                      return _CharacterGridView(characters: filtered);
+                    case CharacterViewMode.compactGrid:
+                      return _CharacterCompactGridView(characters: filtered);
+                  }
+                },
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline,
+                          size: 48, color: Colors.red),
+                      const SizedBox(height: 16),
+                      Text('${l10n.error}: $error'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: () =>
+                            ref.read(characterListProvider.notifier).refresh(),
+                        child: Text(l10n.retry),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
           ),
         ],
@@ -357,56 +357,11 @@ class _CharacterGridCard extends ConsumerWidget {
   }
 
   Widget _defaultAvatar(BuildContext context) {
-    final icon = _getCharacterIcon(character);
-    final color = _getCharacterColor(context, character);
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color,
-            color.withValues(alpha: 0.7),
-          ],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          icon,
-          size: 60,
-          color: Colors.white,
-        ),
-      ),
+    return CharacterPlaceholderAvatar(
+      id: character.id,
+      name: character.name,
+      glyphSize: 56,
     );
-  }
-
-  IconData _getCharacterIcon(Character character) {
-    // Check if it's a built-in character by ID
-    switch (character.id) {
-      case 'builtin_coding_assistant':
-        return Icons.code;
-      case 'builtin_image_gen_assistant':
-        return Icons.image;
-      case 'builtin_xiaohongshu_copywriter':
-        return Icons.edit_note;
-      default:
-        return Icons.person;
-    }
-  }
-
-  Color _getCharacterColor(BuildContext context, Character character) {
-    // Check if it's a built-in character by ID
-    switch (character.id) {
-      case 'builtin_coding_assistant':
-        return const Color(0xFF2196F3); // Blue for coding
-      case 'builtin_image_gen_assistant':
-        return const Color(0xFFE91E63); // Pink for image generation
-      case 'builtin_xiaohongshu_copywriter':
-        return const Color(0xFFFF5722); // Orange/Red for social media
-      default:
-        return context.tavern.divider;
-    }
   }
 }
 
@@ -439,7 +394,7 @@ class _CharacterCompactGridCard extends ConsumerWidget {
                     Text(
                       character.name,
                       style: Theme.of(context).textTheme.bodySmall,
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                     ),
@@ -465,54 +420,11 @@ class _CharacterCompactGridCard extends ConsumerWidget {
   }
 
   Widget _defaultCompactAvatar(BuildContext context) {
-    final icon = _getCharacterIcon(character);
-    final color = _getCharacterColor(context, character);
-
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color,
-            color.withValues(alpha: 0.7),
-          ],
-        ),
-      ),
-      child: Center(
-        child: Icon(
-          icon,
-          size: 40,
-          color: Colors.white,
-        ),
-      ),
+    return CharacterPlaceholderAvatar(
+      id: character.id,
+      name: character.name,
+      glyphSize: 36,
     );
-  }
-
-  IconData _getCharacterIcon(Character character) {
-    switch (character.id) {
-      case 'builtin_coding_assistant':
-        return Icons.code;
-      case 'builtin_image_gen_assistant':
-        return Icons.image;
-      case 'builtin_xiaohongshu_copywriter':
-        return Icons.edit_note;
-      default:
-        return Icons.person;
-    }
-  }
-
-  Color _getCharacterColor(BuildContext context, Character character) {
-    switch (character.id) {
-      case 'builtin_coding_assistant':
-        return const Color(0xFF2196F3);
-      case 'builtin_image_gen_assistant':
-        return const Color(0xFFE91E63);
-      case 'builtin_xiaohongshu_copywriter':
-        return const Color(0xFFFF5722);
-      default:
-        return context.tavern.divider;
-    }
   }
 }
 
@@ -655,43 +567,11 @@ class _CharacterListTile extends ConsumerWidget {
       );
     }
 
-    final icon = _getCharacterIcon(character);
-    final color = _getCharacterColor(context, character);
-
-    return CircleAvatar(
+    return CharacterPlaceholderAvatar(
+      id: character.id,
+      name: character.name,
       radius: 28,
-      backgroundColor: color,
-      child: Icon(
-        icon,
-        color: Colors.white,
-        size: 28,
-      ),
+      glyphSize: 24,
     );
-  }
-
-  IconData _getCharacterIcon(Character character) {
-    switch (character.id) {
-      case 'builtin_coding_assistant':
-        return Icons.code;
-      case 'builtin_image_gen_assistant':
-        return Icons.image;
-      case 'builtin_xiaohongshu_copywriter':
-        return Icons.edit_note;
-      default:
-        return Icons.person;
-    }
-  }
-
-  Color _getCharacterColor(BuildContext context, Character character) {
-    switch (character.id) {
-      case 'builtin_coding_assistant':
-        return const Color(0xFF2196F3);
-      case 'builtin_image_gen_assistant':
-        return const Color(0xFFE91E63);
-      case 'builtin_xiaohongshu_copywriter':
-        return const Color(0xFFFF5722);
-      default:
-        return context.tavern.primary;
-    }
   }
 }

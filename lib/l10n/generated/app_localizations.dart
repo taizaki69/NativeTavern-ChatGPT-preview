@@ -11708,6 +11708,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick one light and one dark theme; the app switches automatically'**
   String get followSystemThemeSubtitle;
+
+  /// Label before an unsent message preview in the chat list
+  ///
+  /// In en, this message translates to:
+  /// **'Draft'**
+  String get draft;
+
+  /// Settings toggle title for vibration feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic feedback'**
+  String get hapticFeedback;
+
+  /// Settings toggle subtitle for vibration feedback
+  ///
+  /// In en, this message translates to:
+  /// **'Light vibration when sending, swiping and long-pressing'**
+  String get hapticFeedbackSubtitle;
 }
 
 class _AppLocalizationsDelegate

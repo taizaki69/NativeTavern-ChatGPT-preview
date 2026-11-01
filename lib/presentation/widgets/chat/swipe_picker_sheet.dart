@@ -145,8 +145,8 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 2),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: isCurrent
                           ? context.tavern.accent
@@ -156,7 +156,8 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
                     child: Text(
                       '${index + 1}',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: isCurrent ? Colors.white : context.tavern.textMuted,
+                        color:
+                            isCurrent ? Colors.white : context.tavern.textMuted,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -179,8 +180,8 @@ class _SwipePickerSheetState extends State<SwipePickerSheet> {
                       icon: const Icon(Icons.delete_outline, size: 18),
                       color: context.tavern.textMuted,
                       padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(
-                          minWidth: 32, minHeight: 32),
+                      constraints:
+                          const BoxConstraints(minWidth: 32, minHeight: 32),
                       onPressed: () => _confirmDelete(context, index),
                     ),
                 ],

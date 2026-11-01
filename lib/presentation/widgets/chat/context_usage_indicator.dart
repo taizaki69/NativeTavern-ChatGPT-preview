@@ -274,19 +274,22 @@ class ContextUsageDialog extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          _buildSummaryRow(context, 
+          _buildSummaryRow(
+            context,
             l10n.totalTokens,
             _formatTokenCount(usage.totalTokens),
             context.tavern.textPrimary,
           ),
           const SizedBox(height: 8),
-          _buildSummaryRow(context, 
+          _buildSummaryRow(
+            context,
             l10n.maxContext,
             _formatTokenCount(usage.maxContext),
             context.tavern.textSecondary,
           ),
           const SizedBox(height: 8),
-          _buildSummaryRow(context, 
+          _buildSummaryRow(
+            context,
             l10n.remaining,
             _formatTokenCount(usage.remainingTokens),
             usage.remainingTokens > 0 ? Colors.green : Colors.red,
@@ -296,7 +299,8 @@ class ContextUsageDialog extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryRow(BuildContext context, String label, String value, Color valueColor) {
+  Widget _buildSummaryRow(
+      BuildContext context, String label, String value, Color valueColor) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -325,7 +329,8 @@ class ContextUsageDialog extends ConsumerWidget {
     ContextUsage usage,
   ) {
     final percentage = component.getPercentage(usage.maxContext);
-    final hasChildren = component.children != null && component.children!.isNotEmpty;
+    final hasChildren =
+        component.children != null && component.children!.isNotEmpty;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -408,7 +413,8 @@ class ContextUsageDialog extends ConsumerWidget {
             width: 8,
             height: 8,
             decoration: BoxDecoration(
-              color: _getComponentColor(context, component.name).withOpacity(0.5),
+              color:
+                  _getComponentColor(context, component.name).withOpacity(0.5),
               shape: BoxShape.circle,
             ),
           ),

@@ -11,6 +11,7 @@ import '../../providers/instruct_providers.dart';
 import '../../providers/settings_providers.dart';
 import '../../router/app_router.dart';
 import '../../theme/app_theme.dart';
+import 'package:native_tavern/presentation/widgets/common/settings_section.dart';
 import 'package:native_tavern/l10n/generated/app_localizations.dart';
 
 /// Provider for China region detection
@@ -102,82 +103,73 @@ class AIConfigScreen extends ConsumerWidget {
               ),
             ),
 
-          _buildSectionHeader(
-              context, AppLocalizations.of(context)!.presetsAndTemplates),
-          ListTile(
-            leading: const Icon(Icons.auto_awesome),
-            title: Text(AppLocalizations.of(context)!.aiPresets),
-            subtitle: Text(activePreset?.name ??
-                AppLocalizations.of(context)!.noPresetSelected),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.aiPresets),
+          SettingsSection(
+            title: AppLocalizations.of(context)!.presetsAndTemplates,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.auto_awesome),
+                title: Text(AppLocalizations.of(context)!.aiPresets),
+                subtitle: Text(activePreset?.name ??
+                    AppLocalizations.of(context)!.noPresetSelected),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.aiPresets),
+              ),
+              const _InstructTemplateTile(),
+              ListTile(
+                leading: const Icon(Icons.reorder),
+                title: Text(AppLocalizations.of(context)!.promptManager),
+                subtitle: Text(
+                    AppLocalizations.of(context)!.orderAndTogglePromptSections),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.push(AppRoutes.promptManager),
+              ),
+            ],
           ),
-          const _InstructTemplateTile(),
-          ListTile(
-            leading: const Icon(Icons.reorder),
-            title: Text(AppLocalizations.of(context)!.promptManager),
-            subtitle: Text(
-                AppLocalizations.of(context)!.orderAndTogglePromptSections),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(AppRoutes.promptManager),
+          SettingsSection(
+            title: AppLocalizations.of(context)!.llmConnection,
+            children: const [
+              _ConnectionProfilesTile(),
+              _LLMProviderTile(),
+              ChatGptPlanTile(),
+              _ApiKeyTile(),
+              _ApiUrlTile(),
+              LLMModelTile(),
+              _OpenRouterProviderTile(),
+              _ConnectionTestTile(),
+            ],
           ),
-
-          const Divider(height: 32),
-          _buildSectionHeader(
-              context, AppLocalizations.of(context)!.llmConnection),
-          const _ConnectionProfilesTile(),
-          const _LLMProviderTile(),
-          const ChatGptPlanTile(),
-          const _ApiKeyTile(),
-          const _ApiUrlTile(),
-          const LLMModelTile(),
-          const _OpenRouterProviderTile(),
-          const _ConnectionTestTile(),
-
-          const Divider(height: 32),
-          _buildSectionHeader(
-              context, AppLocalizations.of(context)!.generationSettings),
-          const _ContextLengthTile(),
-          if (!isPlan) ...[
-            const _MaxTokensTile(),
-            const _TemperatureTile(),
-            const _TopPTile(),
-            const _ReasoningEffortTile(),
-            const _PromptCacheTile(),
-            const _MergeRolesTile(),
-          ] else
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Text(
-                  'ChatGPT manages generation parameters. Select your model above; streaming display remains configurable.'),
-            ),
-          const _StreamingTile(),
-          if (!isPlan)
-            ListTile(
-              leading: const Icon(Icons.tune),
-              title:
-                  Text(AppLocalizations.of(context)!.advancedSamplerSettings),
-              subtitle:
-                  Text(AppLocalizations.of(context)!.fullControlOverSampling),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(AppRoutes.advancedSettings),
-            ),
-
+          SettingsSection(
+            title: AppLocalizations.of(context)!.generationSettings,
+            children: [
+              const _ContextLengthTile(),
+              if (!isPlan) ...[
+                const _MaxTokensTile(),
+                const _TemperatureTile(),
+                const _TopPTile(),
+                const _ReasoningEffortTile(),
+                const _PromptCacheTile(),
+                const _MergeRolesTile(),
+              ] else
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(
+                      'ChatGPT manages generation parameters. Select your model above; streaming display remains configurable.'),
+                ),
+              const _StreamingTile(),
+              if (!isPlan)
+                ListTile(
+                  leading: const Icon(Icons.tune),
+                  title: Text(
+                      AppLocalizations.of(context)!.advancedSamplerSettings),
+                  subtitle: Text(
+                      AppLocalizations.of(context)!.fullControlOverSampling),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => context.push(AppRoutes.advancedSettings),
+                ),
+            ],
+          ),
           const SizedBox(height: 32),
         ],
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: context.tavern.accent,
-              fontWeight: FontWeight.bold,
-            ),
       ),
     );
   }

@@ -8,12 +8,15 @@ import 'package:native_tavern/data/repositories/character_repository.dart';
 import 'package:native_tavern/data/repositories/chat_repository.dart';
 import 'package:native_tavern/data/repositories/group_repository.dart';
 import 'package:native_tavern/l10n/generated/app_localizations.dart';
+import 'package:native_tavern/presentation/providers/chat_draft_providers.dart';
 import 'package:native_tavern/presentation/providers/chat_providers.dart';
 import 'package:native_tavern/presentation/router/app_router.dart';
 import 'package:native_tavern/presentation/theme/app_theme.dart';
 import 'package:native_tavern/presentation/widgets/common/character_avatar_image.dart';
+import 'package:native_tavern/presentation/widgets/common/character_placeholder_avatar.dart';
 import 'package:native_tavern/presentation/widgets/common/confirm_delete_dialog.dart';
 import 'package:native_tavern/presentation/widgets/common/group_avatar.dart';
+import 'package:native_tavern/presentation/widgets/common/haptics.dart';
 import 'package:native_tavern/presentation/widgets/common/adaptive_popup_menu.dart';
 
 /// Home screen showing recent chats
@@ -119,6 +122,7 @@ void _invalidateChatList(void Function(ProviderOrFamily provider) invalidate) {
   invalidate(_groupPresentationProvider);
   invalidate(_lastMessageProvider);
   invalidate(_characterForChatProvider);
+  invalidate(chatDraftProvider);
 }
 
 class _ChatListView extends ConsumerWidget {
@@ -265,6 +269,7 @@ class _ChatListTile extends ConsumerWidget {
         ? null
         : ref.watch(_groupPresentationProvider(chat.groupId!));
     final lastMessageAsync = ref.watch(_lastMessageProvider(chat.id));
+    final draft = ref.watch(chatDraftProvider(chat.id));
 
     final tile = Card(
       clipBehavior: Clip.antiAlias,
@@ -308,16 +313,34 @@ class _ChatListTile extends ConsumerWidget {
                   data: (character) => Text(character?.name ?? chat.title),
                 ),
         ),
-        subtitle: lastMessageAsync.when(
-          loading: () => const Text('...'),
-          error: (_, __) => Text(l10n.noMessages),
-          data: (message) => Text(
-            _previewText(message, l10n),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: colors.textSecondary),
-          ),
-        ),
+        subtitle: draft != null
+            ? Text.rich(
+                TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${l10n.draft}: ',
+                      style: TextStyle(
+                        color: colors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    TextSpan(text: draft.replaceAll(RegExp(r'\s+'), ' ')),
+                  ],
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(color: colors.textSecondary),
+              )
+            : lastMessageAsync.when(
+                loading: () => const Text('...'),
+                error: (_, __) => Text(l10n.noMessages),
+                data: (message) => Text(
+                  _previewText(message, l10n),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: colors.textSecondary),
+                ),
+              ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -370,12 +393,15 @@ class _ChatListTile extends ConsumerWidget {
           color: theme.colorScheme.onErrorContainer,
         ),
       ),
-      confirmDismiss: (_) => confirmDeletion(
-        context,
-        ref,
-        title: l10n.deleteChat,
-        message: l10n.deleteChatConfirmation,
-      ),
+      confirmDismiss: (_) {
+        playHaptic(context, TavernHaptic.medium);
+        return confirmDeletion(
+          context,
+          ref,
+          title: l10n.deleteChat,
+          message: l10n.deleteChatConfirmation,
+        );
+      },
       onDismissed: (_) => _deleteChat(context, ref),
       child: tile,
     );
@@ -393,14 +419,11 @@ class _ChatListTile extends ConsumerWidget {
   }
 
   Widget _characterFallback(BuildContext context, Character? character) {
-    return CircleAvatar(
-      backgroundColor: context.tavern.accent.withValues(alpha: 0.2),
-      child: Text(
-        character?.name.isNotEmpty == true
-            ? character!.name.characters.first.toUpperCase()
-            : '?',
-        style: TextStyle(color: context.tavern.accent),
-      ),
+    return CharacterPlaceholderAvatar(
+      id: character?.id ?? chat.characterId,
+      name: character?.name ?? chat.title,
+      radius: 20,
+      glyphSize: 17,
     );
   }
 
@@ -474,6 +497,7 @@ class _ChatListTile extends ConsumerWidget {
     container.read(pagedChatsProvider.notifier).removeChat(chat.id);
     try {
       await repository.deleteChat(chat.id);
+      await container.read(chatDraftStoreProvider).clear(chat.id);
       container.invalidate(allChatsProvider);
       messenger.showSnackBar(SnackBar(content: Text(l10n.chatDeleted)));
     } catch (error) {

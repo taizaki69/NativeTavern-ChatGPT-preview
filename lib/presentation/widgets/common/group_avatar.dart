@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:native_tavern/data/models/character.dart';
 import 'package:native_tavern/presentation/theme/app_theme.dart';
 import 'package:native_tavern/presentation/widgets/common/character_avatar_image.dart';
+import 'package:native_tavern/presentation/widgets/common/character_placeholder_avatar.dart';
 
 /// A compact group avatar assembled from the first four group members.
 class GroupAvatar extends StatelessWidget {
@@ -79,19 +80,10 @@ class GroupAvatar extends StatelessWidget {
   }
 
   Widget _fallbackMember(BuildContext context, Character? character) {
-    final name = character?.name.trim() ?? '';
-    return ColoredBox(
-      color: context.tavern.primary.withValues(alpha: 0.24),
-      child: Center(
-        child: Text(
-          name.isEmpty ? '?' : name.characters.first.toUpperCase(),
-          style: TextStyle(
-            color: context.tavern.textPrimary,
-            fontSize: size * 0.25,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+    return CharacterPlaceholderAvatar(
+      id: character?.id ?? '',
+      name: character?.name ?? '',
+      glyphSize: size * 0.25,
     );
   }
 

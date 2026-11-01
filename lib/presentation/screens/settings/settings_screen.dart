@@ -8,7 +8,7 @@ import 'package:native_tavern/presentation/providers/persona_providers.dart';
 import 'package:native_tavern/presentation/providers/settings_providers.dart';
 import 'package:native_tavern/core/flags/rpg_product_ui.dart';
 import 'package:native_tavern/presentation/router/app_router.dart';
-import 'package:native_tavern/presentation/theme/app_theme.dart';
+import 'package:native_tavern/presentation/widgets/common/settings_section.dart';
 import 'package:native_tavern/presentation/widgets/privacy/ai_data_sharing_consent_gate.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -61,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.user,
             children: [
               _PersonaTile(),
@@ -74,7 +74,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.chats,
             children: [
               ListTile(
@@ -99,7 +99,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.playHub,
             children: [
               const _MomentsEnabledTile(),
@@ -115,7 +115,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
             ],
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.multimedia,
             children: [
               ListTile(
@@ -150,7 +150,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.advanced,
             children: [
               ListTile(
@@ -223,7 +223,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.settings,
             children: [
               const _LanguageTile(),
@@ -234,6 +234,7 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.push(AppRoutes.themeSettings),
               ),
               const _ConfirmDeleteTile(),
+              const _HapticsTile(),
               const AiDataSharingSettingsTile(),
               const _DebugLogTile(),
               ListTile(
@@ -244,7 +245,7 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ],
           ),
-          _SettingsSection(
+          SettingsSection(
             title: l10n.about,
             children: [
               ListTile(
@@ -279,46 +280,6 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const PrivacyPolicyTile(),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A titled group of settings rendered as a rounded card.
-class _SettingsSection extends StatelessWidget {
-  const _SettingsSection({required this.title, required this.children});
-
-  final String title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-            child: Text(
-              title,
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: context.tavern.accent,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ),
-          Card(
-            margin: EdgeInsets.zero,
-            clipBehavior: Clip.antiAlias,
-            child: ListTileTheme.merge(
-              shape: const RoundedRectangleBorder(),
-              child: Column(children: children),
-            ),
           ),
         ],
       ),
@@ -372,6 +333,29 @@ class _ConfirmDeleteTile extends ConsumerWidget {
       value: settings.confirmBeforeDelete,
       onChanged: (value) {
         ref.read(appSettingsProvider.notifier).updateConfirmBeforeDelete(value);
+      },
+    );
+  }
+}
+
+class _HapticsTile extends ConsumerWidget {
+  const _HapticsTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final enabled = ref.watch(
+      appSettingsProvider.select((settings) => settings.enableHaptics),
+    );
+
+    return SwitchListTile(
+      key: const Key('haptics-enabled-switch'),
+      secondary: const Icon(Icons.vibration),
+      title: Text(l10n.hapticFeedback),
+      subtitle: Text(l10n.hapticFeedbackSubtitle),
+      value: enabled,
+      onChanged: (value) {
+        ref.read(appSettingsProvider.notifier).updateHaptics(value);
       },
     );
   }

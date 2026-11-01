@@ -27,6 +27,7 @@ import 'package:native_tavern/presentation/controllers/chat_tts_autoplay_control
 import 'package:native_tavern/presentation/providers/bookmark_providers.dart';
 import 'package:native_tavern/presentation/providers/background_providers.dart';
 import 'package:native_tavern/presentation/providers/chat_providers.dart';
+import 'package:native_tavern/presentation/providers/chat_draft_providers.dart';
 import 'package:native_tavern/presentation/providers/chat_extension_providers.dart';
 import 'package:native_tavern/presentation/providers/character_providers.dart';
 import 'package:native_tavern/presentation/providers/persona_providers.dart';
@@ -39,6 +40,8 @@ import 'package:native_tavern/presentation/providers/world_info_providers.dart';
 import 'package:native_tavern/presentation/router/app_router.dart';
 import 'package:native_tavern/presentation/theme/app_theme.dart';
 import 'package:native_tavern/presentation/widgets/common/confirm_delete_dialog.dart';
+import 'package:native_tavern/presentation/widgets/common/character_placeholder_avatar.dart';
+import 'package:native_tavern/presentation/widgets/common/haptics.dart';
 import 'package:native_tavern/presentation/widgets/chat/author_note_dialog.dart';
 import 'package:native_tavern/presentation/widgets/chat/bookmark_dialog.dart';
 import 'package:native_tavern/presentation/widgets/chat/data_bank_citation_preview.dart';
@@ -109,6 +112,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   late final TTSStopAction _stopTts;
   final Map<String, GlobalKey<_MessageBubbleState>> _messageKeys = {};
   final ValueNotifier<bool> _showJumpToLatest = ValueNotifier(false);
+  late final ChatDraftStore _draftStore;
+  Timer? _draftSaveTimer;
   bool _initialMessageJumpScheduled = false;
   String? _highlightedMessageId;
 
@@ -116,6 +121,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void initState() {
     super.initState();
     _stopTts = ref.read(ttsStopProvider);
+    _draftStore = ref.read(chatDraftStoreProvider);
+    // Restore unsent text before the first frame so it never flashes empty.
+    _messageController.text = _draftStore.read(widget.chatId) ?? '';
     // Load chat and bookmarks when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -154,7 +162,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
+  void _scheduleDraftSave() {
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = Timer(const Duration(milliseconds: 400), _saveDraftNow);
+  }
+
+  void _saveDraftNow([String? chatId]) {
+    _draftSaveTimer?.cancel();
+    _draftSaveTimer = null;
+    unawaited(
+      _draftStore.write(chatId ?? widget.chatId, _messageController.text),
+    );
+  }
+
   void _onTextChanged() {
+    _scheduleDraftSave();
     final text = _messageController.text;
     final shouldShow = text.startsWith('/') && !text.contains(' ');
     if (shouldShow != _showSlashSuggestions) {
@@ -165,6 +187,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void didUpdateWidget(covariant ChatScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.chatId != widget.chatId) {
+      // Same screen reused for another chat: keep each chat's draft separate.
+      _saveDraftNow(oldWidget.chatId);
+      _messageController.text = _draftStore.read(widget.chatId) ?? '';
+    }
     if (oldWidget.chatId != widget.chatId ||
         oldWidget.initialMessageId != widget.initialMessageId) {
       _initialMessageJumpScheduled = false;
@@ -243,6 +270,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void dispose() {
     unawaited(_stopTts(ownerId: widget.chatId));
+    _saveDraftNow();
     _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.removeListener(_onMessagesScrolled);
@@ -448,6 +476,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     // Capture attachments before clearing
     final attachments = List<ChatAttachment>.from(_pendingAttachments);
+    playHaptic(context);
 
     _messageController.clear();
     setState(() {
@@ -1104,6 +1133,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       if ((messageCountChanged && !olderMessagesLoaded) || loadingFinished) {
         _scrollToBottomImmediate();
+      }
+      // A soft tap when a reply finishes, so you can look away while waiting.
+      if (previous?.isGenerating == true &&
+          !next.isGenerating &&
+          next.error == null) {
+        playHaptic(context);
       }
       _handleChatTTSChange(previous, next);
     });
@@ -1876,6 +1911,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ChatMessage message,
     ActiveChatState chatState,
   ) {
+    playHaptic(context, TavernHaptic.medium);
     final l10n = AppLocalizations.of(context);
     final config = ref.read(llmConfigProvider);
     final isAssistant = message.role == MessageRole.assistant;
@@ -2054,6 +2090,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             layoutMode: layoutMode,
             highlighted: _highlightedMessageId == message.id,
             onSwipe: (swipeIndex) {
+              playHaptic(context, TavernHaptic.selection);
               ref
                   .read(activeChatProvider.notifier)
                   .swipeMessage(message.id, swipeIndex);
@@ -3541,15 +3578,23 @@ class _MessageBubbleState extends State<_MessageBubble> {
   }
 
   Widget _buildAvatar() {
-    if (widget.character?.assets?.avatarPath != null) {
+    final character = widget.character;
+    final fallback = character == null
+        ? const CircleAvatar(radius: 16, child: Icon(Icons.person, size: 16))
+        : CharacterPlaceholderAvatar(
+            id: character.id,
+            name: character.name,
+            radius: 16,
+            glyphSize: 14,
+          );
+    if (character?.assets?.avatarPath != null) {
       return CharacterAvatarCircle(
-        imagePath: widget.character!.assets!.avatarPath!,
+        imagePath: character!.assets!.avatarPath!,
         radius: 16,
-        errorBuilder: (_, __, ___) =>
-            const CircleAvatar(radius: 16, child: Icon(Icons.person, size: 16)),
+        errorBuilder: (_, __, ___) => fallback,
       );
     }
-    return const CircleAvatar(radius: 16, child: Icon(Icons.person, size: 16));
+    return fallback;
   }
 
   /// Build the reasoning/thinking section for AI messages
@@ -3722,6 +3767,7 @@ class _MessageBubbleState extends State<_MessageBubble> {
   }
 
   void _showMessageOptions(BuildContext context) {
+    playHaptic(context, TavernHaptic.medium);
     final l10n = AppLocalizations.of(context);
     final isAssistant = widget.message.role == MessageRole.assistant;
 
