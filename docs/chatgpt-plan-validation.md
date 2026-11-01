@@ -1,7 +1,53 @@
-# NativeTavern provider validation — build 46
+# NativeTavern provider validation — build 47
 
-Date: 2026-10-09. Upstream base: `6dbd1ee042e994966db85693594ab61e4f4ec441`.
-Personal version: `0.1.17+46`. Previous delivered version: `0.1.17+45`.
+Date: 2026-11-01. Upstream base: `6dbd1ee042e994966db85693594ab61e4f4ec441`.
+Personal version: `0.1.17+47`. Previous delivered version: `0.1.17+46`.
+
+## Build 47 interface changes
+
+Build 47 changes presentation and local preferences only. The ChatGPT
+provider, response transport, provider caching and request construction are
+unchanged from build 46.
+
+- A theme builder derives a complete Material 3 scheme from each theme and
+  every screen reads colors from the active theme instead of fixed constants.
+  Faint brand colors are darkened to at least 3:1 contrast with the background.
+- Follow-system appearance stores separate light and dark theme choices.
+- Unsent input is stored per chat in shared preferences and shown as a draft
+  in the chat list. Haptic feedback uses the existing settings flag.
+- The confirm-before-delete setting now gates chat and message deletion.
+  Chat-list retry, deletion refresh and preview refresh were fixed.
+- Invalid hex input is rejected; stored malformed theme colors fall back
+  safely instead of throwing.
+
+## Verified build 47
+
+- Local source: `tool/run_mobile_release_checks.sh` passed — **707 tests
+  passed, 2 skipped**, changed-file formatting, Live2D development gate
+  (61 artifacts) and mobile development gate (zero device-evidence runs).
+  Full-project analysis completed with **zero errors**.
+- New tests cover theme contrast for all 18 built-in themes, hex parsing,
+  follow-system slots, chat-list swipe deletion and previews, drafts,
+  haptics and jump-to-latest.
+- [The successful workflow](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/41312448322) compiled
+  `dd24fd393a9ec96b0b8964b402dc314aa62bd578` on `macos-15` with Flutter
+  3.44.9 and CocoaPods 1.17.0. Analysis, mobile checks (full suite and
+  development gates), device compilation and unsigned packaging succeeded.
+- `build_ios.sh` validated the app bundle and the re-extracted IPA:
+  `com.miaomiaoxworld.nativetavern` 0.1.17 (47), iOS 15.0+, arm64 device
+  executable, no provisioning profile, native Live2D render-scale channel,
+  Live2D renderer and Spine FFI symbols present in the native and Dart binaries.
+- `NativeTavern_ChatGPT_v0.1.17+47_unsigned.ipa`, SHA-256
+  `a620107e8c7082cd55398e4c27a5d47a43f6e9a67b68409d82d9e9ea7442a484`, saved with its checksum companion in the draft release
+  **NativeTavern ChatGPT preview (build 47, unsigned)**
+  (`chatgpt-preview-41312448322-1`), targeting the compiled commit.
+- Not performed for build 47: an independent download of the draft asset,
+  streamed ZIP CRC validation and compiled-marker inspection outside the
+  runner. Re-signed on-device behavior remains unverified.
+
+The build 46 report below remains accurate for provider caching.
+
+# Build 46 report
 
 ## Provider caching changes
 

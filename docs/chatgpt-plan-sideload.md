@@ -61,28 +61,28 @@ is created. Live hits and savings remain unverified.
 
 ## Download build 47
 
-**Build 47 is being compiled. Until its unsigned IPA has been downloaded and
-verified, use build 46 below.**
-
-## Download build 46
-
-**Build 46 has been compiled and its downloaded unsigned IPA verified.**
+**Build 47 has been compiled and its unsigned IPA validated by the build
+script on the macOS runner.**
 Sign in as the fork owner at [the stable Releases page](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/releases)
-and open **NativeTavern ChatGPT preview (build 46, unsigned)**.
-Download `NativeTavern_ChatGPT_v0.1.17+46_unsigned.ipa` and its `.sha256` companion.
-Build 45 contains the earlier OpenRouter Claude feature, not this broader audit.
+and open **NativeTavern ChatGPT preview (build 47, unsigned)**.
+Download `NativeTavern_ChatGPT_v0.1.17+47_unsigned.ipa` and its `.sha256` companion.
+Build 46 (provider caching, without the interface refresh) remains available
+as a separate draft.
 
-The IPA is 45,121,961 bytes (43.0 MiB), above this
-chat's 9 MiB file limit. SHA-256:
+SHA-256:
 
 ~~~
-41a88d671c138d7d97dfcf9b688559605a9f1c17fd8db6f05fa027938a1c5238
+a620107e8c7082cd55398e4c27a5d47a43f6e9a67b68409d82d9e9ea7442a484
 ~~~
 
-[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/38014008008) passed **671 Flutter tests,
-with 2 skipped**, and analysis completed with zero errors.
-[Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/820c196ed0c9c100edded8411b1fd8e8e2758a97): `820c196ed0c9c100edded8411b1fd8e8e2758a97`.
-The source packet identifies documentation-only changes after compilation.
+Check the downloaded file against this value or the `.sha256` companion, for
+example with `shasum -a 256 NativeTavern_ChatGPT_v0.1.17+47_unsigned.ipa`.
+
+[The successful macOS build](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/actions/runs/41312448322) ran analysis, the full Flutter suite and
+the native development gates before packaging; locally the suite passed
+**707 tests, with 2 skipped**, and analysis completed with zero errors.
+[Exact compiled source](https://github.com/taizaki69/NativeTavern-ChatGPT-preview/tree/dd24fd393a9ec96b0b8964b402dc314aa62bd578): `dd24fd393a9ec96b0b8964b402dc314aa62bd578`.
+Changes after compilation are documentation only.
 
 Re-sign the complete app and its frameworks with your existing sideload tool.
 The app targets **iOS 15 or later**. Export existing data before installation.
